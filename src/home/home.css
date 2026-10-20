@@ -1,0 +1,138 @@
+/* Dashboard page. Header comes from shell.css; tokens, .btn and .glass from theme.css. */
+
+.home {
+  width: min(100%, 960px);
+  margin: 0 auto;
+  padding: calc(var(--space) * 2) calc(var(--space) * 2) calc(var(--space) * 5);
+}
+
+.home-intro {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.home-next {
+  margin: 4px 0 calc(var(--space) * 3);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: calc(var(--space) * 2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- Card ---------- */
+.puzzle-card {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: calc(var(--space) * 2);
+  padding: calc(var(--space) * 2.5);
+  animation: home-card-in 250ms var(--ease) both;
+}
+
+.puzzle-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.puzzle-card:nth-child(n + 3) {
+  animation-delay: 120ms;
+}
+
+.puzzle-preview {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+
+.puzzle-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.puzzle-card__name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.puzzle-card__tagline {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.puzzle-card__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
+}
+
+.puzzle-card__actions .btn {
+  flex: 1;
+  text-decoration: none;
+}
+
+/* ---------- Status pill ---------- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-pill[data-status='playing'] {
+  background: rgba(139, 123, 255, 0.2);
+  color: #b9adff;
+}
+
+.status-pill[data-status='done'] {
+  background: rgba(52, 227, 160, 0.18);
+  color: #34e3a0;
+}
+
+.status-pill[data-status='lost'] {
+  background: rgba(255, 92, 122, 0.18);
+  color: #ff5c7a;
+}
+
+@keyframes home-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (max-width: 400px) {
+  .home {
+    padding-left: var(--space);
+    padding-right: var(--space);
+  }
+
+  .home-intro {
+    font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .puzzle-card {
+    animation: none;
+  }
+}

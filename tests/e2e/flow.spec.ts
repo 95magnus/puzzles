@@ -35,7 +35,7 @@ async function drawPath(page: Page, size: number, path: Cell[], upAtEnd = true) 
 
 test('solve a fixed practice puzzle by mouse drag shows win card', async ({ page }) => {
   const { solution } = generateWithSolution(5, mulberry32(123));
-  await page.goto('/#/practice?size=5&seed=123');
+  await page.goto('/flow.html#/practice?size=5&seed=123');
   await expect(page.getByRole('application', { name: 'Puzzle board' })).toBeVisible();
   await expect(page.locator('.board-dot').first()).toBeVisible();
   for (const path of solution) await drawPath(page, 5, path);
@@ -46,7 +46,7 @@ test('solve a fixed practice puzzle by mouse drag shows win card', async ({ page
 test('daily progress survives reload', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-21T12:00:00Z'));
   const { solution } = generateWithSolution(7, mulberry32(seedFromDate('2026-10-21')));
-  await page.goto('/');
+  await page.goto('/flow.html');
   await expect(page.locator('.board-dot').first()).toBeVisible();
   await drawPath(page, 7, solution[0]);
   const polylines = page.locator('polyline.board-path');
@@ -63,7 +63,7 @@ test('daily progress survives reload', async ({ page }) => {
 
 test('right-click clears a path', async ({ page }) => {
   const { solution } = generateWithSolution(5, mulberry32(123));
-  await page.goto('/#/practice?size=5&seed=123');
+  await page.goto('/flow.html#/practice?size=5&seed=123');
   await expect(page.locator('.board-dot').first()).toBeVisible();
   await drawPath(page, 5, solution[0]);
   const polylines = page.locator('polyline.board-path');
