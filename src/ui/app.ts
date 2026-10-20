@@ -161,8 +161,10 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   // ---------- Flow ----------
   async function load(r: Route) {
     const token = ++loadToken;
-    board.setInteractive(false); // may end an in-flight drag → onChange (saved against the old session)
+    // Mark loading BEFORE locking the board: locking may end an in-flight drag, whose
+    // gesture-end is then saved against the old session but can never trigger win UI.
     loading = true;
+    board.setInteractive(false);
     solved = false;
     game = null;
     session = null;

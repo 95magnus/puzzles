@@ -285,6 +285,30 @@ test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths
   expect(loadDaily(today)?.paths.filter(p => p.length).length).toBe(4);
 });
 
+test('a solving gesture cut short by a route change never shows the old win over the new puzzle', async () => {
+  // Full motion so the celebration is async and outlives load()'s synchronous part.
+  vi.stubGlobal('matchMedia', (q: string) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {} }));
+  const today = '2026-10-21';
+  mount(today + 'T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor(today);
+  sol.slice(0, -1).forEach(draw);
+  const last = sol[sol.length - 1];
+  fire('pointerdown', last[0]);
+  for (const c of last.slice(1)) fire('pointermove', c); // completes the puzzle, but no pointerup yet
+  history.replaceState(null, '', '#/practice?size=5&seed=123');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  await settle();
+  await new Promise(r => setTimeout(r, 900)); // longer than any celebration
+  expect(svg().getAttribute('viewBox')).toBe('0 0 500 500');
+  expect(winCard().hidden).toBe(true);
+  expect($('.board')!.classList.contains('board--dim')).toBe(false);
+  expect($('.board')!.classList.contains('board--locked')).toBe(false);
+  // The finished gesture was still saved against the old daily.
+  expect(loadDaily(today)?.paths.every(p => p.length > 0)).toBe(true);
+});
+
 test('HUD shows flows, fill, mm:ss and the fill hint', () => {
   const hud = createHud(root);
   hud.update({ flowsDone: 2, flowsTotal: 6, fillPct: 41 }, 125_999, false);
