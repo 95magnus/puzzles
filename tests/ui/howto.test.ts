@@ -122,3 +122,14 @@ test('colorblind flag is applied on mount', async () => {
   qBtn().click();
   expect(dialog()!.querySelector('[role="switch"]')!.getAttribute('aria-checked')).toBe('true');
 });
+
+test('modal is a direct child of document.body (top layer, not trapped in the app)', async () => {
+  localStorage.setItem('flow:flag:howto-seen', '1');
+  mount();
+  await settle();
+  qBtn().click();
+  const m = dialog()!.parentElement!;
+  expect(m.classList.contains('modal')).toBe(true);
+  expect(m.parentElement).toBe(document.body);
+  expect(root.contains(m)).toBe(false);
+});

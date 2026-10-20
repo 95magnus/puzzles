@@ -195,5 +195,5 @@ export function openHowto(opts: HowtoOptions): void {
   backdrop.addEventListener('click', e => {
     if (e.target === backdrop) close();
   });
-  done.focus();
+  done.focus({ preventScroll: true });
 }
