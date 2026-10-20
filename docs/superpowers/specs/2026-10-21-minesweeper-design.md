@@ -8,8 +8,8 @@
 Add a second puzzle, **Minesweeper ("Mines")**, to the Flow daily-puzzle site. Boards are big and hard; controls are classic desktop Minesweeper.
 
 **In scope (v1)**
-- **Daily mode:** one 30×20 board with 130 mines (~22%) per UTC day, identical for every player. **One shot:** hitting a mine ends today's daily.
-- **Practice mode:** unlimited random boards; presets **Classic** 30×16/99, **Expert+** 30×20/130 (default), **Huge** 50×30/320. Hitting a mine ends that board.
+- **Daily mode:** one 30×20 board with 130 mines (~22%) per UTC day, identical for every player, starting from a pre-revealed opening. Hitting a mine ends the attempt; **Try again** replays the same board from its opening as the next attempt (attempts are counted; a win is final).
+- **Practice mode:** unlimited random boards; presets **Classic** 30×16/99, **Expert+** 30×20/130 (default), **Huge** 50×30/320. A board starts blank; the first reveal generates it with that cell and its neighbours mine-free. Hitting a mine ends that board.
 - **Classic random mine placement** (not no-guess). Guessing is part of the game.
 - Controls: left = reveal, right = flag, left + right = chord. Minimal touch fallback.
 - Separate page `minesweeper.html` sharing the core modules and visual theme with Flow. Static site, no backend.
@@ -67,7 +67,7 @@ type GameState = {
 
 Deterministic: the same `(spec, seed)` gives the same board on every browser. If `mines` exceeds the number of placeable cells, `generateBoard` throws (the fixed presets never do).
 
-The start cell is pre-revealed in both daily and practice; there is no separate "first click is safe" rule.
+Daily: the seeded RNG picks the start cell and it is pre-revealed. Practice: `generateBoard(spec, rng, firstClick)` runs on the first reveal, so the first click is always safe and opens an area; flags placed before it are kept if still hidden.
 
 ## 4. Game rules (`game`)
 
@@ -115,17 +115,17 @@ Header (shared with Flow): wordmark + game links **Flow · Mines** (current high
 
 1. **Daily (playing):** subtitle `#N · Wed Oct 21 · 30×20 · 130 mines`; board; HUD below.
 2. **Daily (won):** board dims; glass card "Cleared ✦", time, "Next daily in hh:mm:ss", primary **Play practice**.
-3. **Daily (lost):** board stays undimmed for study; smaller card below: "Boom.", % cleared, time, next-daily countdown, **Play practice**.
-4. **Practice:** preset switch (Classic · Expert+ · Huge) replaces the subtitle; buttons **New board** (primary) and **Restart** (same board). End cards offer **New board**.
+3. **Daily (lost):** board stays undimmed for study; a dialog centred over the board: "Boom.", % cleared, time, next-daily countdown, **Try again** (primary) and **Play practice**. From attempt 2 the HUD shows `Attempt N`; the win card shows `attempt N` (or `first try`).
+4. **Practice:** preset switch (Classic · Expert+ · Huge) replaces the subtitle; buttons **New board** (primary, blank board) and **Restart** (same board from its opening). End cards (centred over the board) offer **New board**.
 5. **How-to ("?"):** modal listing the three mouse controls and the touch equivalents, with a small chord diagram. Auto-opens on the first visit to the Mines page.
 
 Daily number uses `dailyNumber` from `core/daily` (shared launch date).
 
 ## 8. Persistence
 
-- **Daily** save under key `mines:daily`: `{ v: 1, date, cells: string /* one char per cell: h | r | f */, elapsedMs, status }`. The board is never stored; it is regenerated from the date seed.
+- **Daily** save under key `mines:daily`: `{ v: 1, date, cells: string /* one char per cell: h | r | f */, elapsedMs, status, attempt }` (a missing `attempt` reads as 1; a tab never overwrites a won save or a later attempt). The board is never stored; it is regenerated from the date seed.
 - Written after every action that changes state, and on `pagehide`.
-- On load: restore if `date` is today; a won or lost daily reopens in its end state (no second attempt). Other dates, wrong versions, wrong lengths or invalid characters → discard silently.
+- On load: restore if `date` is today; a won or lost daily reopens in its end state (a lost one offers Try again). Other dates, wrong versions, wrong lengths or invalid characters → discard silently.
 - **Practice:** not persisted. Only the chosen preset (`mines:preset`) and the how-to flag are remembered.
 - All storage access wrapped in try/catch; the game works without storage.
 
