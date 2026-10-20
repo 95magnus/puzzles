@@ -144,7 +144,7 @@ Daily number uses `dailyNumber` from `core/daily` (shared launch date).
 - `storage`: round trip, date mismatch, corrupt data, throwing storage.
 
 **E2E (Playwright)**
-- A test hook (`?seed=` in dev builds only) loads a fixed-seed board. Real mouse input reveals, flags and chords (both buttons held via `mouse.down({ button })`) through to the win card.
+- The practice route `#/practice?preset=<id>&seed=<n>` loads a fixed-seed board (works on the production preview, matching Flow's e2e). Real mouse input reveals, flags and chords (both buttons held via `mouse.down({ button })`) through to the win card.
 - Hitting a mine shows the loss card with mines revealed.
 - Reload mid-daily restores progress; reload after a loss reopens the end card.
 
