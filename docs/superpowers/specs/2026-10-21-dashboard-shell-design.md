@@ -31,6 +31,8 @@ The site now has two puzzles (Flow, Mines) built at different times, and their c
 
 `vite.config.ts` gets three `rolldownOptions.input` entries (`home`, `flow`, `mines`). The `<title>`s become `Puzzles`, `Flow` and `Mines`.
 
+`.vscode/launch.json` has a single browser target, **Debug Puzzles (Chrome)**, opening `/` (the dashboard); the per-puzzle Flow/Mines targets are removed. The Vitest targets are unchanged.
+
 ## 3. Shared shell
 
 New file `src/ui/shell.css` holds every shared chrome style; both games import it after `theme.css`. Game CSS keeps only board/HUD-specific rules.

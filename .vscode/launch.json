@@ -3,18 +3,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug Flow (Chrome)",
+      // Opens the dashboard; every puzzle page is reachable from there in the same session.
+      "name": "Debug Puzzles (Chrome)",
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:5173/",
-      "webRoot": "${workspaceFolder}",
-      "preLaunchTask": "vite: dev"
-    },
-    {
-      "name": "Debug Mines (Chrome)",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:5173/minesweeper.html",
       "webRoot": "${workspaceFolder}",
       "preLaunchTask": "vite: dev"
     },
