@@ -220,6 +220,44 @@ test('a save that does not fit today\'s board is ignored', () => {
   expect(root.querySelectorAll('.is-revealed').length).toBeGreaterThan(0);
 });
 
+test('leaving the daily for practice and back keeps the elapsed time', () => {
+  mount('#/');
+  nowMs += 5_000;
+  vi.advanceTimersByTime(5_000);
+  location.hash = '#/practice';
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  nowMs += 60_000;
+  location.hash = '#/';
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  expect(text('.mines-time')).toBe('00:05');
+});
+
+test('time away in the back/forward cache is not counted', () => {
+  mount('#/');
+  nowMs += 5_000;
+  vi.advanceTimersByTime(5_000);
+  window.dispatchEvent(new Event('pagehide'));
+  nowMs += 600_000;
+  const show = new Event('pageshow') as PageTransitionEvent;
+  Object.defineProperty(show, 'persisted', { value: true });
+  window.dispatchEvent(show);
+  vi.advanceTimersByTime(1_000);
+  expect(text('.mines-time')).toBe('00:05');
+});
+
+test('a finished daily save is never overwritten by a stale playing tab', () => {
+  mount('#/');
+  const { safe, mine } = targets(dailyBoard('2026-10-21'));
+  // Another tab lost today's daily.
+  const g = newGame(dailyBoard('2026-10-21'));
+  reveal(g, mine);
+  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(g), elapsedMs: 9_000, status: 'lost' });
+  leftClick(safe);
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadMinesDaily('2026-10-21')!.status).toBe('lost');
+  expect(text('.mines-card h2')).toBe('Boom.');
+});
+
 // Review Focus 2
 test('UTC rollover loads the next daily', () => {
   nowMs = Date.parse('2026-10-21T23:59:58Z');

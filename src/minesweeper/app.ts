@@ -136,6 +136,12 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
 
   function persist(): void {
     if (route.mode !== 'daily') return;
+    // One shot across tabs: another tab already finished today's daily, so show that instead.
+    const saved = loadMinesDaily(dailyDate);
+    if (saved && saved.status !== 'playing' && game.status === 'playing') {
+      loadDaily();
+      return;
+    }
     saveMinesDaily({ date: dailyDate, cells: encodeCells(game), elapsedMs: elapsed(), status: game.status });
   }
 
@@ -266,6 +272,7 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   }
 
   function render(): void {
+    if (game) persist(); // leaving the daily must keep its clock
     route = parseMinesRoute(location.hash);
     const daily = route.mode === 'daily';
     dailyTab.classList.toggle('is-active', daily);
@@ -288,9 +295,19 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   const onHash = () => {
     if (JSON.stringify(parseMinesRoute(location.hash)) !== JSON.stringify(route)) render();
   };
-  const onHide = () => persist();
+  // Time spent away in the back/forward cache does not count.
+  const onHide = () => {
+    persist();
+    if (runningSince !== null) stopTimer();
+  };
+  const onShow = (e: PageTransitionEvent) => {
+    if (!e.persisted) return;
+    if (route.mode === 'daily' && utcDateString(now()) !== dailyDate) loadDaily();
+    else if (game.status === 'playing') startTimer(baseElapsed);
+  };
   window.addEventListener('hashchange', onHash);
   window.addEventListener('pagehide', onHide);
+  window.addEventListener('pageshow', onShow);
   const interval = setInterval(tick, TICK_MS);
   render();
   if (!getFlag('mines-howto-seen')) {
@@ -303,6 +320,7 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
     hudSizer?.disconnect();
     window.removeEventListener('hashchange', onHash);
     window.removeEventListener('pagehide', onHide);
+    window.removeEventListener('pageshow', onShow);
     board.destroy();
   };
 }
