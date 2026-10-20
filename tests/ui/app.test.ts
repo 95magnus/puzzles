@@ -201,6 +201,75 @@ test('day rollover while solved loads the next daily', async () => {
   expect($('.board')!.classList.contains('board--locked')).toBe(false);
 });
 
+const newDailyBtn = () => $<HTMLButtonElement>('[data-action="new-daily"]');
+
+test('day rollover while the daily is untouched switches to the new daily', async () => {
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+  let t = Date.parse('2026-10-20T23:59:58Z');
+  mount(() => new Date(t));
+  await vi.advanceTimersByTimeAsync(0);
+  expect(subtitle()).toContain('#1 · Tue Oct 20');
+  t += 3000;
+  await vi.advanceTimersByTimeAsync(3000);
+  expect(subtitle()).toContain('#2 · Wed Oct 21');
+  expect(newDailyBtn()?.hidden ?? true).toBe(true);
+});
+
+test('day rollover mid-puzzle keeps it playable and offers "New daily available"', async () => {
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+  let t = Date.parse('2026-10-20T23:59:58Z');
+  mount(() => new Date(t));
+  await vi.advanceTimersByTimeAsync(0);
+  prepBoard(7);
+  const sol = solutionFor('2026-10-20');
+  draw(sol[0]);
+  t += 3000;
+  await vi.advanceTimersByTimeAsync(3000);
+  expect(subtitle()).toContain('#1 · Tue Oct 20');
+  expect(hudText()).toContain(`Flows 1/${sol.length}`);
+  const pill = newDailyBtn()!;
+  expect(pill).not.toBeNull();
+  expect(pill.hidden).toBe(false);
+  expect(pill.textContent).toBe('New daily available');
+  expect(pill.classList.contains('btn')).toBe(true);
+  // Still playable; progress keeps saving under its own date.
+  draw(sol[1]);
+  expect(loadDaily('2026-10-20')?.paths.filter(p => p.length).length).toBe(2);
+  expect(loadDaily('2026-10-21')).toBeNull();
+  t += 5000;
+  await vi.advanceTimersByTimeAsync(5000);
+  expect(subtitle()).toContain('#1 · Tue Oct 20'); // not auto-replaced later either
+  pill.click();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(subtitle()).toContain('#2 · Wed Oct 21');
+  expect(newDailyBtn()!.hidden).toBe(true);
+  expect(hudText()).toContain('Flows 0/');
+});
+
+test('solving a daily after rollover shows a sane win card that stays put', async () => {
+  vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
+  let t = Date.parse('2026-10-20T23:59:58Z');
+  mount(() => new Date(t));
+  await vi.advanceTimersByTimeAsync(0);
+  prepBoard(7);
+  const sol = solutionFor('2026-10-20');
+  draw(sol[0]);
+  t += 3000;
+  await vi.advanceTimersByTimeAsync(3000);
+  sol.slice(1).forEach(draw);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(loadDaily('2026-10-20')?.solved).toBe(true);
+  expect(winCard().hidden).toBe(false);
+  expect(winCard().textContent).toContain('Next daily in 00:00:00');
+  t += 2000;
+  await vi.advanceTimersByTimeAsync(2000);
+  expect(winCard().hidden).toBe(false);
+  expect(subtitle()).toContain('#1 · Tue Oct 20');
+  expect(winCard().textContent).not.toMatch(/-\d/);
+  winCard().querySelector('button')!.click();
+  expect(location.hash).toBe('#/practice?size=7');
+});
+
 test('practice route uses size + seed, size seg and New puzzle regenerate', async () => {
   history.replaceState(null, '', '#/practice?size=5&seed=123');
   mount('2026-10-21T10:00:00Z');

@@ -95,6 +95,8 @@
 .app-sub {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: calc(var(--space) / 2) var(--space);
   min-height: 40px;
   margin-bottom: calc(var(--space) * 2);
 }
@@ -106,6 +108,24 @@
   font-weight: 600;
   font-size: 14px;
   letter-spacing: 0.01em;
+}
+
+/* "New daily available" pill: small, quiet, beside the subtitle. */
+.new-daily {
+  align-self: center;
+  min-height: 28px;
+  padding: 0 calc(var(--space) * 1.5);
+  color: var(--text-2);
+  font-size: 13px;
+  animation: app-fade-up var(--dur) var(--ease);
+}
+
+.new-daily:hover {
+  color: var(--text);
+}
+
+.new-daily[hidden] {
+  display: none;
 }
 
 .sizes {

@@ -76,6 +76,14 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   const sub = h('div', { class: 'app-sub' });
   const subtitle = h('p', { class: 'subtitle num', 'data-role': 'subtitle' });
+  // Shown when the UTC day rolls over while the player is mid-way through a daily.
+  const newDailyBtn = h('button', {
+    class: 'btn new-daily',
+    type: 'button',
+    'data-action': 'new-daily',
+    text: 'New daily available',
+  });
+  newDailyBtn.hidden = true;
   const sizes = h('div', { class: 'seg sizes', role: 'group', 'aria-label': 'Board size' });
   const sizeButtons: HTMLButtonElement[] = [];
   for (let n = MIN_SIZE; n <= MAX_SIZE; n++) {
@@ -110,6 +118,8 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   let loading = false;
   let solved = false;
   let requestedDate: string | null = null;
+  /** The UTC day rolled over mid-puzzle: keep this daily, offer the new one. */
+  let staleDaily = false;
   let loadToken = 0;
   let practiceSize = DEFAULT_PRACTICE_SIZE;
   /** The route most recently passed to load() (what the player is looking at). */
@@ -156,7 +166,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     if (daily) {
       tabDaily.setAttribute('aria-current', 'page');
       tabPractice.removeAttribute('aria-current');
-      sub.replaceChildren(subtitle);
+      sub.replaceChildren(subtitle, newDailyBtn);
       newBtn.remove();
     } else {
       tabPractice.setAttribute('aria-current', 'page');
@@ -175,6 +185,8 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     // gesture-end is then saved against the old session but can never trigger win UI.
     loading = true;
     board.setInteractive(false);
+    staleDaily = false;
+    newDailyBtn.hidden = true;
     solved = false;
     game = null;
     session = null;
@@ -245,6 +257,11 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     }
   }
 
+  /** Time until the next daily; 0 once a newer daily already exists (rollover mid-puzzle). */
+  function dailyCountdown() {
+    return staleDaily ? 0 : Math.max(0, msUntilNextUtcMidnight(now()));
+  }
+
   async function win(animate: boolean) {
     solved = true;
     stopClock();
@@ -259,7 +276,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     winCard.show({
       timeMs: elapsed(),
       mode: session.mode,
-      countdownMs: daily ? msUntilNextUtcMidnight(now()) : undefined,
+      countdownMs: daily ? dailyCountdown() : undefined,
       onPrimary: daily ? () => (location.hash = practiceHash()) : () => newPractice(practiceSize),
     });
   }
@@ -330,12 +347,17 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   }
 
   function tick() {
-    if (route.mode === 'daily' && requestedDate !== null && utcDateString(now()) !== requestedDate) {
-      void load(route);
-      return;
+    if (route.mode === 'daily' && requestedDate !== null && !staleDaily && utcDateString(now()) !== requestedDate) {
+      // Only replace the daily when nothing would be lost: solved, untouched, or not loaded yet.
+      if (!game || loading || solved || game.paths.every(p => p.length === 0)) {
+        void load(route);
+        return;
+      }
+      staleDaily = true;
+      newDailyBtn.hidden = false;
     }
     if (game && !loading) refresh();
-    if (solved && session?.mode === 'daily') winCard.setCountdown(msUntilNextUtcMidnight(now()));
+    if (solved && session?.mode === 'daily') winCard.setCountdown(dailyCountdown());
   }
 
   const howtoBtn = header.querySelector<HTMLButtonElement>('[data-action="howto"]')!;
@@ -349,6 +371,10 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   howtoBtn.addEventListener('click', showHowto);
   if (!getFlag('howto-seen')) showHowto();
 
+  newDailyBtn.addEventListener('click', () => {
+    route = { mode: 'daily' };
+    void load(route);
+  });
   undoBtn.addEventListener('click', doUndo);
   resetBtn.addEventListener('click', doReset);
   newBtn.addEventListener('click', () => newPractice(practiceSize));
