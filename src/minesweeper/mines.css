@@ -1,0 +1,134 @@
+/* Mines page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css. */
+:root {
+  --mines-hidden: rgba(255, 255, 255, 0.1);
+  --mines-hidden-hover: rgba(255, 255, 255, 0.16);
+  --mines-hidden-edge: rgba(255, 255, 255, 0.18);
+  --mines-pressed: rgba(255, 255, 255, 0.05);
+  --mines-revealed: rgba(0, 0, 0, 0.25);
+  --mines-flag: #ffd447;
+  --mines-exploded: #ff5c7a;
+  --mines-n1: #4cb0ff;
+  --mines-n2: #34e3a0;
+  --mines-n3: #ff5c7a;
+  --mines-n4: #b48cff;
+  --mines-n5: #ff9f45;
+  --mines-n6: #3fe0e6;
+  --mines-n7: #ff7ad9;
+  --mines-n8: #c9f05a;
+  --mines-flag-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3.5 1.5v9' stroke='%23eef0f7' stroke-width='1.3' stroke-linecap='round'/%3E%3Cpath d='M4 1.8 10.2 4.3 4 6.8z' fill='%23ffd447'/%3E%3C/svg%3E");
+  --mines-mine-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M6 1.2v1.8M6 9v1.8M1.2 6H3M9 6h1.8M2.6 2.6l1.3 1.3M8.1 8.1l1.3 1.3M2.6 9.4l1.3-1.3M8.1 3.9l1.3-1.3' stroke='%23eef0f7' stroke-width='1' stroke-linecap='round'/%3E%3Ccircle cx='6' cy='6' r='3.2' fill='%230e0c1a' stroke='%23eef0f7' stroke-width='1'/%3E%3C/svg%3E");
+  --mines-cross-img: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 2l8 8M10 2l-8 8' stroke='%23ff5c7a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* ---------- Board ---------- */
+.mines-board {
+  width: 100%;
+  min-width: 0;
+}
+
+.mines-panel {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 12px; /* PANEL_PAD in board.ts */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.mines-grid {
+  --cell: 28px;
+  display: grid;
+  gap: 2px; /* GAP in board.ts */
+  width: max-content;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: pan-x pan-y;
+}
+
+.mines-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cell);
+  height: var(--cell);
+  border-radius: 4px;
+  font-size: calc(var(--cell) * 0.56);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 62%;
+  transition: background-color 150ms var(--ease), box-shadow 150ms var(--ease);
+}
+
+.mines-cell.is-hidden {
+  background-color: var(--mines-hidden);
+  box-shadow: inset 0 1px 0 var(--mines-hidden-edge);
+  cursor: pointer;
+}
+
+.mines-cell.is-hidden:hover {
+  background-color: var(--mines-hidden-hover);
+}
+
+.mines-cell.is-pressed,
+.mines-cell.is-pressed:hover {
+  background-color: var(--mines-pressed);
+  box-shadow: none;
+}
+
+.mines-cell.is-revealed {
+  background-color: var(--mines-revealed);
+}
+
+.mines-cell.is-flagged {
+  background-image: var(--mines-flag-img);
+}
+
+.mines-cell.is-wrong-flag {
+  background-image: var(--mines-cross-img), var(--mines-flag-img);
+}
+
+.mines-cell.is-mine {
+  background-image: var(--mines-mine-img);
+}
+
+.mines-cell.is-exploded {
+  background-color: var(--mines-exploded);
+  animation: mines-pulse 200ms var(--ease);
+}
+
+.mines-cell.n1 { color: var(--mines-n1); }
+.mines-cell.n2 { color: var(--mines-n2); }
+.mines-cell.n3 { color: var(--mines-n3); }
+.mines-cell.n4 { color: var(--mines-n4); }
+.mines-cell.n5 { color: var(--mines-n5); }
+.mines-cell.n6 { color: var(--mines-n6); }
+.mines-cell.n7 { color: var(--mines-n7); }
+.mines-cell.n8 { color: var(--mines-n8); }
+
+.mines-board--locked .mines-cell {
+  cursor: default;
+}
+
+.mines-board--locked .mines-cell.is-hidden:hover {
+  background-color: var(--mines-hidden);
+}
+
+@keyframes mines-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 92, 122, 0.7); }
+  100% { box-shadow: 0 0 0 8px rgba(255, 92, 122, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mines-cell {
+    transition: none;
+    transition-delay: 0s !important;
+  }
+
+  .mines-cell.is-exploded {
+    animation: none;
+  }
+}

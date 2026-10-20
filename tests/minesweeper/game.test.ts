@@ -1,18 +1,7 @@
 import { expect, test } from 'vitest';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from '../../src/minesweeper/game';
 import { neighbours } from '../../src/minesweeper/generate';
-import type { Board } from '../../src/minesweeper/types';
-
-/** `*` = mine, `.` = safe. */
-function boardFrom(rows: string[], start: [number, number]): Board {
-  const cols = rows[0].length;
-  const n = cols * rows.length;
-  const mines = new Uint8Array(n);
-  rows.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === '*') mines[r * cols + c] = 1; }));
-  const adj = new Uint8Array(n);
-  for (let i = 0; i < n; i++) adj[i] = neighbours(cols, rows.length, i).filter((j) => mines[j]).length;
-  return { cols, rows: rows.length, mines, adj, start: start[0] * cols + start[1] };
-}
+import { boardFrom } from './helpers';
 
 const idx = (r: number, c: number) => r * 5 + c;
 const revealedIdx = (cells: Uint8Array) => [...cells].flatMap((v, i) => (v === 1 ? [i] : []));
