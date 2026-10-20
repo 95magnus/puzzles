@@ -6,10 +6,11 @@ import {
   utcDateString,
 } from '../core/daily';
 import { mulberry32, randomSeed } from '../core/rng';
-import { getMinesPreset, loadMinesDaily, saveMinesDaily, setMinesPreset } from '../core/storage';
+import { getFlag, getMinesPreset, loadMinesDaily, saveMinesDaily, setFlag, setMinesPreset } from '../core/storage';
 import { createBoard } from './board';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from './game';
 import { DAILY_PRESET, PRESETS, generateBoard, minesDailySeed } from './generate';
+import { openMinesHowto } from './howto';
 import type { InputAction } from './input';
 import type { Board, GameState, PresetId } from './types';
 
@@ -71,6 +72,7 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   const helpBtn = el('button', 'btn mines-help', '?');
   helpBtn.type = 'button';
   helpBtn.setAttribute('aria-label', 'How to play');
+  helpBtn.addEventListener('click', () => openMinesHowto(helpBtn));
   header.append(games, modes, helpBtn);
 
   const sub = el('div', 'mines-sub');
@@ -291,6 +293,10 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   window.addEventListener('pagehide', onHide);
   const interval = setInterval(tick, TICK_MS);
   render();
+  if (!getFlag('mines-howto-seen')) {
+    setFlag('mines-howto-seen', true);
+    openMinesHowto(helpBtn);
+  }
 
   return () => {
     clearInterval(interval);
