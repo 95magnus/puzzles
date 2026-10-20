@@ -31,6 +31,8 @@
 }
 
 html {
+  /* Same gutter whether or not a page scrolls, so shared chrome lines up across pages. */
+  scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }

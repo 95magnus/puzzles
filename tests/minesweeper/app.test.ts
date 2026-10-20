@@ -71,11 +71,12 @@ test('parseMinesRoute', () => {
   expect(parseMinesRoute('#/practice')).toEqual({ mode: 'practice', preset: 'classic' });
 });
 
-test('header links to Flow and marks Mines current', () => {
+test('header links home to the dashboard and marks Mines current', () => {
   mount('#/');
-  const flow = root.querySelector<HTMLAnchorElement>('a[href="./index.html"]')!;
-  expect(flow.textContent).toBe('Flow');
-  expect(root.querySelector('[aria-current="page"]')!.textContent).toBe('Mines');
+  const home = root.querySelector<HTMLAnchorElement>('.shell-header .wordmark')!;
+  expect(home.getAttribute('href')).toBe('./index.html');
+  expect(root.querySelector('.shell-game')!.textContent).toBe('Mines');
+  expect(root.querySelector('.shell-game')!.getAttribute('aria-current')).toBe('page');
 });
 
 test('daily subtitle', () => {

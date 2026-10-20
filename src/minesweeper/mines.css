@@ -22,51 +22,6 @@
 
 /* ---------- Page ---------- */
 /* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
-.mines-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: calc(var(--space) * 2);
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: calc(var(--space) * 1.5) calc(var(--space) * 2);
-}
-
-.mines-games {
-  display: flex;
-  gap: calc(var(--space) * 2);
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.mines-games a {
-  color: var(--text-2);
-  text-decoration: none;
-}
-
-.mines-games a:hover,
-.mines-games a[aria-current='page'] {
-  color: var(--text);
-}
-
-.mines-games a[aria-current='page'] {
-  text-decoration: underline 2px #b48cff;
-  text-underline-offset: 6px;
-}
-
-.mines-modes .seg__item {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-}
-
-.mines-help {
-  justify-self: end;
-  width: 40px;
-  padding: 0;
-}
-
 .mines-main {
   display: flex;
   flex-direction: column;

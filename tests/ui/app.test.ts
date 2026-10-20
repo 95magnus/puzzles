@@ -98,19 +98,19 @@ test('parseRoute', () => {
 test('renders header with wordmark, Daily/Practice tabs and a howto hook', async () => {
   mount('2026-10-21T10:00:00Z');
   await settle();
-  expect($('.wordmark')?.textContent).toBe('flow');
-  const tabs = [...root.querySelectorAll<HTMLAnchorElement>('.app-tabs a')];
+  expect($('.wordmark')?.textContent).toBe('puzzles');
+  const tabs = [...root.querySelectorAll<HTMLAnchorElement>('.shell-tabs a')];
   expect(tabs.map(t => [t.textContent, t.getAttribute('href')])).toEqual([['Daily', '#/'], ['Practice', '#/practice?size=7']]);
   expect(tabs[0].getAttribute('aria-current')).toBe('page');
   expect($('[data-action="howto"]')?.textContent).toBe('?');
 });
 
-test('header links to the Mines page', async () => {
+test('header links home to the dashboard and names the game', async () => {
   mount('2026-10-21T10:00:00Z');
   await settle();
-  const mines = root.querySelector<HTMLAnchorElement>('.app-header a[href="./minesweeper.html"]');
-  expect(mines?.textContent).toBe('Mines');
-  expect($('.wordmark')?.getAttribute('aria-current')).toBe('page');
+  expect($<HTMLAnchorElement>('.shell-header .wordmark')?.getAttribute('href')).toBe('./index.html');
+  expect($('.shell-game')?.textContent).toBe('Flow');
+  expect($('.shell-game')?.getAttribute('aria-current')).toBe('page');
 });
 
 test('daily subtitle shows number, date, and size', async () => {
@@ -289,7 +289,7 @@ test('practice route uses size + seed, size seg and New puzzle regenerate', asyn
   expect(sizes.map(b => b.textContent)).toEqual(['5×5', '6×6', '7×7', '8×8', '9×9']);
   expect(sizes[0].getAttribute('aria-pressed')).toBe('true');
   expect($('[data-action="new"]')!.classList.contains('btn--primary')).toBe(true);
-  expect(root.querySelector('.app-tabs a[href="#/practice?size=5"]')!.getAttribute('aria-current')).toBe('page');
+  expect(root.querySelector('.shell-tabs a[href="#/practice?size=5"]')!.getAttribute('aria-current')).toBe('page');
 
   sizes[4].click();
   await settle();
@@ -429,7 +429,7 @@ test('re-selecting the active Practice tab keeps the current puzzle', async () =
   history.replaceState(null, '', '#/practice?size=5&seed=123');
   mount('2026-10-21T10:00:00Z');
   await settle();
-  const tab = () => root.querySelector<HTMLAnchorElement>('.app-tabs a:last-child')!;
+  const tab = () => root.querySelector<HTMLAnchorElement>('.shell-tabs a:last-child')!;
   expect(tab().getAttribute('href')).toBe('#/practice?size=5');
   root.querySelectorAll<HTMLButtonElement>('.sizes button')[1].click(); // 6×6
   await settle();

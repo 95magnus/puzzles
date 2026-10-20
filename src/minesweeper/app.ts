@@ -7,6 +7,7 @@ import {
 } from '../core/daily';
 import { mulberry32, randomSeed } from '../core/rng';
 import { getFlag, getMinesPreset, loadMinesDaily, saveMinesDaily, setFlag, setMinesPreset } from '../core/storage';
+import { createHeader } from '../ui/header';
 import { createBoard } from './board';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from './game';
 import { DAILY_PRESET, PRESETS, generateBoard, minesDailySeed } from './generate';
@@ -53,27 +54,11 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   // ---------- Static shell ----------
   root.textContent = '';
   root.classList.add('mines-app');
-  const header = el('header', 'mines-header');
-  const games = el('nav', 'mines-games');
-  games.setAttribute('aria-label', 'Games');
-  const flowLink = el('a', '', 'Flow');
-  flowLink.href = './index.html';
-  const minesLink = el('a', '', 'Mines');
-  minesLink.href = './minesweeper.html';
-  minesLink.setAttribute('aria-current', 'page');
-  games.append(flowLink, minesLink);
-  const modes = el('nav', 'seg mines-modes');
-  modes.setAttribute('aria-label', 'Mode');
-  const dailyTab = el('a', 'seg__item', 'Daily');
-  dailyTab.href = '#/';
-  const practiceTab = el('a', 'seg__item', 'Practice');
-  practiceTab.href = '#/practice';
-  modes.append(dailyTab, practiceTab);
-  const helpBtn = el('button', 'btn mines-help', '?');
-  helpBtn.type = 'button';
-  helpBtn.setAttribute('aria-label', 'How to play');
-  helpBtn.addEventListener('click', () => openMinesHowto(helpBtn));
-  header.append(games, modes, helpBtn);
+  const shellHeader = createHeader({ game: 'Mines', onHelp: () => openMinesHowto(helpBtn) });
+  const header = shellHeader.el;
+  const dailyTab = shellHeader.tabDaily!;
+  const practiceTab = shellHeader.tabPractice!;
+  const helpBtn = shellHeader.helpBtn!;
 
   const sub = el('div', 'mines-sub');
   const stage = el('div', 'mines-stage');

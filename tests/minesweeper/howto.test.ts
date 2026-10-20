@@ -41,7 +41,7 @@ test('does not auto-open when mines-howto-seen is set', () => {
 test('? opens it; Esc closes and returns focus to ?', () => {
   setFlag('mines-howto-seen', true);
   unmount = mountMines(root);
-  const help = root.querySelector<HTMLButtonElement>('.mines-help')!;
+  const help = root.querySelector<HTMLButtonElement>('.shell-help')!;
   help.focus();
   help.click();
   expect(dialog()).not.toBeNull();
