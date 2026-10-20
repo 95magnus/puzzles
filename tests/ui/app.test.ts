@@ -104,6 +104,14 @@ test('renders header with wordmark, Daily/Practice tabs and a howto hook', async
   expect($('[data-action="howto"]')?.textContent).toBe('?');
 });
 
+test('header links to the Mines page', async () => {
+  mount('2026-10-21T10:00:00Z');
+  await settle();
+  const mines = root.querySelector<HTMLAnchorElement>('.app-header a[href="./minesweeper.html"]');
+  expect(mines?.textContent).toBe('Mines');
+  expect($('.wordmark')?.getAttribute('aria-current')).toBe('page');
+});
+
 test('daily subtitle shows number, date, and size', async () => {
   mount('2026-10-21T10:00:00Z');
   await settle();

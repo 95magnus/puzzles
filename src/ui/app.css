@@ -21,6 +21,27 @@
   margin-bottom: calc(var(--space) * 3);
 }
 
+.app-brand {
+  justify-self: start;
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 1.5);
+  white-space: nowrap;
+}
+
+/* Link to the other puzzle page. */
+.game-link {
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.game-link:hover {
+  color: var(--text);
+}
+
 .wordmark {
   justify-self: start;
   color: var(--text);
@@ -319,6 +340,14 @@
 
   .app-header {
     gap: 4px;
+  }
+
+  .app-brand {
+    gap: var(--space);
+  }
+
+  .game-link {
+    font-size: 13px;
   }
 
   .wordmark {

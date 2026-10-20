@@ -69,7 +69,12 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   const header = h(
     'header',
     { class: 'app-header' },
-    h('a', { class: 'wordmark', href: '#/', 'aria-label': 'flow — daily puzzle', text: 'flow' }),
+    h(
+      'div',
+      { class: 'app-brand' },
+      h('a', { class: 'wordmark', href: '#/', 'aria-label': 'flow — daily puzzle', 'aria-current': 'page', text: 'flow' }),
+      h('a', { class: 'game-link', href: './minesweeper.html', text: 'Mines' }),
+    ),
     h('nav', { class: 'seg app-tabs', 'aria-label': 'Mode' }, tabDaily, tabPractice),
     h('button', { class: 'icon-btn', type: 'button', 'data-action': 'howto', 'aria-label': 'How to play', text: '?' }),
   );

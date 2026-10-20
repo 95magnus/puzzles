@@ -1,0 +1,44 @@
+{
+  // F5 targets. The browser configs start the Vite dev server first (see tasks.json).
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Flow (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite: dev"
+    },
+    {
+      "name": "Debug Mines (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173/minesweeper.html",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite: dev"
+    },
+    {
+      "name": "Debug current test file (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "${relativeFile}", "--no-file-parallelism"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Debug all unit tests (Vitest)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--no-file-parallelism"],
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
