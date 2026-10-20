@@ -27,7 +27,7 @@ const solutionFor = (date: string) => generateWithSolution(7, mulberry32(seedFro
 const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector(sel) as T | null;
 const subtitle = () => $('[data-role="subtitle"]')?.textContent;
 const hudText = () => $('.hud')?.textContent ?? '';
-const winCard = () => $('.win')!;
+const winCard = () => $('.end-card')!;
 const svg = () => $<SVGSVGElement>('.board-svg')!;
 
 async function settle() {
@@ -481,7 +481,7 @@ test('win card shows daily and practice variants and hides', () => {
   const card = createWinCard(root);
   const onPrimary = vi.fn();
   card.show({ timeMs: 61_000, mode: 'daily', countdownMs: 3_600_000, onPrimary });
-  const el = root.querySelector<HTMLElement>('.win')!;
+  const el = root.querySelector<HTMLElement>('.end-card')!;
   expect(el.hidden).toBe(false);
   expect(el.textContent).toContain('01:01');
   expect(el.textContent).toContain('Next daily in 01:00:00');
@@ -492,4 +492,21 @@ test('win card shows daily and practice variants and hides', () => {
   expect(el.querySelector('button')!.textContent).toBe('Next puzzle');
   card.hide();
   expect(el.hidden).toBe(true);
+});
+
+test('win card uses the shared end-card structure', () => {
+  const card = createWinCard(root);
+  card.show({ timeMs: 83_000, mode: 'daily', countdownMs: 60_000, onPrimary: () => {} });
+  const el = root.querySelector<HTMLElement>(':scope > .end-card.glass')!;
+  expect(el.getAttribute('role')).toBe('dialog');
+  expect(el.querySelector('.end-card__title')!.textContent).toBe('Solved ✦');
+  expect(el.querySelector('.end-card__stat')!.textContent).toBe('01:23');
+  expect(el.querySelector('.end-card__next')!.textContent).toBe('Next daily in 00:01:00');
+  expect(el.querySelectorAll('.end-card__actions > .btn--primary')).toHaveLength(1);
+});
+
+test('HUD values and labels use the shared HUD typography classes', () => {
+  createHud(root).update({ flowsDone: 1, flowsTotal: 6, fillPct: 10 }, 0, false);
+  expect(root.querySelectorAll('.hud__value.hud-value')).toHaveLength(3);
+  expect(root.querySelectorAll('.hud__label.hud-label')).toHaveLength(2);
 });

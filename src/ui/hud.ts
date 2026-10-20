@@ -20,10 +20,10 @@ export function createHud(el: HTMLElement): HudHandle {
     const item = document.createElement('span');
     item.className = 'hud__item';
     const value = document.createElement('b');
-    value.className = 'hud__value';
+    value.className = 'hud__value hud-value';
     if (label) {
       const l = document.createElement('span');
-      l.className = 'hud__label';
+      l.className = 'hud__label hud-label';
       l.textContent = label + ' ';
       item.append(l);
     }

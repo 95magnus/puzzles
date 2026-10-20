@@ -1,4 +1,4 @@
-/* Flow page — layout, HUD, win card. Header and modal come from shell.css; Builds on the Dusk tokens in theme.css. */
+/* Flow page — layout, board stage, HUD. Header, modal and end card come from shell.css. */
 
 .app {
   --board-w: min(90vw, 520px);
@@ -139,11 +139,6 @@
   opacity: 0.6;
 }
 
-.hud__value {
-  color: var(--text);
-  font-weight: 600;
-}
-
 .hud__time .hud__value {
   min-width: 5ch;
   display: inline-block;
@@ -172,62 +167,6 @@
 
 .actions .btn {
   min-width: 88px;
-}
-
-/* ---------- Win card ---------- */
-.win {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--space) * 3);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: min(calc(100% - var(--space) * 4), 320px);
-  padding: calc(var(--space) * 3) calc(var(--space) * 3) calc(var(--space) * 2.5);
-  text-align: center;
-  background: rgba(30, 26, 52, 0.55);
-  transform: translateX(-50%);
-  animation: app-win-in 250ms var(--ease) both;
-}
-
-.win[hidden] {
-  display: none;
-}
-
-.win__title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.win__time {
-  margin: 0;
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.win__next {
-  margin: 0;
-  color: var(--text-2);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.win__primary {
-  margin-top: calc(var(--space) * 1.5);
-  min-width: 160px;
-}
-
-@keyframes app-win-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 24px);
-  }
 }
 
 @keyframes app-fade-up {

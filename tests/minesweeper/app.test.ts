@@ -125,14 +125,14 @@ test('a lost daily shows Boom. and reopens on it, non-interactive', () => {
   mount('#/');
   const { mine, safe } = targets(dailyBoard('2026-10-21'));
   leftClick(mine);
-  expect(text('.mines-card h2')).toBe('Boom.');
-  expect(text('.mines-card')).toContain('Next daily in 14:00:00');
-  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('Try again');
-  expect(root.querySelector('.mines-card [data-action="practice"]')!.textContent).toBe('Play practice');
+  expect(text('.end-card h2')).toBe('Boom.');
+  expect(text('.end-card')).toContain('Next daily in 14:00:00');
+  expect(root.querySelector('.end-card .btn--primary')!.textContent).toBe('Try again');
+  expect(root.querySelector('.end-card [data-action="practice"]')!.textContent).toBe('Play practice');
   unmount!();
   root.textContent = '';
   mount('#/');
-  expect(text('.mines-card h2')).toBe('Boom.');
+  expect(text('.end-card h2')).toBe('Boom.');
   expect(root.querySelector('.mines-board--locked')).not.toBeNull();
   leftClick(safe);
   expect(cell(safe).classList.contains('is-hidden')).toBe(true);
@@ -144,7 +144,7 @@ test('loss card reports % cleared', () => {
   const { g, mine } = targets(b);
   leftClick(mine);
   const pct = Math.round((g.revealed / (600 - 130)) * 100);
-  expect(text('.mines-card')).toContain(`${pct}% cleared`);
+  expect(text('.end-card')).toContain(`${pct}% cleared`);
 });
 
 /** Click every safe cell the mirror still shows hidden. */
@@ -164,9 +164,9 @@ test('winning shows Cleared ✦ with the time and dims the board', () => {
   nowMs += 61_000;
   vi.advanceTimersByTime(61_000);
   clearBoard(b);
-  expect(text('.mines-card h2')).toBe('Cleared ✦');
-  expect(text('.mines-card')).toContain('01:01');
-  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('New board');
+  expect(text('.end-card h2')).toBe('Cleared ✦');
+  expect(text('.end-card')).toContain('01:01');
+  expect(root.querySelector('.end-card .btn--primary')!.textContent).toBe('New board');
   expect(root.querySelector('.mines-stage.is-dimmed')).not.toBeNull();
 });
 
@@ -188,7 +188,7 @@ test('the first practice click is safe and opens the board around it', () => {
     const b = generateBoard(PRESETS.classic, mulberry32(first), first);
     const shown = [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
     expect(shown).toBe(encodeCells(newGame(b)));
-    expect(root.querySelector('.mines-card')).toBeNull();
+    expect(root.querySelector('.end-card')).toBeNull();
   }
   nowMs += 3_000;
   vi.advanceTimersByTime(3_000);
@@ -219,7 +219,7 @@ test('tap on a revealed number chords, on a hidden cell reveals', () => {
   }
   const { safe } = targets(b);
   tap(safe);
-  expect(cell(safe).classList.contains('is-revealed') || text('.mines-card h2') !== '').toBe(true);
+  expect(cell(safe).classList.contains('is-revealed') || text('.end-card h2') !== '').toBe(true);
 });
 
 test('Restart replays the same board from its opening; New board starts blank', () => {
@@ -244,8 +244,8 @@ test('Try again restarts the daily from its opening as the next attempt', () => 
   nowMs += 7_000;
   vi.advanceTimersByTime(7_000);
   leftClick(mine);
-  root.querySelector<HTMLButtonElement>('.mines-card .btn--primary')!.click();
-  expect(root.querySelector('.mines-card')).toBeNull();
+  root.querySelector<HTMLButtonElement>('.end-card .btn--primary')!.click();
+  expect(root.querySelector('.end-card')).toBeNull();
   expect(root.querySelector('.mines-board--locked')).toBeNull();
   const shown = [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
   expect(shown).toBe(encodeCells(g));
@@ -258,11 +258,11 @@ test('a daily won on a retry reports the attempt', () => {
   mount('#/');
   const b = dailyBoard('2026-10-21');
   leftClick(targets(b).mine);
-  root.querySelector<HTMLButtonElement>('.mines-card .btn--primary')!.click();
+  root.querySelector<HTMLButtonElement>('.end-card .btn--primary')!.click();
   clearBoard(b);
-  expect(text('.mines-card h2')).toBe('Cleared ✦');
-  expect(text('.mines-card')).toContain('attempt 2');
-  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('Play practice');
+  expect(text('.end-card h2')).toBe('Cleared ✦');
+  expect(text('.end-card')).toContain('attempt 2');
+  expect(root.querySelector('.end-card .btn--primary')!.textContent).toBe('Play practice');
   expect(loadMinesDaily('2026-10-21')).toMatchObject({ status: 'won', attempt: 2 });
 });
 
@@ -331,7 +331,7 @@ test('a finished daily save is never overwritten by a stale playing tab', () => 
   leftClick(safe);
   window.dispatchEvent(new Event('pagehide'));
   expect(loadMinesDaily('2026-10-21')!.status).toBe('lost');
-  expect(text('.mines-card h2')).toBe('Boom.');
+  expect(text('.end-card h2')).toBe('Boom.');
 });
 
 test('a stale tab on an older attempt never overwrites a newer attempt', () => {
@@ -349,7 +349,7 @@ test('a stale tab on an older attempt never overwrites a newer attempt', () => {
 test('the Boom. card is a dialog centred over the board, which stays undimmed', () => {
   mount('#/');
   leftClick(targets(dailyBoard('2026-10-21')).mine);
-  const boom = root.querySelector('.mines-stage > .mines-card')!;
+  const boom = root.querySelector('.mines-stage > .end-card')!;
   expect(boom.querySelector('h2')!.textContent).toBe('Boom.');
   expect(boom.getAttribute('role')).toBe('dialog');
   expect(root.querySelector('.mines-stage.is-dimmed')).toBeNull();
@@ -361,10 +361,17 @@ test('UTC rollover loads the next daily', () => {
   const { mine } = targets(dailyBoard('2026-10-21'));
   mount('#/');
   leftClick(mine);
-  expect(text('.mines-card h2')).toBe('Boom.');
+  expect(text('.end-card h2')).toBe('Boom.');
   nowMs += 3_000;
   vi.advanceTimersByTime(3_000);
   expect(text('.mines-sub')).toBe('#3 · Thu Oct 22 · 30×20 · 130 mines');
-  expect(root.querySelector('.mines-card')).toBeNull();
+  expect(root.querySelector('.end-card')).toBeNull();
   expect(root.querySelector('.mines-board--locked')).toBeNull();
+});
+
+test('HUD stats use the shared HUD typography classes', () => {
+  mount('#/');
+  expect(root.querySelector('.mines-left')!.classList.contains('hud-value')).toBe(true);
+  expect(root.querySelector('.mines-time')!.classList.contains('hud-value')).toBe(true);
+  expect(root.querySelector('.mines-attempt')!.classList.contains('hud-label')).toBe(true);
 });

@@ -65,9 +65,8 @@
 
 .mines-stats {
   display: flex;
+  align-items: baseline;
   gap: calc(var(--space) * 2.5);
-  font-size: 17px;
-  font-weight: 600;
 }
 
 .mines-left::before,
@@ -92,58 +91,6 @@
 .mines-controls {
   display: flex;
   gap: var(--space);
-}
-
-/* ---------- End cards ---------- */
-.mines-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space);
-  padding: calc(var(--space) * 2.5) calc(var(--space) * 4);
-  text-align: center;
-  animation: mines-card-in 250ms var(--ease);
-}
-
-.mines-card h2 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-}
-
-.mines-card p {
-  margin: 0;
-}
-
-.mines-card__time {
-  font-size: 17px;
-}
-
-/* Both end cards sit centred over the board; only a win dims it. */
-.mines-stage > .mines-card {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 1;
-  translate: -50% -50%;
-  min-width: 280px;
-  max-width: calc(100% - 32px);
-  background: rgba(30, 27, 48, 0.88);
-}
-
-.mines-card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space);
-  margin-top: calc(var(--space) / 2);
-}
-
-@keyframes mines-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
 }
 
 /* ---------- How-to ---------- */
@@ -282,8 +229,7 @@
     transition-delay: 0s !important;
   }
 
-  .mines-cell.is-exploded,
-  .mines-card {
+  .mines-cell.is-exploded {
     animation: none;
   }
 
