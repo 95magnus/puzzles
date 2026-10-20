@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { cellFromPoint, createBoard, type BoardHandle } from '../../src/ui/board';
 import { GLYPHS } from '../../src/ui/palette';
-import { newGame, restore, type GameState } from '../../src/core/game';
+import { isPairComplete, newGame, restore, undo, type GameState } from '../../src/core/game';
 import { P5x5_solution, P5x5_unique } from '../fixtures';
 
 // 5x5 board laid out at 0,0 with 100px cells: center of (r,c) = (c*100+50, r*100+50)
@@ -212,6 +212,48 @@ test('completing a pair pulses its dots for 200 ms', () => {
   expect(pulsing).toHaveLength(2);
   vi.advanceTimersByTime(200);
   expect(svg().querySelectorAll('circle.board-dot--pulse')).toHaveLength(0);
+});
+
+test('externally supplied states (undo / redo-like setState) never replay the completion pulse', () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  board.setState(withPaths([P5x5_solution[0].slice(0, 5), [], [], []]));
+  fire('pointerdown', at(2, 1));
+  fire('pointermove', at(3, 1));
+  fire('pointerup', at(3, 1));
+  flushFrames();
+  const completed = lastCall()[0];
+  expect(isPairComplete(completed, 0)).toBe(true);
+  expect(svg().querySelectorAll('circle.board-dot--pulse')).toHaveLength(2);
+  vi.advanceTimersByTime(200);
+
+  const undone = undo(completed);
+  expect(isPairComplete(undone, 0)).toBe(false);
+  board.setState(undone);
+  flushFrames();
+  board.setState(completed);
+  flushFrames();
+  expect(svg().querySelectorAll('circle.board-dot--pulse')).toHaveLength(0);
+});
+
+test('board is exposed as an interactive application with a live status', () => {
+  const s = svg();
+  expect(s.getAttribute('role')).toBe('application');
+  expect(s.getAttribute('aria-roledescription')).toBe('puzzle board');
+  expect(s.getAttribute('aria-label')).toBe('Puzzle board');
+  const live = el.querySelector('[aria-live="polite"]')!;
+  expect(live).not.toBeNull();
+  expect(live.classList.contains('sr-only')).toBe(true);
+  expect(live.textContent).toBe('0 of 4 flows connected, 0% filled');
+
+  fire('pointerdown', at(0, 1));
+  fire('pointermove', at(0, 0));
+  fire('pointerup', at(0, 0));
+  expect(live.textContent).toBe('0 of 4 flows connected, 8% filled');
+
+  board.setState(withPaths(P5x5_solution.slice(0, 1).concat([[], [], []])));
+  expect(live.textContent).toBe('1 of 4 flows connected, 24% filled');
+  board.setState(withPaths(P5x5_solution));
+  expect(live.textContent).toBe('Puzzle solved');
 });
 
 test('celebrate resolves within 600 ms', async () => {

@@ -2,9 +2,11 @@ import type { Cell, Puzzle } from '../core/types';
 import {
   clearPath,
   isPairComplete,
+  isSolved,
   pointerDown,
   pointerMove,
   pointerUp,
+  stats,
   type GameState,
 } from '../core/game';
 import { GLYPHS, PALETTE } from './palette';
@@ -70,9 +72,18 @@ export function createBoard(
   opts: { onChange: (s: GameState, kind: ChangeKind) => void },
 ): BoardHandle {
   const id = `board-${++instance}`;
-  const svg = svgEl('svg', { class: 'board-svg', role: 'img', 'aria-label': 'Puzzle board' });
+  const svg = svgEl('svg', {
+    class: 'board-svg',
+    role: 'application',
+    'aria-roledescription': 'puzzle board',
+    'aria-label': 'Puzzle board',
+  });
+  const status = document.createElement('div');
+  status.className = 'sr-only board-status';
+  status.setAttribute('aria-live', 'polite');
+  status.setAttribute('role', 'status');
   el.classList.add('board', 'glass');
-  el.appendChild(svg);
+  el.append(svg, status);
 
   let state: GameState | null = null;
   let builtFor: Puzzle | null = null;
@@ -84,6 +95,8 @@ export function createBoard(
   let raf = 0;
   let destroyed = false;
   let wasComplete: boolean[] = [];
+  /** True when the pending render follows a board-handled user gesture (pulses allowed). */
+  let userChange = false;
   const timers = new Set<ReturnType<typeof setTimeout>>();
   const pendingCelebrations = new Set<() => void>();
 
@@ -209,6 +222,8 @@ export function createBoard(
     const s = state;
     const fresh = s.puzzle !== builtFor;
     if (fresh) build(s.puzzle);
+    const mayPulse = userChange && !fresh;
+    userChange = false;
     const p = s.puzzle;
 
     // Paths: one polyline per non-empty path, kept in color order.
@@ -244,7 +259,7 @@ export function createBoard(
         gTints.append(g);
         tints.set(k, { sig: key, g });
       }
-      if (done && !wasComplete[k] && !fresh) pulse(k);
+      if (done && !wasComplete[k] && mayPulse) pulse(k);
       wasComplete[k] = done;
     });
 
@@ -296,8 +311,19 @@ export function createBoard(
     render();
   }
 
+  /** Live-region summary; announced on gesture end / external state, not on every drag step. */
+  function announce(s: GameState) {
+    const t = stats(s);
+    const text = isSolved(s)
+      ? 'Puzzle solved'
+      : `${t.flowsDone} of ${t.flowsTotal} flows connected, ${t.fillPct}% filled`;
+    if (status.textContent !== text) status.textContent = text;
+  }
+
   function commit(next: GameState, kind: ChangeKind) {
     state = next;
+    userChange = true;
+    if (kind === 'gesture-end') announce(next);
     if (next.active !== null) {
       const path = next.paths[next.active];
       if (path.length) lastCell = path[path.length - 1];
@@ -409,7 +435,9 @@ export function createBoard(
       if (s === state) return;
       if (state && s.puzzle !== state.puzzle) lastCell = null;
       state = s;
+      userChange = false; // external state: prime completion flags without pulsing
       renderNow();
+      announce(s);
     },
     setColorblind(on) {
       colorblind = on;
@@ -473,6 +501,7 @@ export function createBoard(
       svg.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('blur', onBlur);
       svg.remove();
+      status.remove();
       el.classList.remove('board', 'glass', 'board--locked');
     },
   };
