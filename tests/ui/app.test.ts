@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { generateWithSolution } from '../../src/core/generator';
 import { mulberry32, seedFromDate } from '../../src/core/rng';
-import { loadDaily, saveDaily } from '../../src/core/storage';
+import { loadDaily, saveDaily, setFlag } from '../../src/core/storage';
 import type { Cell } from '../../src/core/types';
 
 vi.mock('../../src/gen/client', async () => {
@@ -73,6 +73,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // Close any how-to modal left open (it auto-opens on first visit).
+  if (document.querySelector('.modal')) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   if (typeof unmount === 'function') unmount();
   unmount = undefined;
   root.remove();
@@ -237,6 +239,7 @@ test('solving practice shows Next puzzle which loads a fresh board', async () =>
 });
 
 test('Reset confirms only after more than 3 moves; Ctrl+Z undoes', async () => {
+  setFlag('howto-seen', true);
   mount('2026-10-21T10:00:00Z');
   await settle();
   prepBoard(7);
@@ -307,6 +310,28 @@ test('a solving gesture cut short by a route change never shows the old win over
   expect($('.board')!.classList.contains('board--locked')).toBe(false);
   // The finished gesture was still saved against the old daily.
   expect(loadDaily(today)?.paths.every(p => p.length > 0)).toBe(true);
+});
+
+test('Ctrl/Cmd+Z is ignored while the how-to modal is open', async () => {
+  setFlag('howto-seen', true);
+  mount('2026-10-21T10:00:00Z');
+  await settle();
+  expect($('.modal')).toBeNull();
+  expect(document.querySelector('.modal')).toBeNull();
+  prepBoard(7);
+  const sol = solutionFor('2026-10-21');
+  draw(sol[0]);
+  expect(hudText()).toContain(`Flows 1/${sol.length}`);
+  $<HTMLButtonElement>('[data-action="howto"]')!.click();
+  expect(document.querySelector('.modal')).not.toBeNull();
+  for (const mod of [{ ctrlKey: true }, { metaKey: true }]) {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ...mod, bubbles: true }));
+  }
+  expect(hudText()).toContain(`Flows 1/${sol.length}`);
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(document.querySelector('.modal')).toBeNull();
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  expect(hudText()).toContain(`Flows 0/${sol.length}`);
 });
 
 test('HUD shows flows, fill, mm:ss and the fill hint', () => {

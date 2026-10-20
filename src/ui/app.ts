@@ -12,7 +12,7 @@ import type { Puzzle } from '../core/types';
 import { latestOnly, requestPuzzle, STALE } from '../gen/client';
 import { createBoard } from './board';
 import { createHud } from './hud';
-import { openHowto } from './howto';
+import { isHowtoOpen, openHowto } from './howto';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
@@ -302,6 +302,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   function onKeyDown(e: KeyboardEvent) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'z') return;
+    if (isHowtoOpen()) return; // the modal owns the keyboard while open
     const t = e.target as HTMLElement | null;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
     e.preventDefault();

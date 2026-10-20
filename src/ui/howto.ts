@@ -74,6 +74,11 @@ const STEPS: { text: string; svg: () => SVGSVGElement }[] = [
 
 let current: { close: () => void } | null = null;
 
+/** True while the how-to modal is showing (global shortcuts should stand down). */
+export function isHowtoOpen(): boolean {
+  return current !== null;
+}
+
 export function openHowto(opts: HowtoOptions): void {
   current?.close();
   const returnTo = opts.returnFocus ?? document.querySelector<HTMLElement>('[data-action="howto"]');
