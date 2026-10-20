@@ -35,8 +35,12 @@ test.beforeEach(async ({ page }) => {
 
 test('win a fixed practice board with real clicks, flags and a chord', async ({ page }) => {
   await page.goto('/minesweeper.html#/practice?preset=classic&seed=123');
-  const b = generateBoard(PRESETS.classic, mulberry32(123));
+  await expect(page.locator('.is-revealed')).toHaveCount(0);
+  // The first click generates the board around itself.
+  await leftClick(page, 240);
+  const b = generateBoard(PRESETS.classic, mulberry32(123), 240);
   const g = newGame(b);
+  await expect(page.locator('.is-revealed')).toHaveCount(g.revealed);
   const nb = (i: number) => neighbours(b.cols, b.rows, i);
 
   // Chord on a revealed number that still has hidden safe neighbours.
@@ -67,14 +71,21 @@ test('win a fixed practice board with real clicks, flags and a chord', async ({ 
   await expect(page.getByRole('button', { name: 'New board' }).first()).toBeVisible();
 });
 
-test('hitting a mine shows Boom. with mines revealed', async ({ page }) => {
+test('hitting a mine shows Boom. centred over the board, with mines revealed', async ({ page }) => {
   await page.goto('/minesweeper.html#/practice?preset=classic&seed=123');
-  const b = generateBoard(PRESETS.classic, mulberry32(123));
+  await leftClick(page, 240);
+  const b = generateBoard(PRESETS.classic, mulberry32(123), 240);
   const mine = [...b.mines.keys()].find((i) => b.mines[i] === 1)!;
   await leftClick(page, mine);
   await expect(page.getByRole('heading', { name: 'Boom.' })).toBeVisible();
   await expect(page.locator(`[data-i="${mine}"]`)).toHaveClass(/is-exploded/);
   await expect(page.locator('.is-mine')).toHaveCount(99);
+  // Measure after the slide-in animation settles.
+  await page.getByRole('dialog').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+  const card = (await page.getByRole('dialog').boundingBox())!;
+  const panel = (await page.locator('.mines-panel').boundingBox())!;
+  expect(Math.abs(card.x + card.width / 2 - (panel.x + panel.width / 2))).toBeLessThan(2);
+  expect(Math.abs(card.y + card.height / 2 - (panel.y + panel.height / 2))).toBeLessThan(2);
 });
 
 test('daily: reload mid-game restores progress; reload after loss reopens the card', async ({ page }) => {
@@ -96,4 +107,11 @@ test('daily: reload mid-game restores progress; reload after loss reopens the ca
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Boom.' })).toBeVisible();
   await expect(page.locator('.mines-board--locked')).toHaveCount(1);
+
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.mines-attempt')).toHaveText('Attempt 2');
+  await expect(page.locator(`[data-i="${safe}"]`)).toHaveClass(/is-hidden/);
+  await page.reload();
+  await expect(page.locator('.mines-attempt')).toHaveText('Attempt 2');
 });

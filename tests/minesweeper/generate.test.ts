@@ -59,6 +59,18 @@ test('tight board: any start position keeps its neighbourhood clear', () => {
   }
 });
 
+test('an explicit start cell is used and kept mine-free', () => {
+  for (const start of [0, 29, 300, 599]) {
+    for (let seed = 0; seed < 20; seed++) {
+      const b = generateBoard(spec, mulberry32(seed), start);
+      expect(b.start).toBe(start);
+      expect(count(b.mines)).toBe(130);
+      for (const j of [start, ...neighbours(30, 20, start)]) expect(b.mines[j]).toBe(0);
+    }
+  }
+  expect(generateBoard(spec, mulberry32(3), 77)).toEqual(generateBoard(spec, mulberry32(3), 77));
+});
+
 test('throws when mines exceed placeable cells', () => {
   // 3×3 leaves at most 5 candidates for any start
   for (let seed = 0; seed < 20; seed++) {

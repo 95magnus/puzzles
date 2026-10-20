@@ -126,7 +126,8 @@ test('a lost daily shows Boom. and reopens on it, non-interactive', () => {
   leftClick(mine);
   expect(text('.mines-card h2')).toBe('Boom.');
   expect(text('.mines-card')).toContain('Next daily in 14:00:00');
-  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('Play practice');
+  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('Try again');
+  expect(root.querySelector('.mines-card [data-action="practice"]')!.textContent).toBe('Play practice');
   unmount!();
   root.textContent = '';
   mount('#/');
@@ -145,28 +146,67 @@ test('loss card reports % cleared', () => {
   expect(text('.mines-card')).toContain(`${pct}% cleared`);
 });
 
-test('winning shows Cleared ✦ with the time and dims the board', () => {
-  location.hash = '#/practice?preset=classic&seed=7';
-  unmount = mountMines(root, { now });
-  const b = generateBoard(PRESETS.classic, mulberry32(7));
-  const g = newGame(b);
-  nowMs += 61_000;
-  vi.advanceTimersByTime(61_000);
+/** Click every safe cell the mirror still shows hidden. */
+function clearBoard(b: Board, g = newGame(b)) {
   for (let i = 0; i < g.cells.length; i++) {
     if (g.cells[i] === 0 && !b.mines[i]) {
       reveal(g, i);
       if (!cell(i).classList.contains('is-revealed')) leftClick(i);
     }
   }
+}
+
+test('winning shows Cleared ✦ with the time and dims the board', () => {
+  mount('#/practice?preset=classic&seed=7');
+  leftClick(200);
+  const b = generateBoard(PRESETS.classic, mulberry32(7), 200);
+  nowMs += 61_000;
+  vi.advanceTimersByTime(61_000);
+  clearBoard(b);
   expect(text('.mines-card h2')).toBe('Cleared ✦');
   expect(text('.mines-card')).toContain('01:01');
   expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('New board');
   expect(root.querySelector('.mines-stage.is-dimmed')).not.toBeNull();
 });
 
+test('practice starts blank and the timer waits for the first click', () => {
+  mount('#/practice?preset=classic&seed=7');
+  expect(root.querySelectorAll('.is-revealed')).toHaveLength(0);
+  expect(text('.mines-left')).toBe('99');
+  nowMs += 5_000;
+  vi.advanceTimersByTime(5_000);
+  expect(text('.mines-time')).toBe('00:00');
+});
+
+test('the first practice click is safe and opens the board around it', () => {
+  for (const first of [0, 237, 479]) {
+    unmount?.();
+    root.textContent = '';
+    mount(`#/practice?preset=classic&seed=${first}`);
+    leftClick(first);
+    const b = generateBoard(PRESETS.classic, mulberry32(first), first);
+    const shown = [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
+    expect(shown).toBe(encodeCells(newGame(b)));
+    expect(root.querySelector('.mines-card')).toBeNull();
+  }
+  nowMs += 3_000;
+  vi.advanceTimersByTime(3_000);
+  expect(text('.mines-time')).toBe('00:03');
+});
+
+test('flags placed before the first click are kept if still hidden', () => {
+  mount('#/practice?preset=classic&seed=9');
+  rightClick(479); // far corner from the first click
+  expect(text('.mines-left')).toBe('98');
+  leftClick(0);
+  expect(cell(479).classList.contains('is-flagged')).toBe(true);
+  expect(text('.mines-left')).toBe('98');
+});
+
 test('tap on a revealed number chords, on a hidden cell reveals', () => {
   mount('#/practice?preset=expert&seed=11');
-  const b = generateBoard(PRESETS.expert, mulberry32(11));
+  tap(310);
+  const b = generateBoard(PRESETS.expert, mulberry32(11), 310);
   const g = newGame(b);
   const n = [...g.cells.keys()].find(
     (i) => g.cells[i] === 1 && b.adj[i] > 0 && neighbours(30, 20, i).some((j) => g.cells[j] === 0 && !b.mines[j]),
@@ -181,18 +221,53 @@ test('tap on a revealed number chords, on a hidden cell reveals', () => {
   expect(cell(safe).classList.contains('is-revealed') || text('.mines-card h2') !== '').toBe(true);
 });
 
-test('Restart replays the same board; New board changes it', () => {
+test('Restart replays the same board from its opening; New board starts blank', () => {
   mount('#/practice?preset=classic&seed=5');
-  const opening = () => [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
-  const first = opening();
-  const b = generateBoard(PRESETS.classic, mulberry32(5));
-  const { safe } = targets(b);
-  leftClick(safe);
-  expect(opening()).not.toBe(first);
+  const shown = () => [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
+  leftClick(100);
+  const b = generateBoard(PRESETS.classic, mulberry32(5), 100);
+  const opening = encodeCells(newGame(b));
+  expect(shown()).toBe(opening);
+  leftClick(targets(b).safe);
+  expect(shown()).not.toBe(opening);
   root.querySelector<HTMLButtonElement>('[data-action="restart"]')!.click();
-  expect(opening()).toBe(first);
+  expect(shown()).toBe(opening);
   root.querySelector<HTMLButtonElement>('[data-action="new"]')!.click();
-  expect(opening()).not.toBe(first);
+  expect(root.querySelectorAll('.is-revealed')).toHaveLength(0);
+});
+
+test('Try again restarts the daily from its opening as the next attempt', () => {
+  mount('#/');
+  const b = dailyBoard('2026-10-21');
+  const { g, mine } = targets(b);
+  nowMs += 7_000;
+  vi.advanceTimersByTime(7_000);
+  leftClick(mine);
+  root.querySelector<HTMLButtonElement>('.mines-card .btn--primary')!.click();
+  expect(root.querySelector('.mines-card')).toBeNull();
+  expect(root.querySelector('.mines-board--locked')).toBeNull();
+  const shown = [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
+  expect(shown).toBe(encodeCells(g));
+  expect(text('.mines-time')).toBe('00:00');
+  expect(text('.mines-attempt')).toBe('Attempt 2');
+  expect(loadMinesDaily('2026-10-21')).toMatchObject({ status: 'playing', attempt: 2, elapsedMs: 0 });
+});
+
+test('a daily won on a retry reports the attempt', () => {
+  mount('#/');
+  const b = dailyBoard('2026-10-21');
+  leftClick(targets(b).mine);
+  root.querySelector<HTMLButtonElement>('.mines-card .btn--primary')!.click();
+  clearBoard(b);
+  expect(text('.mines-card h2')).toBe('Cleared ✦');
+  expect(text('.mines-card')).toContain('attempt 2');
+  expect(root.querySelector('.mines-card .btn--primary')!.textContent).toBe('Play practice');
+  expect(loadMinesDaily('2026-10-21')).toMatchObject({ status: 'won', attempt: 2 });
+});
+
+test('the first attempt shows no attempt label', () => {
+  mount('#/');
+  expect(text('.mines-attempt')).toBe('');
 });
 
 test('practice preset switch changes the board size and is remembered', () => {
@@ -207,14 +282,14 @@ test('practice preset switch changes the board size and is remembered', () => {
 // Review Focus 5
 test('timer resumes from saved elapsedMs, not wall-clock', () => {
   const b = dailyBoard('2026-10-21');
-  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(newGame(b)), elapsedMs: 65_000, status: 'playing' });
+  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(newGame(b)), elapsedMs: 65_000, status: 'playing', attempt: 1 });
   nowMs += 3 * 3_600_000;
   mount('#/');
   expect(text('.mines-time')).toBe('01:05');
 });
 
 test('a save that does not fit today\'s board is ignored', () => {
-  saveMinesDaily({ date: '2026-10-21', cells: 'h'.repeat(600), elapsedMs: 9_000, status: 'playing' });
+  saveMinesDaily({ date: '2026-10-21', cells: 'h'.repeat(600), elapsedMs: 9_000, status: 'playing', attempt: 1 });
   mount('#/');
   expect(text('.mines-time')).toBe('00:00');
   expect(root.querySelectorAll('.is-revealed').length).toBeGreaterThan(0);
@@ -251,11 +326,32 @@ test('a finished daily save is never overwritten by a stale playing tab', () => 
   // Another tab lost today's daily.
   const g = newGame(dailyBoard('2026-10-21'));
   reveal(g, mine);
-  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(g), elapsedMs: 9_000, status: 'lost' });
+  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(g), elapsedMs: 9_000, status: 'lost', attempt: 1 });
   leftClick(safe);
   window.dispatchEvent(new Event('pagehide'));
   expect(loadMinesDaily('2026-10-21')!.status).toBe('lost');
   expect(text('.mines-card h2')).toBe('Boom.');
+});
+
+test('a stale tab on an older attempt never overwrites a newer attempt', () => {
+  mount('#/');
+  const b = dailyBoard('2026-10-21');
+  const { safe } = targets(b);
+  // Another tab lost attempt 1 and is now playing attempt 2.
+  saveMinesDaily({ date: '2026-10-21', cells: encodeCells(newGame(b)), elapsedMs: 2_000, status: 'playing', attempt: 2 });
+  leftClick(safe);
+  expect(loadMinesDaily('2026-10-21')).toMatchObject({ attempt: 2, elapsedMs: 2_000 });
+  expect(text('.mines-attempt')).toBe('Attempt 2');
+  expect(cell(safe).classList.contains('is-hidden')).toBe(true);
+});
+
+test('the Boom. card is a dialog centred over the board, which stays undimmed', () => {
+  mount('#/');
+  leftClick(targets(dailyBoard('2026-10-21')).mine);
+  const boom = root.querySelector('.mines-stage > .mines-card')!;
+  expect(boom.querySelector('h2')!.textContent).toBe('Boom.');
+  expect(boom.getAttribute('role')).toBe('dialog');
+  expect(root.querySelector('.mines-stage.is-dimmed')).toBeNull();
 });
 
 // Review Focus 2

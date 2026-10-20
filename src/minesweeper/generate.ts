@@ -29,11 +29,14 @@ export function neighbours(cols: number, rows: number, i: number): number[] {
   return out;
 }
 
-/** Deterministic for a given (spec, rng stream). The start cell and its neighbours are mine-free. */
-export function generateBoard(spec: BoardSpec, rng: Rng): Board {
+/**
+ * Deterministic for a given (spec, rng stream, start). The start cell and its neighbours are
+ * mine-free; the daily picks the start from the rng, practice passes the player's first click.
+ */
+export function generateBoard(spec: BoardSpec, rng: Rng, startCell?: number): Board {
   const { cols, rows, mines: count } = spec;
   const n = cols * rows;
-  const start = randInt(rng, n);
+  const start = startCell ?? randInt(rng, n);
   const safe = new Set([start, ...neighbours(cols, rows, start)]);
   const candidates: number[] = [];
   for (let i = 0; i < n; i++) if (!safe.has(i)) candidates.push(i);

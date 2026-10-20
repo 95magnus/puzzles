@@ -36,7 +36,15 @@ export function saveDaily(save: Omit<DailySave, 'v'>): void {
 export type MinesStatus = 'playing' | 'won' | 'lost';
 export type MinesPreset = 'classic' | 'expert' | 'huge';
 /** `cells` is one char per cell: h(idden) / r(evealed) / f(lagged). The board itself is regenerated from the date. */
-export type MinesDailySave = { v: 1; date: string; cells: string; elapsedMs: number; status: MinesStatus };
+export type MinesDailySave = {
+  v: 1;
+  date: string;
+  cells: string;
+  elapsedMs: number;
+  status: MinesStatus;
+  /** 1-based; saves from before retries existed read as 1. */
+  attempt: number;
+};
 
 const MINES_DAILY_KEY = 'mines:daily';
 const MINES_PRESET_KEY = 'mines:preset';
@@ -54,7 +62,9 @@ export function loadMinesDaily(date: string): MinesDailySave | null {
     if (typeof o.cells !== 'string' || !/^[hrf]*$/.test(o.cells)) return null;
     if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
     if (!MINES_STATUSES.includes(o.status)) return null;
-    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, status: o.status };
+    const attempt = o.attempt ?? 1;
+    if (!Number.isInteger(attempt) || attempt < 1) return null;
+    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, status: o.status, attempt };
   } catch {
     return null;
   }

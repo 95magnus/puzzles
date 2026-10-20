@@ -52,7 +52,13 @@ test('flags round-trip and default false', () => {
   expect(getFlag('howto-seen')).toBe(false);
 });
 
-const mines = { date: '2026-10-21', cells: 'hrrf', elapsedMs: 65_000, status: 'playing' as const };
+const mines = { date: '2026-10-21', cells: 'hrrf', elapsedMs: 65_000, status: 'playing' as const, attempt: 2 };
+
+test('a mines save from before attempts existed reads as attempt 1', () => {
+  const { attempt: _, ...old } = mines;
+  localStorage.setItem('mines:daily', JSON.stringify({ v: 1, ...old }));
+  expect(loadMinesDaily('2026-10-21')).toEqual({ v: 1, ...old, attempt: 1 });
+});
 
 test('mines daily save round-trips', () => {
   saveMinesDaily(mines);
@@ -78,6 +84,9 @@ test('loadMinesDaily returns null for corrupt or malformed saves', () => {
     { v: 1, ...mines, elapsedMs: -1 },
     { v: 1, ...mines, elapsedMs: 'x' },
     { v: 1, ...mines, status: 'paused' },
+    { v: 1, ...mines, attempt: 0 },
+    { v: 1, ...mines, attempt: 1.5 },
+    { v: 1, ...mines, attempt: '2' },
   ]) {
     put(bad);
     expect(loadMinesDaily('2026-10-21')).toBeNull();
