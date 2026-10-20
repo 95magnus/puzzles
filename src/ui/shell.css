@@ -108,7 +108,7 @@
   justify-self: end;
 }
 
-/* Keep the header on one row down to 320px: the home link shrinks to its dot. */
+/* Keep the header on one row down to 320px: the game name gives way, the home link stays readable. */
 @media (max-width: 400px) {
   .shell-header {
     gap: 4px;
@@ -125,18 +125,13 @@
     font-size: 22px;
   }
 
-  .shell-brand:has(.shell-game) .wordmark {
-    font-size: 0;
-  }
-
-  .shell-sep {
+  .shell-sep,
+  .shell-game {
     display: none;
   }
 
-  .shell-brand:has(.shell-game) .wordmark::after {
-    width: 10px;
-    height: 10px;
-    margin: 0;
+  .shell-brand:has(.shell-game) .wordmark {
+    color: var(--text);
   }
 
   .shell-tabs > .seg__item {

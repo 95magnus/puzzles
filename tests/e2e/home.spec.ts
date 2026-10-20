@@ -51,6 +51,19 @@ for (const path of ['/', '/flow.html', '/minesweeper.html']) {
   });
 }
 
+for (const path of ['/flow.html', '/minesweeper.html']) {
+  test(`home link stays a readable text link at 320px on ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto(path);
+    const home = page.getByRole('link', { name: 'puzzles — all games' });
+    await expect(home).toBeVisible();
+    const fontSize = await home.evaluate(el => parseFloat(getComputedStyle(el).fontSize));
+    expect(fontSize).toBeGreaterThanOrEqual(16);
+    const box = (await home.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(44);
+  });
+}
+
 test('headers match across games', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const boxes = [];
