@@ -264,6 +264,27 @@ test('Reset confirms only after more than 3 moves; Ctrl+Z undoes', async () => {
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
 });
 
+test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths back', async () => {
+  const today = '2026-10-21';
+  const sol = solutionFor(today);
+  expect(sol.length).toBeGreaterThan(4);
+  const paths = sol.map((p, i) => (i < 4 ? p : []));
+  saveDaily({ date: today, paths, elapsedMs: 10_000, solved: false });
+  mount(today + 'T10:00:00Z');
+  await settle();
+  expect(hudText()).toContain(`Flows 4/${sol.length}`);
+  const confirmSpy = vi.fn(() => true);
+  vi.stubGlobal('confirm', confirmSpy);
+  $<HTMLButtonElement>('[data-action="reset"]')!.click();
+  expect(confirmSpy).toHaveBeenCalledTimes(1);
+  expect(hudText()).toContain(`Flows 0/${sol.length}`);
+  const undoBtn = $<HTMLButtonElement>('[data-action="undo"]')!;
+  expect(undoBtn.disabled).toBe(false);
+  undoBtn.click();
+  expect(hudText()).toContain(`Flows 4/${sol.length}`);
+  expect(loadDaily(today)?.paths.filter(p => p.length).length).toBe(4);
+});
+
 test('HUD shows flows, fill, mm:ss and the fill hint', () => {
   const hud = createHud(root);
   hud.update({ flowsDone: 2, flowsTotal: 6, fillPct: 41 }, 125_999, false);

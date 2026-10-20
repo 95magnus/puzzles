@@ -118,9 +118,10 @@ export function undo(s: GameState): GameState {
   return { ...s, paths: s.undo[s.undo.length - 1], undo: s.undo.slice(0, -1) };
 }
 
+/** Clear every path. Undoable (one step) and counted as a move; no-op on an empty board. */
 export function reset(s: GameState): GameState {
-  if (s.active !== null) return s;
-  return newGame(s.puzzle);
+  if (s.active !== null || s.paths.every(p => p.length === 0)) return s;
+  return { ...s, paths: s.puzzle.pairs.map(() => []), undo: [...s.undo, s.paths], moves: s.moves + 1 };
 }
 
 function filledCount(s: GameState): number {
@@ -175,5 +176,7 @@ export function restore(puzzle: Puzzle, paths: Cell[][]): GameState | null {
     }
     clean.push(out);
   }
-  return { puzzle, paths: clean, undo: [], active: null, moves: 0 };
+  // Seed `moves` from restored work so thresholds (e.g. Reset's confirm) reflect it.
+  const moves = clean.filter(p => p.length > 0).length;
+  return { puzzle, paths: clean, undo: [], active: null, moves };
 }

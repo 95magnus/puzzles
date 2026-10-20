@@ -214,11 +214,29 @@ describe('game state', () => {
     expect(reset(s)).toBe(s);
   });
 
-  test('reset clears everything when idle', () => {
+  test('reset clears all paths when idle', () => {
     const s = reset(drag(newGame(P), [c(0, 1), c(0, 0)]));
     expect(s.paths.every(p => p.length === 0)).toBe(true);
+    expect(s.active).toBeNull();
+  });
+
+  test('reset is undoable and counts as a move; no-op on an empty board', () => {
+    const before = drag(drag(newGame(P), [c(0, 1), c(0, 0)]), [c(1, 3), c(2, 3)]);
+    const r = reset(before);
+    expect(r.paths.every(p => p.length === 0)).toBe(true);
+    expect(r.moves).toBe(before.moves + 1);
+    expect(r.undo).toHaveLength(before.undo.length + 1);
+    const u = undo(r);
+    expect(u.paths).toEqual(before.paths);
+    const empty = newGame(P);
+    expect(reset(empty)).toBe(empty);
+  });
+
+  test('restore seeds moves from the number of non-empty paths', () => {
+    const s = restore(P, [[c(0, 1), c(0, 0), c(1, 0)], [], [c(1, 3), c(2, 3)], []])!;
+    expect(s.moves).toBe(2);
     expect(s.undo).toEqual([]);
-    expect(s.moves).toBe(0);
+    expect(restore(P, [[], [], [], []])!.moves).toBe(0);
   });
 
   // Review Focus 3
