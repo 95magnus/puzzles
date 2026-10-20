@@ -12,6 +12,7 @@ import type { Puzzle } from '../core/types';
 import { latestOnly, requestPuzzle, STALE } from '../gen/client';
 import { createBoard } from './board';
 import { createHud } from './hud';
+import { openHowto } from './howto';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
@@ -313,6 +314,17 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     if (game && !loading) refresh();
     if (solved && session?.mode === 'daily') winCard.setCountdown(msUntilNextUtcMidnight(now()));
   }
+
+  const howtoBtn = header.querySelector<HTMLButtonElement>('[data-action="howto"]')!;
+  function showHowto() {
+    openHowto({
+      colorblind: getFlag('colorblind'),
+      onColorblindChange: on => board.setColorblind(on),
+      returnFocus: howtoBtn,
+    });
+  }
+  howtoBtn.addEventListener('click', showHowto);
+  if (!getFlag('howto-seen')) showHowto();
 
   undoBtn.addEventListener('click', doUndo);
   resetBtn.addEventListener('click', doReset);

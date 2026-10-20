@@ -319,3 +319,204 @@
     font-size: 13px;
   }
 }
+
+/* ---------- How-to modal ---------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--space) * 2);
+  background: rgba(8, 6, 16, 0.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: modal-in var(--dur) var(--ease);
+}
+
+.modal__panel {
+  width: min(440px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: calc(var(--space) * 3);
+  background: rgba(30, 26, 48, 0.86);
+  animation: modal-pop var(--dur) var(--ease);
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: calc(var(--space) * 2);
+}
+
+.modal__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.howto-steps {
+  list-style: none;
+  margin: 0 0 calc(var(--space) * 2);
+  padding: 0;
+  display: grid;
+  gap: calc(var(--space) * 1.5);
+}
+
+.howto-step {
+  display: grid;
+  grid-template-columns: 120px 22px 1fr;
+  align-items: center;
+  gap: var(--space);
+}
+
+.howto-step p {
+  margin: 0;
+}
+
+.howto-step__n {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg-hover);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.howto-demo {
+  width: 120px;
+  height: 60px;
+}
+
+.howto-demo__bg {
+  fill: var(--board);
+  stroke: var(--board-border);
+}
+
+.howto-demo__grid {
+  stroke: var(--grid-line);
+  stroke-width: 1;
+}
+
+.howto-path {
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.9;
+  stroke-dasharray: 1;
+  animation: howto-draw 3s var(--ease) infinite;
+}
+
+.howto-path--blocked {
+  opacity: 0.45;
+  stroke-dasharray: 0.12 0.1;
+  stroke-dashoffset: 0;
+  animation: howto-blink 3s ease-out infinite;
+}
+
+.howto-cb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--space) * 2);
+  padding: calc(var(--space) * 1.5) 0;
+  border-top: 1px solid var(--btn-border);
+  margin-bottom: calc(var(--space) * 2);
+}
+
+.howto-cb__text {
+  display: grid;
+}
+
+.howto-cb__hint {
+  font-size: 13px;
+}
+
+.switch {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.switch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform var(--dur) var(--ease);
+}
+
+.switch[aria-checked='true'] {
+  background: var(--glow-violet);
+}
+
+.switch[aria-checked='true'] .switch__thumb {
+  transform: translateX(20px);
+}
+
+.modal__done {
+  width: 100%;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; }
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+@keyframes howto-draw {
+  0% { stroke-dashoffset: 1; }
+  45%, 85% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes howto-blink {
+  0%, 30% { opacity: 0; }
+  40%, 70% { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+@media (max-width: 420px) {
+  .howto-step {
+    grid-template-columns: 96px 22px 1fr;
+  }
+  .howto-demo {
+    width: 96px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .modal__panel,
+  .howto-path,
+  .howto-path--blocked,
+  .switch,
+  .switch__thumb {
+    animation: none;
+    transition: none;
+  }
+  .howto-path {
+    stroke-dashoffset: 0;
+  }
+  .howto-path--blocked {
+    opacity: 0.55;
+  }
+}
