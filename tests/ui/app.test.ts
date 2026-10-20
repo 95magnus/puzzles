@@ -17,6 +17,7 @@ vi.mock('../../src/gen/client', async () => {
 
 import { mountApp, parseRoute } from '../../src/ui/app';
 import { createHud } from '../../src/ui/hud';
+import { openModal } from '../../src/ui/modal';
 import { createWinCard } from '../../src/ui/winCard';
 
 let root: HTMLElement;
@@ -409,6 +410,19 @@ test('Ctrl/Cmd+Z is ignored while the how-to modal is open', async () => {
   expect(document.querySelector('.modal')).toBeNull();
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
+});
+
+test('game shortcuts are ignored while any shared modal is open', async () => {
+  setFlag('howto-seen', true);
+  mount('2026-10-21T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor('2026-10-21');
+  draw(sol[0]);
+  openModal({ title: 'Other', body: [], returnFocus: null });
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(hudText()).toContain(`Flows 1/${sol.length}`);
 });
 
 test('re-selecting the active Practice tab keeps the current puzzle', async () => {
