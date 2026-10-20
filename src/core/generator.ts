@@ -28,9 +28,10 @@ function canJoin(P: Cell[], Q: Cell[], u: number, v: number, size: number, owner
 }
 
 /**
- * Start from one single-cell path per cell and repeatedly merge a shortest path
- * with a neighbouring path end-to-end, keeping every path non-self-touching.
- * Returns null when stuck or when some path is shorter than minLen.
+ * Start from one single-cell path per cell and repeatedly merge a shortest
+ * mergeable path (preferring the globally shortest ones) with a neighbouring path
+ * end-to-end, keeping every path non-self-touching. Returns null when no path can
+ * merge at all, or when some path is shorter than minLen.
  */
 function fillPaths(size: number, rng: Rng, target: number, minLen: number): Cell[][] | null {
   const paths: Cell[][] = [];
@@ -46,10 +47,17 @@ function fillPaths(size: number, rng: Rng, target: number, minLen: number): Cell
   outer: while (paths.length > target) {
     let minLength = Infinity;
     for (const p of paths) if (p.length < minLength) minLength = p.length;
+    // Shortest paths first (shuffled); if none of them can merge, fall back to
+    // progressively longer paths (shuffled, then stably sorted by length).
     const candidates = shuffle(
       rng,
       paths.filter((p) => p.length === minLength),
     );
+    const longer = shuffle(
+      rng,
+      paths.filter((p) => p.length !== minLength),
+    ).sort((x, y) => x.length - y.length);
+    candidates.push(...longer);
     for (const P of candidates) {
       const pFirst = idx(P[0]);
       const pLast = idx(P[P.length - 1]);
