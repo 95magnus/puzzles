@@ -99,7 +99,7 @@ test('renders header with wordmark, Daily/Practice tabs and a howto hook', async
   await settle();
   expect($('.wordmark')?.textContent).toBe('flow');
   const tabs = [...root.querySelectorAll<HTMLAnchorElement>('.app-tabs a')];
-  expect(tabs.map(t => [t.textContent, t.getAttribute('href')])).toEqual([['Daily', '#/'], ['Practice', '#/practice']]);
+  expect(tabs.map(t => [t.textContent, t.getAttribute('href')])).toEqual([['Daily', '#/'], ['Practice', '#/practice?size=7']]);
   expect(tabs[0].getAttribute('aria-current')).toBe('page');
   expect($('[data-action="howto"]')?.textContent).toBe('?');
 });
@@ -211,7 +211,7 @@ test('practice route uses size + seed, size seg and New puzzle regenerate', asyn
   expect(sizes.map(b => b.textContent)).toEqual(['5×5', '6×6', '7×7', '8×8', '9×9']);
   expect(sizes[0].getAttribute('aria-pressed')).toBe('true');
   expect($('[data-action="new"]')!.classList.contains('btn--primary')).toBe(true);
-  expect(root.querySelector('.app-tabs a[href="#/practice"]')!.getAttribute('aria-current')).toBe('page');
+  expect(root.querySelector('.app-tabs a[href="#/practice?size=5"]')!.getAttribute('aria-current')).toBe('page');
 
   sizes[4].click();
   await settle();
@@ -332,6 +332,47 @@ test('Ctrl/Cmd+Z is ignored while the how-to modal is open', async () => {
   expect(document.querySelector('.modal')).toBeNull();
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
+});
+
+test('re-selecting the active Practice tab keeps the current puzzle', async () => {
+  history.replaceState(null, '', '#/practice?size=5&seed=123');
+  mount('2026-10-21T10:00:00Z');
+  await settle();
+  const tab = () => root.querySelector<HTMLAnchorElement>('.app-tabs a:last-child')!;
+  expect(tab().getAttribute('href')).toBe('#/practice?size=5');
+  root.querySelectorAll<HTMLButtonElement>('.sizes button')[1].click(); // 6×6
+  await settle();
+  expect(location.hash).toBe('#/practice?size=6');
+  expect(tab().getAttribute('href')).toBe('#/practice?size=6');
+  prepBoard(6);
+  const board = $('.board')!;
+  const before = svg().innerHTML;
+  // Navigating to the route we are already on (e.g. the tab, or a bare #/practice?size=6) is a no-op.
+  history.replaceState(null, '', tab().getAttribute('href')!);
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  await settle();
+  expect(board.classList.contains('board--loading')).toBe(false);
+  expect(svg().innerHTML).toBe(before);
+  // A different size still loads.
+  history.replaceState(null, '', '#/practice?size=8');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  await settle();
+  expect(svg().getAttribute('viewBox')).toBe('0 0 800 800');
+  expect(tab().getAttribute('href')).toBe('#/practice?size=8');
+});
+
+test("daily win card's Play practice opens the last practice size", async () => {
+  const today = '2026-10-21';
+  history.replaceState(null, '', '#/practice?size=9');
+  mount(today + 'T10:00:00Z');
+  await settle();
+  saveDaily({ date: today, paths: solutionFor(today), elapsedMs: 1000, solved: true });
+  history.replaceState(null, '', '#/');
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  await settle();
+  expect(winCard().hidden).toBe(false);
+  winCard().querySelector('button')!.click();
+  expect(location.hash).toBe('#/practice?size=9');
 });
 
 test('HUD shows flows, fill, mm:ss and the fill hint', () => {

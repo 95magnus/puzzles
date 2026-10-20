@@ -111,7 +111,16 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   let solved = false;
   let requestedDate: string | null = null;
   let loadToken = 0;
-  let practiceSize = route.mode === 'practice' ? route.size : DEFAULT_PRACTICE_SIZE;
+  let practiceSize = DEFAULT_PRACTICE_SIZE;
+  /** The route most recently passed to load() (what the player is looking at). */
+  let current: Route | null = null;
+  const practiceHash = () => `#/practice?size=${practiceSize}`;
+  function setPracticeSize(n: number) {
+    practiceSize = n;
+    // The tab (and "Play practice") return to the last size, so re-selecting it is a no-op.
+    tabPractice.setAttribute('href', practiceHash());
+  }
+  setPracticeSize(route.mode === 'practice' ? route.size : DEFAULT_PRACTICE_SIZE);
   // Clock: accumulated ms + running segment.
   let baseMs = 0;
   let startedAt: number | null = null;
@@ -161,6 +170,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   // ---------- Flow ----------
   async function load(r: Route) {
     const token = ++loadToken;
+    current = r;
     // Mark loading BEFORE locking the board: locking may end an in-flight drag, whose
     // gesture-end is then saved against the old session but can never trigger win UI.
     loading = true;
@@ -189,7 +199,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     } else {
       requestedDate = null;
       size = r.size;
-      practiceSize = size;
+      setPracticeSize(size);
       seed = r.seed ?? randomSeed();
     }
 
@@ -200,6 +210,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
       puzzle = res;
     } catch (err) {
       if (token !== loadToken) return;
+      current = null; // let navigating to the same route retry
       loading = false;
       boardEl.classList.remove('board--loading');
       boardEl.removeAttribute('aria-busy');
@@ -249,7 +260,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
       timeMs: elapsed(),
       mode: session.mode,
       countdownMs: daily ? msUntilNextUtcMidnight(now()) : undefined,
-      onPrimary: daily ? () => (location.hash = '#/practice') : () => newPractice(practiceSize),
+      onPrimary: daily ? () => (location.hash = practiceHash()) : () => newPractice(practiceSize),
     });
   }
 
@@ -285,7 +296,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   }
 
   function newPractice(size: number) {
-    practiceSize = size;
+    setPracticeSize(size);
     route = { mode: 'practice', size };
     try {
       history.replaceState(history.state, '', `#/practice?size=${size}`);
@@ -295,8 +306,17 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     void load(route);
   }
 
+  /** Would loading `r` just regenerate what is already on screen (or loading)? */
+  function isCurrent(r: Route): boolean {
+    if (!current || r.mode !== current.mode) return false;
+    if (r.mode === 'daily') return true;
+    return current.mode === 'practice' && r.size === current.size && r.seed === undefined;
+  }
+
   function onHashChange() {
-    route = parseRoute(location.hash);
+    const next = parseRoute(location.hash);
+    if (isCurrent(next)) return;
+    route = next;
     void load(route);
   }
 
