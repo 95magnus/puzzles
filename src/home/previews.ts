@@ -80,3 +80,40 @@ export function tanglePreview(): SVGSVGElement {
   });
   return svg;
 }
+
+/** Queens: 5×5 board of tinted regions with thick region borders and five queens. */
+export function queensPreview(): SVGSVGElement {
+  const svg = frame();
+  const N = 5, size = 12, o = 2; // 5 cells of 12 centred in the 64 frame
+  // Region id per cell (= PALETTE index); the queens are the unique non-touching solution.
+  const regions = [
+    [0, 0, 1, 1, 1],
+    [0, 2, 2, 1, 3],
+    [0, 2, 3, 3, 3],
+    [4, 2, 3, 4, 4],
+    [4, 4, 4, 4, 4],
+  ];
+  const queens = [[0, 2], [1, 0], [2, 3], [3, 1], [4, 4]];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      svg.append(s('rect', { x: o + 1 + c * size, y: o + 1 + r * size, width: size, height: size, fill: PALETTE[regions[r][c]], opacity: 0.4 }));
+    }
+  }
+  // Thick borders only where neighbouring cells belong to different regions.
+  const edge = (x1: number, y1: number, x2: number, y2: number) =>
+    svg.append(s('line', { x1, y1, x2, y2, stroke: 'rgba(238,240,247,.85)', 'stroke-width': 1.6, 'stroke-linecap': 'round' }));
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const x = o + 1 + c * size, y = o + 1 + r * size;
+      if (c < N - 1 && regions[r][c] !== regions[r][c + 1]) edge(x + size, y, x + size, y + size);
+      if (r < N - 1 && regions[r][c] !== regions[r + 1][c]) edge(x, y + size, x + size, y + size);
+    }
+  }
+  svg.append(s('rect', { x: o + 1, y: o + 1, width: N * size, height: N * size, fill: 'none', stroke: 'rgba(238,240,247,.85)', 'stroke-width': 1.6 }));
+  for (const [r, c] of queens) {
+    const t = s('text', { x: o + 1 + c * size + size / 2, y: o + 1 + r * size + size / 2 + 4, 'text-anchor': 'middle', 'font-size': 11, fill: '#eef0f7' });
+    t.textContent = '♛';
+    svg.append(t);
+  }
+  return svg;
+}

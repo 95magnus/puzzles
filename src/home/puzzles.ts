@@ -1,6 +1,6 @@
-import { loadDaily, loadMinesDaily, loadTangleDaily } from '../core/storage';
+import { loadDaily, loadMinesDaily, loadQueensDaily, loadTangleDaily } from '../core/storage';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview, tanglePreview } from './previews';
+import { flowPreview, minesPreview, queensPreview, tanglePreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -10,7 +10,7 @@ export type DailyStatus =
   | { kind: 'lost'; elapsedMs: number; attempt: number };
 
 export type PuzzleEntry = {
-  id: 'flow' | 'mines' | 'tangle';
+  id: 'flow' | 'mines' | 'tangle' | 'queens';
   name: string;
   tagline: string;
   href: string;
@@ -68,6 +68,19 @@ export const PUZZLES: readonly PuzzleEntry[] = [
       if (save.status === 'won') return { kind: 'done', elapsedMs, attempt };
       if (save.status === 'lost') return { kind: 'lost', elapsedMs, attempt };
       return { kind: 'playing', elapsedMs, attempt };
+    },
+  },
+  {
+    id: 'queens',
+    name: 'Queens',
+    tagline: 'One queen per row, column and colour.',
+    href: './queens.html',
+    doneWord: 'Solved',
+    preview: queensPreview,
+    dailyStatus(date) {
+      const save = loadQueensDaily(date);
+      if (!save) return { kind: 'new' };
+      return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },
   },
 ];
