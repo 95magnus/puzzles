@@ -1,4 +1,5 @@
 import { setFlag } from '../core/storage';
+import { openModal } from './modal';
 import { GLYPHS, PALETTE } from './palette';
 
 export type HowtoOptions = {
@@ -9,7 +10,6 @@ export type HowtoOptions = {
 };
 
 const NS = 'http://www.w3.org/2000/svg';
-const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 
 function s(tag: string, attrs: Record<string, string | number>, ...kids: SVGElement[]): SVGElement {
   const e = document.createElementNS(NS, tag);
@@ -72,29 +72,9 @@ const STEPS: { text: string; svg: () => SVGSVGElement }[] = [
   },
 ];
 
-let current: { close: () => void } | null = null;
-
-/** True while the how-to modal is showing (global shortcuts should stand down). */
-export function isHowtoOpen(): boolean {
-  return current !== null;
-}
-
 export function openHowto(opts: HowtoOptions): void {
-  current?.close();
   const returnTo = opts.returnFocus ?? document.querySelector<HTMLElement>('[data-action="howto"]');
   setFlag('howto-seen', true);
-
-  const titleId = 'howto-title';
-  const closeBtn = document.createElement('button');
-  closeBtn.type = 'button';
-  closeBtn.className = 'icon-btn modal__close';
-  closeBtn.setAttribute('aria-label', 'Close');
-  closeBtn.textContent = '✕';
-
-  const title = document.createElement('h2');
-  title.id = titleId;
-  title.className = 'modal__title';
-  title.textContent = 'How to play';
 
   const list = document.createElement('ol');
   list.className = 'howto-steps';
@@ -140,65 +120,5 @@ export function openHowto(opts: HowtoOptions): void {
     opts.onColorblindChange(on);
   });
 
-  const done = document.createElement('button');
-  done.type = 'button';
-  done.className = 'btn btn--primary modal__done';
-  done.textContent = 'Got it';
-
-  const dialog = document.createElement('div');
-  dialog.className = 'modal__panel glass';
-  dialog.setAttribute('role', 'dialog');
-  dialog.setAttribute('aria-modal', 'true');
-  dialog.setAttribute('aria-labelledby', titleId);
-  const head = document.createElement('div');
-  head.className = 'modal__head';
-  head.append(title, closeBtn);
-  dialog.append(head, list, cb, done);
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal';
-  backdrop.append(dialog);
-  document.body.append(backdrop);
-
-  let closed = false;
-  function close() {
-    if (closed) return;
-    closed = true;
-    document.removeEventListener('keydown', onKey, true);
-    backdrop.remove();
-    if (current === handle) current = null;
-    returnTo?.focus();
-  }
-  const handle = { close };
-  current = handle;
-
-  function onKey(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      close();
-    } else if (e.key === 'Tab') {
-      const f = [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)];
-      if (!f.length) return;
-      const first = f[0];
-      const last = f[f.length - 1];
-      const a = document.activeElement;
-      if (!dialog.contains(a)) {
-        e.preventDefault();
-        first.focus();
-      } else if (e.shiftKey && a === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && a === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  }
-  document.addEventListener('keydown', onKey, true);
-  closeBtn.addEventListener('click', close);
-  done.addEventListener('click', close);
-  backdrop.addEventListener('click', e => {
-    if (e.target === backdrop) close();
-  });
-  done.focus({ preventScroll: true });
+  openModal({ title: 'How to play', body: [list, cb], returnFocus: returnTo });
 }

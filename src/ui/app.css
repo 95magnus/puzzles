@@ -1,4 +1,4 @@
-/* App shell — layout, header, HUD, win card. Builds on the Dusk tokens in theme.css. */
+/* Flow page — layout, board stage, HUD. Header, modal and end card come from shell.css. */
 
 .app {
   --board-w: min(90vw, 520px);
@@ -7,102 +7,7 @@
   align-items: center;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: calc(var(--space) * 2) calc(var(--space) * 2) calc(var(--space) * 5);
-}
-
-/* ---------- Header ---------- */
-.app-header {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--space);
-  width: min(100%, 560px);
-  min-height: 56px;
-  margin-bottom: calc(var(--space) * 3);
-}
-
-.app-brand {
-  justify-self: start;
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 1.5);
-  white-space: nowrap;
-}
-
-/* Link to the other puzzle page. */
-.game-link {
-  color: var(--text-2);
-  font-weight: 700;
-  font-size: 15px;
-  text-decoration: none;
-  border-radius: 6px;
-}
-
-.game-link:hover {
-  color: var(--text);
-}
-
-.wordmark {
-  justify-self: start;
-  color: var(--text);
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  text-decoration: none;
-  border-radius: 6px;
-}
-
-.wordmark::after {
-  content: '';
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  margin-left: 2px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #8b7bff, #ff6aa8);
-  box-shadow: 0 0 8px rgba(255, 106, 168, 0.6);
-}
-
-.app-tabs {
-  justify-self: center;
-}
-
-.seg > a.seg__item {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.icon-btn {
-  justify-self: end;
-  appearance: none;
-  display: inline-grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: 1px solid var(--btn-border);
-  border-radius: 50%;
-  background: var(--btn-bg);
-  color: var(--text);
-  font: inherit;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    background-color var(--dur) var(--ease),
-    transform var(--dur) var(--ease);
-}
-
-.icon-btn:hover {
-  background: var(--btn-bg-hover);
-}
-
-.icon-btn:active {
-  transform: scale(0.94);
+  padding-bottom: calc(var(--space) * 5);
 }
 
 /* ---------- Main column ---------- */
@@ -111,6 +16,7 @@
   flex-direction: column;
   align-items: center;
   width: 100%;
+  padding: calc(var(--space) * 2) calc(var(--space) * 2) 0;
 }
 
 .app-sub {
@@ -233,11 +139,6 @@
   opacity: 0.6;
 }
 
-.hud__value {
-  color: var(--text);
-  font-weight: 600;
-}
-
 .hud__time .hud__value {
   min-width: 5ch;
   display: inline-block;
@@ -268,62 +169,6 @@
   min-width: 88px;
 }
 
-/* ---------- Win card ---------- */
-.win {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--space) * 3);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: min(calc(100% - var(--space) * 4), 320px);
-  padding: calc(var(--space) * 3) calc(var(--space) * 3) calc(var(--space) * 2.5);
-  text-align: center;
-  background: rgba(30, 26, 52, 0.55);
-  transform: translateX(-50%);
-  animation: app-win-in 250ms var(--ease) both;
-}
-
-.win[hidden] {
-  display: none;
-}
-
-.win__title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.win__time {
-  margin: 0;
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.win__next {
-  margin: 0;
-  color: var(--text-2);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.win__primary {
-  margin-top: calc(var(--space) * 1.5);
-  min-width: 160px;
-}
-
-@keyframes app-win-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 24px);
-  }
-}
-
 @keyframes app-fade-up {
   from {
     opacity: 0;
@@ -332,35 +177,11 @@
 }
 
 /* ---------- Narrow screens: keep the header on one row down to 320px ---------- */
+/* ---------- Narrow screens ---------- */
 @media (max-width: 400px) {
-  .app {
+  .app-main {
     padding-left: var(--space);
     padding-right: var(--space);
-  }
-
-  .app-header {
-    gap: 4px;
-  }
-
-  .app-brand {
-    gap: var(--space);
-  }
-
-  .game-link {
-    font-size: 13px;
-  }
-
-  .wordmark {
-    font-size: 22px;
-  }
-
-  .app-tabs > .seg__item {
-    padding: 0 10px;
-  }
-
-  .icon-btn {
-    width: 36px;
-    height: 36px;
   }
 
   .sizes > button {
@@ -369,48 +190,7 @@
   }
 }
 
-/* ---------- How-to modal ---------- */
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  isolation: isolate;
-  display: grid;
-  place-items: center;
-  padding: calc(var(--space) * 2);
-  background: rgba(8, 6, 16, 0.6);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  animation: modal-in var(--dur) var(--ease);
-}
-
-.modal__panel {
-  width: min(440px, 100%);
-  max-height: calc(100vh - var(--space) * 4);
-  max-height: calc(100dvh - var(--space) * 4);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  padding: calc(var(--space) * 3);
-  background: #1c1930;
-  animation: modal-pop var(--dur) var(--ease);
-}
-
-.modal__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: calc(var(--space) * 2);
-}
-
-.modal__title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
+/* ---------- How-to (inside the shared modal) ---------- */
 .howto-steps {
   list-style: none;
   margin: 0 0 calc(var(--space) * 2);
@@ -523,18 +303,6 @@
   transform: translateX(20px);
 }
 
-.modal__done {
-  width: 100%;
-}
-
-@keyframes modal-in {
-  from { opacity: 0; }
-}
-
-@keyframes modal-pop {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-}
-
 @keyframes howto-draw {
   0% { stroke-dashoffset: 1; }
   45%, 85% { stroke-dashoffset: 0; }
@@ -558,8 +326,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal,
-  .modal__panel,
   .howto-path,
   .howto-path--blocked,
   .switch,

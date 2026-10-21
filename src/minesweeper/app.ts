@@ -7,6 +7,7 @@ import {
 } from '../core/daily';
 import { mulberry32, randomSeed } from '../core/rng';
 import { getFlag, getMinesPreset, loadMinesDaily, saveMinesDaily, setFlag, setMinesPreset } from '../core/storage';
+import { createHeader } from '../ui/header';
 import { createBoard } from './board';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from './game';
 import { DAILY_PRESET, PRESETS, generateBoard, minesDailySeed } from './generate';
@@ -53,39 +54,23 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   // ---------- Static shell ----------
   root.textContent = '';
   root.classList.add('mines-app');
-  const header = el('header', 'mines-header');
-  const games = el('nav', 'mines-games');
-  games.setAttribute('aria-label', 'Games');
-  const flowLink = el('a', '', 'Flow');
-  flowLink.href = './index.html';
-  const minesLink = el('a', '', 'Mines');
-  minesLink.href = './minesweeper.html';
-  minesLink.setAttribute('aria-current', 'page');
-  games.append(flowLink, minesLink);
-  const modes = el('nav', 'seg mines-modes');
-  modes.setAttribute('aria-label', 'Mode');
-  const dailyTab = el('a', 'seg__item', 'Daily');
-  dailyTab.href = '#/';
-  const practiceTab = el('a', 'seg__item', 'Practice');
-  practiceTab.href = '#/practice';
-  modes.append(dailyTab, practiceTab);
-  const helpBtn = el('button', 'btn mines-help', '?');
-  helpBtn.type = 'button';
-  helpBtn.setAttribute('aria-label', 'How to play');
-  helpBtn.addEventListener('click', () => openMinesHowto(helpBtn));
-  header.append(games, modes, helpBtn);
+  const shellHeader = createHeader({ game: 'Mines', onHelp: () => openMinesHowto(helpBtn) });
+  const header = shellHeader.el;
+  const dailyTab = shellHeader.tabDaily!;
+  const practiceTab = shellHeader.tabPractice!;
+  const helpBtn = shellHeader.helpBtn!;
 
   const sub = el('div', 'mines-sub');
   const stage = el('div', 'mines-stage');
   const boardEl = el('div', 'mines-board');
   stage.appendChild(boardEl);
   const hud = el('div', 'mines-hud');
-  const left = el('span', 'mines-left num');
+  const left = el('span', 'mines-left hud-value num');
   left.setAttribute('aria-label', 'Mines left');
-  const time = el('span', 'mines-time num');
+  const time = el('span', 'mines-time hud-value num');
   time.setAttribute('aria-label', 'Time');
   const stats = el('div', 'mines-stats');
-  const attemptLabel = el('span', 'mines-attempt text-2');
+  const attemptLabel = el('span', 'mines-attempt hud-label');
   stats.append(left, time, attemptLabel);
   const controls = el('div', 'mines-controls');
   hud.append(stats, controls);
@@ -170,25 +155,25 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
     hideCard();
     const won = game.status === 'won';
     const daily = route.mode === 'daily';
-    card = el('section', `mines-card glass ${won ? 'mines-card--won' : 'mines-card--lost'}`);
+    card = el('section', `end-card glass ${won ? 'end-card--won' : 'end-card--lost'}`);
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-labelledby', 'mines-card-title');
-    const title = el('h2', '', won ? 'Cleared ✦' : 'Boom.');
+    const title = el('h2', 'end-card__title', won ? 'Cleared ✦' : 'Boom.');
     title.id = 'mines-card-title';
     card.appendChild(title);
     const clock = formatClock(elapsed());
     if (won) {
       const tries = daily ? (attempt > 1 ? ` · attempt ${attempt}` : ' · first try') : '';
-      card.appendChild(el('p', 'mines-card__time num', clock + tries));
+      card.appendChild(el('p', 'end-card__stat num', clock + tries));
     } else {
       const pct = Math.round((game.revealed / safeCount(game.board)) * 100);
-      card.appendChild(el('p', 'mines-card__time num', `${pct}% cleared · ${clock}`));
+      card.appendChild(el('p', 'end-card__stat num', `${pct}% cleared · ${clock}`));
     }
-    const actions = el('div', 'mines-card__actions');
+    const actions = el('div', 'end-card__actions');
     const toPractice = () => { location.hash = '#/practice'; };
     let primary: HTMLButtonElement;
     if (daily) {
-      card.appendChild(el('p', 'mines-countdown text-2 num'));
+      card.appendChild(el('p', 'end-card__next mines-countdown text-2 num'));
       if (won) {
         primary = button('Play practice', true, toPractice);
         actions.append(primary);

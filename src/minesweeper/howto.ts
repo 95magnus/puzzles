@@ -1,3 +1,5 @@
+import { openModal } from '../ui/modal';
+
 const CONTROLS: [string, string][] = [
   ['Left click', 'reveal a tile'],
   ['Right click', 'flag a tile'],
@@ -24,32 +26,10 @@ const CHORD_SVG = `
   </g>
 </svg>`;
 
-let openDialog: (() => void) | null = null;
-
-/** Modal listing the controls. Esc, ✕, "Got it" or the backdrop close it; focus returns to `returnFocusTo`. */
+/** Modal listing the controls; the shared modal handles closing and focus. */
 export function openMinesHowto(returnFocusTo: HTMLElement): void {
-  openDialog?.();
-
-  const backdrop = document.createElement('div');
-  backdrop.className = 'mines-howto';
-  const dlg = document.createElement('div');
-  dlg.className = 'mines-howto__dialog glass';
-  dlg.setAttribute('role', 'dialog');
-  dlg.setAttribute('aria-modal', 'true');
-  dlg.setAttribute('aria-labelledby', 'mines-howto-title');
-
-  const close = document.createElement('button');
-  close.type = 'button';
-  close.className = 'btn mines-howto__close';
-  close.setAttribute('aria-label', 'Close');
-  close.textContent = '✕';
-
-  const title = document.createElement('h2');
-  title.id = 'mines-howto-title';
-  title.textContent = 'How to play';
-
   const intro = document.createElement('p');
-  intro.className = 'text-2';
+  intro.className = 'text-2 mines-howto__intro';
   intro.textContent = 'Clear every tile that is not a mine. Numbers count the mines touching a tile.';
 
   const list = document.createElement('ul');
@@ -61,57 +41,14 @@ export function openMinesHowto(returnFocusTo: HTMLElement): void {
     list.appendChild(li);
   }
 
-  const touch = document.createElement('p');
-  touch.className = 'text-2';
-  touch.textContent = TOUCH;
-
-  const ok = document.createElement('button');
-  ok.type = 'button';
-  ok.className = 'btn btn--primary';
-  ok.textContent = 'Got it';
-
   const body = document.createElement('div');
   body.className = 'mines-howto__body';
   body.append(list);
   body.insertAdjacentHTML('beforeend', CHORD_SVG);
 
-  dlg.append(close, title, intro, body, touch, ok);
-  backdrop.appendChild(dlg);
-  document.body.appendChild(backdrop);
+  const touch = document.createElement('p');
+  touch.className = 'text-2 mines-howto__touch';
+  touch.textContent = TOUCH;
 
-  const focusables = () => [...dlg.querySelectorAll<HTMLElement>('button')];
-
-  function onKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      dismiss();
-    } else if (e.key === 'Tab') {
-      const f = focusables();
-      const first = f[0];
-      const last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    }
-  }
-
-  function dismiss(): void {
-    document.removeEventListener('keydown', onKey);
-    backdrop.remove();
-    openDialog = null;
-    returnFocusTo.focus();
-  }
-
-  close.addEventListener('click', dismiss);
-  ok.addEventListener('click', dismiss);
-  backdrop.addEventListener('click', (e) => {
-    if (e.target === backdrop) dismiss();
-  });
-  document.addEventListener('keydown', onKey);
-  openDialog = dismiss;
-  ok.focus();
+  openModal({ title: 'How to play', body: [intro, body, touch], returnFocus: returnFocusTo });
 }

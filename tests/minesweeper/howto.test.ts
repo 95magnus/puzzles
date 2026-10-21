@@ -21,7 +21,7 @@ beforeEach(() => {
 afterEach(() => {
   unmount?.();
   unmount = undefined;
-  dialog()?.remove();
+  document.querySelectorAll('.modal').forEach(d => d.remove());
   root.remove();
 });
 
@@ -41,7 +41,7 @@ test('does not auto-open when mines-howto-seen is set', () => {
 test('? opens it; Esc closes and returns focus to ?', () => {
   setFlag('mines-howto-seen', true);
   unmount = mountMines(root);
-  const help = root.querySelector<HTMLButtonElement>('.mines-help')!;
+  const help = root.querySelector<HTMLButtonElement>('.shell-help')!;
   help.focus();
   help.click();
   expect(dialog()).not.toBeNull();
@@ -62,7 +62,7 @@ test('lists mouse and touch controls; ✕ and backdrop close it', () => {
   document.querySelector<HTMLButtonElement>('[aria-label="Close"]')!.click();
   expect(dialog()).toBeNull();
   openMinesHowto(opener);
-  const backdrop = document.querySelector<HTMLElement>('.mines-howto')!;
+  const backdrop = document.querySelector<HTMLElement>('.modal')!;
   backdrop.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   expect(dialog()).toBeNull();
   opener.remove();
@@ -79,6 +79,19 @@ test('Tab is trapped inside the dialog', () => {
   expect(document.activeElement).toBe(focusables[0]);
   key('Tab', true);
   expect(document.activeElement).toBe(last);
+  key('Escape');
+  opener.remove();
+});
+
+test('body contains the three controls, the chord demo and the touch line', () => {
+  const opener = document.createElement('button');
+  document.body.appendChild(opener);
+  openMinesHowto(opener);
+  const panel = document.querySelector<HTMLElement>('.modal .modal__panel')!;
+  expect(panel.querySelectorAll('.mines-howto__body li')).toHaveLength(3);
+  expect(panel.querySelector('svg.mines-howto__demo')).not.toBeNull();
+  expect(panel.textContent).toContain('Long-press');
+  expect(panel.querySelector('.modal__title')!.textContent).toBe('How to play');
   key('Escape');
   opener.remove();
 });

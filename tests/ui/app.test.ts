@@ -17,6 +17,7 @@ vi.mock('../../src/gen/client', async () => {
 
 import { mountApp, parseRoute } from '../../src/ui/app';
 import { createHud } from '../../src/ui/hud';
+import { openModal } from '../../src/ui/modal';
 import { createWinCard } from '../../src/ui/winCard';
 
 let root: HTMLElement;
@@ -26,7 +27,7 @@ const solutionFor = (date: string) => generateWithSolution(7, mulberry32(seedFro
 const $ = <T extends Element = HTMLElement>(sel: string) => root.querySelector(sel) as T | null;
 const subtitle = () => $('[data-role="subtitle"]')?.textContent;
 const hudText = () => $('.hud')?.textContent ?? '';
-const winCard = () => $('.win')!;
+const winCard = () => $('.end-card')!;
 const svg = () => $<SVGSVGElement>('.board-svg')!;
 
 async function settle() {
@@ -97,19 +98,19 @@ test('parseRoute', () => {
 test('renders header with wordmark, Daily/Practice tabs and a howto hook', async () => {
   mount('2026-10-21T10:00:00Z');
   await settle();
-  expect($('.wordmark')?.textContent).toBe('flow');
-  const tabs = [...root.querySelectorAll<HTMLAnchorElement>('.app-tabs a')];
+  expect($('.wordmark')?.textContent).toBe('puzzles');
+  const tabs = [...root.querySelectorAll<HTMLAnchorElement>('.shell-tabs a')];
   expect(tabs.map(t => [t.textContent, t.getAttribute('href')])).toEqual([['Daily', '#/'], ['Practice', '#/practice?size=7']]);
   expect(tabs[0].getAttribute('aria-current')).toBe('page');
   expect($('[data-action="howto"]')?.textContent).toBe('?');
 });
 
-test('header links to the Mines page', async () => {
+test('header links home to the dashboard and names the game', async () => {
   mount('2026-10-21T10:00:00Z');
   await settle();
-  const mines = root.querySelector<HTMLAnchorElement>('.app-header a[href="./minesweeper.html"]');
-  expect(mines?.textContent).toBe('Mines');
-  expect($('.wordmark')?.getAttribute('aria-current')).toBe('page');
+  expect($<HTMLAnchorElement>('.shell-header .wordmark')?.getAttribute('href')).toBe('./index.html');
+  expect($('.shell-game')?.textContent).toBe('Flow');
+  expect($('.shell-game')?.getAttribute('aria-current')).toBe('page');
 });
 
 test('daily subtitle shows number, date, and size', async () => {
@@ -288,7 +289,7 @@ test('practice route uses size + seed, size seg and New puzzle regenerate', asyn
   expect(sizes.map(b => b.textContent)).toEqual(['5×5', '6×6', '7×7', '8×8', '9×9']);
   expect(sizes[0].getAttribute('aria-pressed')).toBe('true');
   expect($('[data-action="new"]')!.classList.contains('btn--primary')).toBe(true);
-  expect(root.querySelector('.app-tabs a[href="#/practice?size=5"]')!.getAttribute('aria-current')).toBe('page');
+  expect(root.querySelector('.shell-tabs a[href="#/practice?size=5"]')!.getAttribute('aria-current')).toBe('page');
 
   sizes[4].click();
   await settle();
@@ -411,11 +412,24 @@ test('Ctrl/Cmd+Z is ignored while the how-to modal is open', async () => {
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
 });
 
+test('game shortcuts are ignored while any shared modal is open', async () => {
+  setFlag('howto-seen', true);
+  mount('2026-10-21T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor('2026-10-21');
+  draw(sol[0]);
+  openModal({ title: 'Other', body: [], returnFocus: null });
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  expect(hudText()).toContain(`Flows 1/${sol.length}`);
+});
+
 test('re-selecting the active Practice tab keeps the current puzzle', async () => {
   history.replaceState(null, '', '#/practice?size=5&seed=123');
   mount('2026-10-21T10:00:00Z');
   await settle();
-  const tab = () => root.querySelector<HTMLAnchorElement>('.app-tabs a:last-child')!;
+  const tab = () => root.querySelector<HTMLAnchorElement>('.shell-tabs a:last-child')!;
   expect(tab().getAttribute('href')).toBe('#/practice?size=5');
   root.querySelectorAll<HTMLButtonElement>('.sizes button')[1].click(); // 6×6
   await settle();
@@ -467,7 +481,7 @@ test('win card shows daily and practice variants and hides', () => {
   const card = createWinCard(root);
   const onPrimary = vi.fn();
   card.show({ timeMs: 61_000, mode: 'daily', countdownMs: 3_600_000, onPrimary });
-  const el = root.querySelector<HTMLElement>('.win')!;
+  const el = root.querySelector<HTMLElement>('.end-card')!;
   expect(el.hidden).toBe(false);
   expect(el.textContent).toContain('01:01');
   expect(el.textContent).toContain('Next daily in 01:00:00');
@@ -478,4 +492,21 @@ test('win card shows daily and practice variants and hides', () => {
   expect(el.querySelector('button')!.textContent).toBe('Next puzzle');
   card.hide();
   expect(el.hidden).toBe(true);
+});
+
+test('win card uses the shared end-card structure', () => {
+  const card = createWinCard(root);
+  card.show({ timeMs: 83_000, mode: 'daily', countdownMs: 60_000, onPrimary: () => {} });
+  const el = root.querySelector<HTMLElement>(':scope > .end-card.glass')!;
+  expect(el.getAttribute('role')).toBe('dialog');
+  expect(el.querySelector('.end-card__title')!.textContent).toBe('Solved ✦');
+  expect(el.querySelector('.end-card__stat')!.textContent).toBe('01:23');
+  expect(el.querySelector('.end-card__next')!.textContent).toBe('Next daily in 00:01:00');
+  expect(el.querySelectorAll('.end-card__actions > .btn--primary')).toHaveLength(1);
+});
+
+test('HUD values and labels use the shared HUD typography classes', () => {
+  createHud(root).update({ flowsDone: 1, flowsTotal: 6, fillPct: 10 }, 0, false);
+  expect(root.querySelectorAll('.hud__value.hud-value')).toHaveLength(3);
+  expect(root.querySelectorAll('.hud__label.hud-label')).toHaveLength(2);
 });

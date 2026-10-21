@@ -11,8 +11,10 @@ import { getFlag, loadDaily, saveDaily } from '../core/storage';
 import type { Puzzle } from '../core/types';
 import { latestOnly, requestPuzzle, STALE } from '../gen/client';
 import { createBoard } from './board';
+import { createHeader } from './header';
 import { createHud } from './hud';
-import { isHowtoOpen, openHowto } from './howto';
+import { openHowto } from './howto';
+import { isModalOpen } from './modal';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
@@ -64,20 +66,10 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   const generate = latestOnly(requestPuzzle);
 
   // ---------- DOM ----------
-  const tabDaily = h('a', { class: 'seg__item', href: '#/', text: 'Daily' });
-  const tabPractice = h('a', { class: 'seg__item', href: '#/practice', text: 'Practice' });
-  const header = h(
-    'header',
-    { class: 'app-header' },
-    h(
-      'div',
-      { class: 'app-brand' },
-      h('a', { class: 'wordmark', href: '#/', 'aria-label': 'flow — daily puzzle', 'aria-current': 'page', text: 'flow' }),
-      h('a', { class: 'game-link', href: './minesweeper.html', text: 'Mines' }),
-    ),
-    h('nav', { class: 'seg app-tabs', 'aria-label': 'Mode' }, tabDaily, tabPractice),
-    h('button', { class: 'icon-btn', type: 'button', 'data-action': 'howto', 'aria-label': 'How to play', text: '?' }),
-  );
+  const shellHeader = createHeader({ game: 'Flow', onHelp: () => showHowto() });
+  const header = shellHeader.el;
+  const tabDaily = shellHeader.tabDaily!;
+  const tabPractice = shellHeader.tabPractice!;
 
   const sub = h('div', { class: 'app-sub' });
   const subtitle = h('p', { class: 'subtitle num', 'data-role': 'subtitle' });
@@ -344,7 +336,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   function onKeyDown(e: KeyboardEvent) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'z') return;
-    if (isHowtoOpen()) return; // the modal owns the keyboard while open
+    if (isModalOpen()) return; // the modal owns the keyboard while open
     const t = e.target as HTMLElement | null;
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
     e.preventDefault();
@@ -365,7 +357,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     if (solved && session?.mode === 'daily') winCard.setCountdown(dailyCountdown());
   }
 
-  const howtoBtn = header.querySelector<HTMLButtonElement>('[data-action="howto"]')!;
+  const howtoBtn = shellHeader.helpBtn!;
   function showHowto() {
     openHowto({
       colorblind: getFlag('colorblind'),
@@ -373,7 +365,6 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
       returnFocus: howtoBtn,
     });
   }
-  howtoBtn.addEventListener('click', showHowto);
   if (!getFlag('howto-seen')) showHowto();
 
   newDailyBtn.addEventListener('click', () => {
