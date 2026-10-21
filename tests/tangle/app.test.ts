@@ -98,7 +98,7 @@ test('daily shows number, size and arrow count', () => {
   expect(text('.tangle-sub')).toBe(`#2 · Wed Oct 21 · 40×40 · ${n} arrows`);
   expect(text('.tangle-left')).toBe(String(n));
   expect(text('.tangle-lives')).toBe('♥♥♥');
-  expect(root.querySelector('.tangle-lives')!.getAttribute('aria-label')).toBe('Lives');
+  expect(root.querySelector('.tangle-lives')!.getAttribute('aria-label')).toBe('3 of 3 lives left');
   expect(text('.tangle-time')).toBe('00:00');
   expect(text('.tangle-attempt')).toBe('');
   expect(root.querySelector('.shell-game')!.textContent).toBe('Tangle');
@@ -188,6 +188,33 @@ test('persist never overwrites a later attempt from another tab', async () => {
   expect(save.attempt).toBe(3);
   expect(save.removed).toBe(all);
   expect(text('.tangle-attempt')).toBe('Attempt 3');
+});
+
+test('persist never overwrites a won save from another tab', async () => {
+  mount('#/');
+  const l = dailyLevel();
+  const b = blockedArrow(l);
+  for (let k = 0; k < 2; k++) await tapArrow(l, b);
+  // Another tab wins this attempt; our next bump is the last life.
+  saveTangleDaily({ date: DATE, removed: '0'.repeat(l.arrows.length), lives: 3, elapsedMs: 5_000, status: 'won', attempt: 1 });
+  await tapArrow(l, b);
+  expect(loadTangleDaily(DATE)!.status).toBe('won');
+  expect(text('.end-card__title')).toBe('Untangled ✦');
+});
+
+test('a finished lost daily reopens with Out of lives and Try again', () => {
+  const l = dailyLevel();
+  saveTangleDaily({ date: DATE, removed: '1'.repeat(l.arrows.length), lives: 0, elapsedMs: 9_000, status: 'lost', attempt: 1 });
+  mount('#/');
+  expect(text('.end-card__title')).toBe('Out of lives');
+  expect([...root.querySelectorAll('.end-card button')].some((x) => x.textContent === 'Try again')).toBe(true);
+});
+
+test('a finished won daily reopens with the win card', () => {
+  const l = dailyLevel();
+  saveTangleDaily({ date: DATE, removed: '0'.repeat(l.arrows.length), lives: 3, elapsedMs: 9_000, status: 'won', attempt: 1 });
+  mount('#/');
+  expect(text('.end-card__title')).toBe('Untangled ✦');
 });
 
 test('practice seed route is deterministic and Restart restores all arrows', async () => {

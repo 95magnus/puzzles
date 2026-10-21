@@ -11,6 +11,7 @@ import { analyze, exitLine } from '../../src/tangle/solver';
 import { DIRS, type Level } from '../../src/tangle/types';
 
 const SEEDS = Array.from({ length: 20 }, (_, i) => i + 1);
+const HUGE_SEEDS = [1, 2, 3, 4, 5];
 
 /** Generate each preset/seed once and share it across tests (hard is the expensive one). */
 const cache = new Map<string, Level>();
@@ -27,8 +28,8 @@ beforeAll(() => {
     level('medium', seed);
     level('hard', seed);
   }
-  level('huge', 7);
-}, 60_000);
+  for (const seed of HUGE_SEEDS) level('huge', seed);
+}, 120_000);
 
 /** Shape violations of a level, empty when valid (plain checks: per-cell `expect` is slow). */
 function shapeErrors(l: Level): string[] {
@@ -93,7 +94,7 @@ test('no overlaps, length ≥ 2, straight neck, exit line misses own body', () =
       expect(shapeErrors(l), `${id} seed ${seed}`).toEqual([]);
     }
   }
-  expect(shapeErrors(level('huge', 7))).toEqual([]);
+  for (const seed of HUGE_SEEDS) expect(shapeErrors(level('huge', seed)), `huge seed ${seed}`).toEqual([]);
 });
 
 test('always solvable', () => {
@@ -101,12 +102,12 @@ test('always solvable', () => {
     expect(analyze(level('medium', seed))).not.toBeNull();
     expect(analyze(level('hard', seed))).not.toBeNull();
   }
-  expect(analyze(level('huge', 7))).not.toBeNull();
+  for (const seed of HUGE_SEEDS) expect(analyze(level('huge', seed))).not.toBeNull();
 });
 
 test('dense: fill ≥ 95 % for hard', () => {
   for (const seed of SEEDS) expect(fillRatio(level('hard', seed))).toBeGreaterThanOrEqual(0.95);
-  expect(fillRatio(level('huge', 7))).toBeGreaterThanOrEqual(0.95);
+  for (const seed of HUGE_SEEDS) expect(fillRatio(level('huge', seed))).toBeGreaterThanOrEqual(0.95);
 });
 
 test('hard is hard: ≤ 20 % of arrows free at the start', () => {

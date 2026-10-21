@@ -97,7 +97,7 @@ export function setMinesPreset(id: MinesPreset): void {
 
 export type TangleStatus = 'playing' | 'won' | 'lost';
 export type TanglePreset = 'medium' | 'hard' | 'huge';
-/** `removed` is one char per arrow: 0 (still on the board) / 1 (removed). The level itself is regenerated from the date. */
+/** `removed` is one char per arrow: 1 (still on the board, alive) / 0 (removed). The level itself is regenerated from the date. */
 export type TangleDailySave = {
   v: 1;
   date: string;

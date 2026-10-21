@@ -113,6 +113,7 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
       lives.appendChild(h);
     }
     lives.title = `${n} of ${MAX_LIVES} lives left`;
+    lives.setAttribute('aria-label', `${n} of ${MAX_LIVES} lives left`);
   }
 
   function renderHud(): void {
@@ -134,7 +135,8 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
     const saved = loadTangleDaily(dailyDate);
     if (
       saved &&
-      (saved.attempt > attempt || (saved.attempt === attempt && saved.status !== 'playing' && game.status === 'playing'))
+      (saved.attempt > attempt || (saved.attempt === attempt && saved.status !== 'playing' && game.status === 'playing') ||
+        (saved.attempt === attempt && saved.status === 'won'))
     ) {
       loadDaily();
       return true;

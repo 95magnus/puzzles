@@ -49,7 +49,7 @@ Stack as Flow/Mines: TypeScript + Vite, no UI framework. The board is rendered a
 |---|---|---|
 | `tangle/types` | `Arrow`, `Level`, `GameState`, `PresetId`, `LevelSpec` | — |
 | `tangle/generate` | `generateLevel(spec, rng): Level` — deterministic; `PRESETS`, `DAILY_PRESET`, `tangleDailySeed(date)` | `core/rng`, `solver` |
-| `tangle/solver` | `exitLine`, `blockersOf`, `isFree`, `analyze(level) → { order, initiallyFree, depth } \| null` | `types` |
+| `tangle/solver` | `exitLine`, `blockersOf`, `analyze(level) → { order, initiallyFree, depth } \| null` | `types` |
 | `tangle/game` | Pure state + `tap(i)`: exit / bump / ignored, lives, win/loss, encode/restore. No DOM | `solver` |
 | `tangle/board` | SVG renderer, hit-testing by cell, slide-out and bump animations, input lock | `game` |
 | `tangle/app` | Routing, daily number/date, HUD, timer, end cards, Try again, how-to, storage | all above, `core/daily`, `core/storage`, `ui/header`, `ui/modal` |
@@ -92,9 +92,9 @@ type TapResult =
 
 | Preset | Grid | maxLen | blockBias | Approx. arrows |
 |---|---|---|---|---|
-| `medium` | 30×30 | 12 | 1 | ~140 |
-| `hard` (default, daily) | 40×40 | 14 | 4 | ~250 |
-| `huge` | 50×50 | 16 | 4 | ~400 |
+| `medium` | 30×30 | 12 | 1 | ~150 |
+| `hard` (default, daily) | 40×40 | 14 | 4 | ~325 |
+| `huge` | 50×50 | 16 | 4 | ~530 |
 
 Daily seed: `seedFromString('tangle-daily:' + isoDate)`, preset `hard`.
 
@@ -119,8 +119,8 @@ Stop when a pass changes nothing. Remaining isolated single cells stay empty.
 ## 5. Solver (`solver`)
 
 - `exitLine(level, i)`: cell indices from the head to the edge.
-- `blockersOf(state, i)`: distinct live arrows in `i`'s exit line, nearest first.
-- `isFree(state, i)`: `blockersOf` is empty.
+- `blockersOf(level, occ, i)`: distinct live arrows in `i`'s exit line, nearest first.
+- There is no separate `isFree`: callers test `blockersOf(...).length === 0`.
 - `analyze(level)`: build edges `blocker → blocked` for every arrow pair; Kahn's algorithm. Returns `null` if a cycle exists, else `{ order, initiallyFree, depth }` where `depth` is the longest chain length. Used by the generator, tests and the e2e helper.
 
 ## 6. Game rules (`game`)
@@ -147,13 +147,13 @@ Reuses the "Dusk" theme (background glows, glass board panel, Inter) from `ui/th
 - Bump: head slides to contact (0.35 cell overlap), flash, slides back; ≤ 500 ms.
 - End card slides up (shared modal).
 
-**Sizing:** cell size `clamp(14px, fit-to-panel, 28px)`. Hard (40×40) is ~15 px per cell on a 1280×720 screen without scrolling. Huge and all boards on phones may overflow at the 14 px minimum; then the board panel scrolls on its own and the page never scrolls horizontally. Hit-testing works by cell, so the whole body of an arrow is the tap target.
+**Sizing:** cell size `clamp(12px, fit-to-panel, 28px)`, measured from the real page chrome. Hard (40×40) is ~13 px per cell on a 1280×720 screen without scrolling. Huge and all boards on phones may overflow at the 12 px minimum; then the board panel scrolls on its own and the page never scrolls horizontally. Hit-testing works by cell, so the whole body of an arrow is the tap target.
 
 ## 8. Screens
 
 Header (shared): `puzzles · Tangle`, Daily / Practice tabs, "?".
 
-1. **Daily (playing):** subtitle `#N · Wed Oct 21 · 40×40 · 251 arrows`; board; HUD below: lives `♥♥♥` (lost lives as outlines), arrows left, timer mm:ss, and `Attempt N` from attempt 2.
+1. **Daily (playing):** subtitle `#N · Wed Oct 21 · 40×40 · 325 arrows`; board; HUD below: lives `♥♥♥` (lost lives as outlines), arrows left, timer mm:ss, and `Attempt N` from attempt 2.
 2. **Daily (won):** board dims; card "Untangled ✦", time, `first try` / `attempt N`, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Daily (out of lives):** board stays visible; dialog centred over it: "Out of lives", % of arrows cleared, time, next-daily countdown, **Try again** (primary) and **Play practice**.
 4. **Practice:** preset switch (Medium · Hard · Huge) replaces the subtitle; buttons **New board** (primary) and **Restart** (same board, 3 lives). End cards offer **New board**.
@@ -164,7 +164,7 @@ The timer starts when the board appears and stops on win or loss. Daily number u
 
 ## 9. Persistence
 
-- **Daily** save under key `tangle:daily`: `{ v: 1, date, removed: string /* one char per arrow: 0 | 1 */, lives, elapsedMs, status, attempt }`. The level is never stored; it is regenerated from the date seed.
+- **Daily** save under key `tangle:daily`: `{ v: 1, date, removed: string /* one char per arrow: 1 = still on the board, 0 = removed */, lives, elapsedMs, status, attempt }`. The level is never stored; it is regenerated from the date seed.
 - Written after every tap that changes state and on `pagehide`. A tab never overwrites a won save or a later attempt (same rule as Mines).
 - On load: restore if `date` is today and `removed.length` equals today's arrow count; a won or lost daily reopens in its end state (lost offers Try again). Other dates, wrong versions, wrong lengths, invalid characters or `lives` outside 0–3 → discard silently.
 - **Practice:** not persisted. Only the preset (`tangle:preset`) and the how-to flag are remembered.
