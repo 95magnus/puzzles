@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { bodyAt, createTangleBoard, fitCell, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
+import { arrowDist, bodyAt, createTangleBoard, fitCell, pickArrow, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
 import { newGame, tap } from '../../src/tangle/game';
 import { PALETTE } from '../../src/ui/palette';
 import { lvl } from './helpers';
@@ -102,13 +102,30 @@ test('setGame renders one group per alive arrow', () => {
   expect(el.querySelector('.tangle-panel.glass')).not.toBeNull();
 });
 
-test('tap maps to the right cell', () => {
+test('a tap on an arrow reports its head cell', () => {
   board.setGame(newGame(LEVEL()));
   stubRect(300, 300);
-  tapAt(45, 15);
-  expect(taps).toEqual([1]);
+  tapAt(15, 15); // tail cell of arrow 0
+  expect(taps).toEqual([2]);
+});
+
+test('a tap just off an arrow still hits it; far from every arrow hits nothing', () => {
+  board.setGame(newGame(LEVEL()));
+  stubRect(300, 300);
+  tapAt(45, 36); // empty cell (1,1), 0.7 cells below arrow 0's centre line
+  expect(taps).toEqual([2]);
+  tapAt(45, 42); // 0.9 cells below: outside the hit radius
   tapAt(295, 295);
-  expect(taps).toEqual([1, 99]);
+  expect(taps).toEqual([2]);
+});
+
+test('pickArrow prefers the nearest centre line', () => {
+  const l = LEVEL();
+  const owner = new Int32Array(100).fill(-1);
+  l.arrows.forEach((a, i) => a.cells.forEach((c) => (owner[c] = i)));
+  // Between arrow 3's tail (4,5) and arrow 1's head (5,3) region: nearer arrow 3.
+  expect(pickArrow(l, owner, [5.5, 4.2])).toBe(3);
+  expect(arrowDist(l, 0, [1.5, 0.5])).toBe(0);
 });
 
 test('exit removes the arrow when play resolves', async () => {
@@ -146,7 +163,7 @@ test('ignored resolves at once', async () => {
   await board.play({ kind: 'ignored' });
 });
 
-test('taps are ignored while an animation plays', () => {
+test('taps on a moving arrow are ignored; other arrows stay tappable', () => {
   stubMotion(false);
   vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
@@ -154,8 +171,30 @@ test('taps are ignored while an animation plays', () => {
   board.setGame(s);
   stubRect(300, 300);
   void board.play(tap(s, 0));
-  tapAt(45, 15);
+  tapAt(45, 15); // arrow 0, still sliding out
   expect(taps).toEqual([]);
+  tapAt(105, 165); // arrow 1 at (5,3)
+  expect(taps).toEqual([53]);
+});
+
+test('a bumping arrow ignores taps until it is back', () => {
+  stubMotion(false);
+  vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
+  vi.stubGlobal('cancelAnimationFrame', vi.fn());
+  const s = newGame(LEVEL());
+  board.setGame(s);
+  stubRect(300, 300);
+  void board.play(tap(s, 30));
+  tapAt(15, 105); // arrow 2, mid-bump
+  expect(taps).toEqual([]);
+});
+
+test('the board draws a starfield behind the arrows', () => {
+  board.setGame(newGame(LEVEL()));
+  const layers = svg().querySelectorAll('rect.tangle-stars');
+  expect(layers.length).toBe(2);
+  expect(svg().firstElementChild!.tagName.toLowerCase()).toBe('defs');
+  expect(svg().querySelector('g.tangle-arrow')!.compareDocumentPosition(layers[1])).toBe(Node.DOCUMENT_POSITION_PRECEDING);
 });
 
 test('setInteractive(false) blocks taps', () => {
@@ -166,7 +205,7 @@ test('setInteractive(false) blocks taps', () => {
   expect(taps).toEqual([]);
   board.setInteractive(true);
   tapAt(45, 15);
-  expect(taps).toEqual([1]);
+  expect(taps).toEqual([2]);
 });
 
 test('animated exit and bump complete with real frames', async () => {
@@ -198,7 +237,7 @@ test('setGame during an animation cancels it without touching the new board', as
   expect(el.querySelector('[data-a="0"]')).not.toBeNull();
   stubRect(300, 300);
   tapAt(45, 15);
-  expect(taps).toEqual([1]);
+  expect(taps).toEqual([2]);
 });
 
 test('right-button release is not a tap', () => {
@@ -225,7 +264,7 @@ test('pointerup without a matching pointerdown is not a tap', () => {
   pointer('pointerup', 45, 15);
   expect(taps).toEqual([]);
   tapAt(45, 15);
-  expect(taps).toEqual([1]);
+  expect(taps).toEqual([2]);
 });
 
 test('fitCell fits the smaller of width and height, clamped to [12, 28]', () => {

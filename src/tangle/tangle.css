@@ -168,6 +168,20 @@
   touch-action: pan-x pan-y;
 }
 
+/* Barely-there dots at every cell centre: show the straight lines arrows will travel. */
+.tangle-star {
+  fill: #fff;
+  opacity: 0.13;
+}
+
+.tangle-star--bright {
+  opacity: 0.3;
+}
+
+.tangle-stars {
+  pointer-events: none;
+}
+
 .tangle-arrow path {
   fill: none;
   stroke: var(--c);

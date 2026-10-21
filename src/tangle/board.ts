@@ -20,14 +20,18 @@ const PANEL_PAD = 12;
 const MIN_CELL = 12;
 const MAX_CELL = 28;
 /** Animation speed in cells per second. */
-const SPEED = 30;
-const EXIT_MAX_MS = 600;
-/** Each leg (out, back) of a bump; two legs stay within the 500 ms budget with the flash. */
-const BUMP_LEG_MAX_MS = 200;
+const SPEED = 45;
+const EXIT_MAX_MS = 400;
+/** Each leg (out, back) of a bump. */
+const BUMP_LEG_MAX_MS = 140;
 /** How far past `distance` the head slides so it visibly touches the blocker. */
 const BUMP_CONTACT = 0.7;
-const FLASH_MS = 250;
+const FLASH_MS = 200;
 const HEAD = 0.42;
+/** A tap hits the nearest arrow whose centre line is within this many cells. */
+const HIT_RADIUS = 0.75;
+
+let boardCount = 0;
 
 /** Whole-pixel cell size that fits `cols × rows` into `availW × availH` px, clamped to [MIN_CELL, MAX_CELL]. */
 export function fitCell(cols: number, rows: number, availW: number, availH: number): number {
@@ -94,6 +98,72 @@ function headPoints([hx, hy]: Pt, [dc, dr]: readonly [number, number]): string {
   return [tip, b1, b2].map(([x, y]) => fmt(x) + ',' + fmt(y)).join(' ');
 }
 
+/** Distance from `p` to the segment `a`–`b`. */
+function segDist([px, py]: Pt, [ax, ay]: Pt, [bx, by]: Pt): number {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 ? Math.min(1, Math.max(0, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+  return Math.hypot(px - (ax + dx * t), py - (ay + dy * t));
+}
+
+/** Distance from `p` (in cell units) to the centre line of arrow `i`. */
+export function arrowDist(level: Level, i: number, p: Pt): number {
+  const pts = trackFor(level, i, 0);
+  if (pts.length === 1) return Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1]);
+  let best = Infinity;
+  for (let k = 1; k < pts.length; k++) best = Math.min(best, segDist(p, pts[k - 1], pts[k]));
+  return best;
+}
+
+/**
+ * The arrow a tap at `p` (cell units) means: the nearest one among `owner`'s arrows in the 3×3 cells
+ * around `p`, if its centre line is within HIT_RADIUS. `owner` maps cell → arrow, -1 when empty.
+ */
+export function pickArrow(level: Level, owner: Int32Array, p: Pt): number {
+  const { cols, rows } = level;
+  const c0 = Math.floor(p[0]);
+  const r0 = Math.floor(p[1]);
+  let best = -1;
+  let bestD = HIT_RADIUS;
+  for (let r = r0 - 1; r <= r0 + 1; r++) {
+    if (r < 0 || r >= rows) continue;
+    for (let c = c0 - 1; c <= c0 + 1; c++) {
+      if (c < 0 || c >= cols) continue;
+      const i = owner[r * cols + c];
+      if (i < 0 || i === best) continue;
+      const d = arrowDist(level, i, p);
+      if (d <= bestD) {
+        best = i;
+        bestD = d;
+      }
+    }
+  }
+  return best;
+}
+
+/** Faint dots at every cell centre, with a sparser brighter layer so the field reads like stars. */
+function starfield(id: string, cols: number, rows: number): SVGElement[] {
+  const defs = document.createElementNS(SVG_NS, 'defs');
+  defs.innerHTML =
+    `<pattern id="${id}-a" patternUnits="userSpaceOnUse" width="1" height="1">` +
+    `<circle cx=".5" cy=".5" r=".045" class="tangle-star"/></pattern>` +
+    `<pattern id="${id}-b" patternUnits="userSpaceOnUse" width="7" height="5">` +
+    `<circle cx="1.5" cy=".5" r=".065" class="tangle-star tangle-star--bright"/>` +
+    `<circle cx="4.5" cy="2.5" r=".065" class="tangle-star tangle-star--bright"/>` +
+    `<circle cx="2.5" cy="3.5" r=".055" class="tangle-star tangle-star--bright"/>` +
+    `<circle cx="6.5" cy="4.5" r=".055" class="tangle-star tangle-star--bright"/></pattern>`;
+  const layer = (suffix: string) => {
+    const rect = document.createElementNS(SVG_NS, 'rect');
+    rect.setAttribute('width', String(cols));
+    rect.setAttribute('height', String(rows));
+    rect.setAttribute('fill', `url(#${id}-${suffix})`);
+    rect.setAttribute('class', 'tangle-stars');
+    return rect;
+  };
+  return [defs, layer('a'), layer('b')];
+}
+
 type Anim = { cancel(): void };
 
 export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number) => void }): TangleBoardHandle {
@@ -110,8 +180,12 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
   /** Cell size last applied by fit(); 0 forces the next fit to apply. */
   let cellPx = 0;
   let groups = new Map<number, SVGGElement>();
+  /** Cell → arrow for every arrow still drawn, including ones animating out. */
+  let owner = new Int32Array(0);
+  /** Arrows mid-animation; taps on them are ignored so a double-tap never costs two lives. */
+  const moving = new Set<number>();
   let interactive = true;
-  let busy = false;
+  const starId = `tangle-stars-${++boardCount}`;
   /** Bumped by setGame/destroy so a superseded play() leaves the new board alone. */
   let gen = 0;
   const anims = new Set<Anim>();
@@ -213,6 +287,7 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
   function remove(i: number): void {
     groups.get(i)?.remove();
     groups.delete(i);
+    if (game) for (const cell of game.level.arrows[i].cells) if (owner[cell] === i) owner[cell] = -1;
   }
 
   async function playExit(i: number): Promise<void> {
@@ -270,14 +345,17 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     const matched = downId !== -1 && downId === e.pointerId && isPrimaryPress(e);
     if (isPrimaryPress(e) || downId === e.pointerId) downId = -1;
     if (!matched) return;
-    if (!interactive || busy || !game) return;
-    const { cols, rows } = game.level;
+    if (!interactive || !game) return;
+    const { level } = game;
     const rect = svg.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
-    const c = Math.floor(((e.clientX - rect.left) / rect.width) * cols);
-    const r = Math.floor(((e.clientY - rect.top) / rect.height) * rows);
-    if (c < 0 || c >= cols || r < 0 || r >= rows) return;
-    opts.onTap(r * cols + c);
+    const p: Pt = [
+      ((e.clientX - rect.left) / rect.width) * level.cols,
+      ((e.clientY - rect.top) / rect.height) * level.rows,
+    ];
+    const i = pickArrow(level, owner, p);
+    if (i < 0 || moving.has(i)) return;
+    opts.onTap(level.arrows[i].cells[level.arrows[i].cells.length - 1]);
   }
 
   const onContextMenu = (e: Event) => e.preventDefault();
@@ -296,18 +374,21 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     setGame(s) {
       gen++;
       cancelAll();
-      busy = false;
+      moving.clear();
       game = s;
       const { cols, rows, arrows } = s.level;
       svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
       cellPx = 0;
       svg.textContent = '';
+      svg.append(...starfield(starId, cols, rows));
       groups = new Map();
+      owner = new Int32Array(cols * rows).fill(-1);
       for (let i = 0; i < arrows.length; i++) {
         if (!s.alive[i]) continue;
         const g = makeGroup(i);
         groups.set(i, g);
         svg.appendChild(g);
+        for (const cell of arrows[i].cells) owner[cell] = i;
         draw(i, 0, trackFor(s.level, i, 0));
       }
       fit();
@@ -315,13 +396,13 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
 
     async play(r) {
       if (r.kind === 'ignored' || !game) return;
-      busy = true;
       const g0 = gen;
+      moving.add(r.arrow);
       try {
         if (r.kind === 'exit') await playExit(r.arrow);
         else await playBump(r.arrow, r.blocker, r.distance);
       } finally {
-        if (g0 === gen) busy = false;
+        if (g0 === gen) moving.delete(r.arrow);
       }
     },
 

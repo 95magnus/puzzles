@@ -232,15 +232,17 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
     if (!g) return;
     const result = tap(g, cell);
     if (result.kind === 'ignored') return;
-    board.setInteractive(false);
-    if (g.status !== 'playing') stopTimer();
+    // Other arrows stay tappable while this one animates; the board ignores taps on moving arrows.
+    if (g.status !== 'playing') {
+      board.setInteractive(false);
+      stopTimer();
+    }
     // If another tab moved the daily on, the board now shows that game: nothing to animate.
     if (persist()) return;
     renderHud();
     await board.play(result);
     if (game !== g) return; // replaced (restart, new board, route change) while animating
-    if (g.status !== 'playing') showCard();
-    else board.setInteractive(true);
+    if (g.status !== 'playing' && !card) showCard();
   }
 
   // ---------- Modes ----------

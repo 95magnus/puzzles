@@ -29,11 +29,11 @@ Tagline: *Tap arrows out of the knot. Don't crash.*
 
 **Exit line.** The cells in a straight line from the head (exclusive) to the board edge in the head's direction. An arrow is **free** when no other live arrow occupies any cell of its exit line. No arrow's exit line ever crosses its own body (guaranteed by the generator).
 
-**Tap.** Tapping any cell of a live arrow launches it:
+**Tap.** Tapping on or near a live arrow launches it — the nearest arrow whose centre line is within 0.75 of a cell:
 - **Free:** it slides out snake-style — the head moves straight along the exit line, the body follows its own path cell by cell — until fully off the board, then it is removed.
 - **Blocked:** the head slides along the exit line until it touches the first blocking arrow, bumps (both arrows flash red), you lose a life, and the arrow slides back to its starting position. Nothing else changes.
 
-Input is locked while an arrow animates, so a double-tap never costs a second life.
+An arrow ignores taps while it animates, so a double-tap never costs a second life; other arrows stay tappable.
 
 **Win:** every arrow removed. **Loss:** lives reach 0. After either, all taps are ignored.
 
@@ -139,15 +139,15 @@ Reuses the "Dusk" theme (background glows, glass board panel, Inter) from `ui/th
 **Arrows — "neon strokes" (approved in prototype).**
 - Body: SVG `<path>` through cell centres, `stroke-width = 26 %` of the cell size, round caps and joins, colour from `ui/palette` `PALETTE`.
 - Head: a filled triangle centred on the head cell, pointing in `dir`, with size ≈ 42 % of the cell, slightly rounded (stroke-linejoin round), same colour.
-- Board background: the existing glass panel; faint grid lines are not drawn (the tangle provides the texture).
+- Board background: the glass panel with a barely visible dot at every cell centre (opacity ≈ 0.13) and a sparser, brighter layer (≈ 0.3), like a starry sky. The dots line up with the exit lines, so the path an arrow will take is easy to follow.
 - Bump: arrow and blocker turn `#ff5c7a` for ~250 ms.
 
 **Motion** (disabled under `prefers-reduced-motion`, where exits/bumps resolve instantly with a brief red flash on a bump):
-- Exit: the arrow slides along its track (its cells + exit line) at ~30 cells/s, capped at 600 ms total; the board clips it at the edge.
-- Bump: head slides to contact (0.35 cell overlap), flash, slides back; ≤ 500 ms.
+- Exit: the arrow slides along its track (its cells + exit line) at ~45 cells/s, capped at 400 ms total; the board clips it at the edge.
+- Bump: head slides to contact (0.7 cell past the free cells), flash (200 ms), slides back; each leg ≤ 140 ms.
 - End card slides up (shared modal).
 
-**Sizing:** cell size `clamp(12px, fit-to-panel, 28px)`, measured from the real page chrome. Hard (40×40) is ~13 px per cell on a 1280×720 screen without scrolling. Huge and all boards on phones may overflow at the 12 px minimum; then the board panel scrolls on its own and the page never scrolls horizontally. Hit-testing works by cell, so the whole body of an arrow is the tap target.
+**Sizing:** cell size `clamp(12px, fit-to-panel, 28px)`, measured from the real page chrome. Hard (40×40) is ~13 px per cell on a 1280×720 screen without scrolling. Huge and all boards on phones may overflow at the 12 px minimum; then the board panel scrolls on its own and the page never scrolls horizontally. Hit-testing picks the nearest arrow centre line within 0.75 cell, so the whole body plus a margin is the tap target.
 
 ## 8. Screens
 

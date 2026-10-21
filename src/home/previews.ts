@@ -63,11 +63,11 @@ export function minesPreview(): SVGSVGElement {
 export function tanglePreview(): SVGSVGElement {
   const svg = frame();
   // [path, arrowhead tip x, tip y, direction dx, dy]
+  // Deliberately lopsided: no rotational symmetry, so the strokes never read as a pinwheel.
   const strokes: [string, number, number, number, number][] = [
-    ['M10 18 H36 V26', 36, 26, 0, 1],
-    ['M54 12 V32 H40', 40, 32, -1, 0],
-    ['M12 54 V40 H30', 30, 40, 1, 0],
-    ['M54 54 H44 V44', 44, 44, 0, -1],
+    ['M10 13 H38 V23 H50', 50, 23, 1, 0],
+    ['M12 52 V30 H24 V22', 24, 22, 0, -1],
+    ['M22 40 H42 V50', 42, 50, 0, 1],
   ];
   strokes.forEach(([d, x, y, dx, dy], i) => {
     const color = PALETTE[i + 1];
