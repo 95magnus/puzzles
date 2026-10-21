@@ -20,9 +20,19 @@ function svg(): SVGSVGElement {
   return el.querySelector<SVGSVGElement>('svg.tangle-svg')!;
 }
 
-function pointerUp(x: number, y: number) {
-  const ev = new MouseEvent('pointerup', { bubbles: true, cancelable: true, clientX: x, clientY: y });
+type Ptr = { button?: number; isPrimary?: boolean; pointerId?: number };
+
+function pointer(type: string, x: number, y: number, { button = 0, isPrimary = true, pointerId = 1 }: Ptr = {}) {
+  const ev = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button });
+  Object.defineProperty(ev, 'isPrimary', { value: isPrimary });
+  Object.defineProperty(ev, 'pointerId', { value: pointerId });
   svg().dispatchEvent(ev);
+}
+
+/** A full primary tap: pointerdown then pointerup at the same spot. */
+function tapAt(x: number, y: number, p: Ptr = {}) {
+  pointer('pointerdown', x, y, p);
+  pointer('pointerup', x, y, p);
 }
 
 function stubRect(w: number, h: number) {
@@ -95,9 +105,9 @@ test('setGame renders one group per alive arrow', () => {
 test('tap maps to the right cell', () => {
   board.setGame(newGame(LEVEL()));
   stubRect(300, 300);
-  pointerUp(45, 15);
+  tapAt(45, 15);
   expect(taps).toEqual([1]);
-  pointerUp(295, 295);
+  tapAt(295, 295);
   expect(taps).toEqual([1, 99]);
 });
 
@@ -144,7 +154,7 @@ test('taps are ignored while an animation plays', () => {
   board.setGame(s);
   stubRect(300, 300);
   void board.play(tap(s, 0));
-  pointerUp(45, 15);
+  tapAt(45, 15);
   expect(taps).toEqual([]);
 });
 
@@ -152,10 +162,10 @@ test('setInteractive(false) blocks taps', () => {
   board.setGame(newGame(LEVEL()));
   stubRect(300, 300);
   board.setInteractive(false);
-  pointerUp(45, 15);
+  tapAt(45, 15);
   expect(taps).toEqual([]);
   board.setInteractive(true);
-  pointerUp(45, 15);
+  tapAt(45, 15);
   expect(taps).toEqual([1]);
 });
 
@@ -187,6 +197,33 @@ test('setGame during an animation cancels it without touching the new board', as
   await p;
   expect(el.querySelector('[data-a="0"]')).not.toBeNull();
   stubRect(300, 300);
-  pointerUp(45, 15);
+  tapAt(45, 15);
+  expect(taps).toEqual([1]);
+});
+
+test('right-button release is not a tap', () => {
+  board.setGame(newGame(LEVEL()));
+  stubRect(300, 300);
+  tapAt(45, 15, { button: 2 });
+  pointer('pointerdown', 45, 15);
+  pointer('pointerup', 45, 15, { button: 2 });
+  expect(taps).toEqual([]);
+});
+
+test('pointerup without a matching pointerdown is not a tap', () => {
+  board.setGame(newGame(LEVEL()));
+  stubRect(300, 300);
+  pointer('pointerup', 45, 15);
+  expect(taps).toEqual([]);
+  // A second finger lifting (non-primary, other id) does not count either.
+  pointer('pointerdown', 45, 15, { pointerId: 1 });
+  pointer('pointerup', 45, 15, { pointerId: 2, isPrimary: false });
+  expect(taps).toEqual([]);
+  // A cancelled press does not become a tap.
+  pointer('pointerdown', 45, 15);
+  pointer('pointercancel', 45, 15);
+  pointer('pointerup', 45, 15);
+  expect(taps).toEqual([]);
+  tapAt(45, 15);
   expect(taps).toEqual([1]);
 });

@@ -25,7 +25,8 @@ const SPEED = 30;
 const EXIT_MAX_MS = 600;
 /** Each leg (out, back) of a bump; two legs stay within the 500 ms budget with the flash. */
 const BUMP_LEG_MAX_MS = 200;
-const BUMP_OVERLAP = 0.35;
+/** How far past `distance` the head slides so it visibly touches the blocker. */
+const BUMP_CONTACT = 0.7;
 const FLASH_MS = 250;
 const HEAD = 0.42;
 
@@ -219,7 +220,7 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
       return;
     }
     const level = game!.level;
-    const peak = distance + BUMP_OVERLAP;
+    const peak = distance + BUMP_CONTACT;
     const track = trackFor(level, i, Math.ceil(peak) + 1);
     const ms = Math.min(BUMP_LEG_MAX_MS, (peak / SPEED) * 1000);
     const ease = (t: number) => 1 - (1 - t) * (1 - t);
@@ -232,7 +233,24 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     if (g0 === gen) draw(i, 0, track);
   }
 
+  /** pointerId of the primary press that started on the svg; -1 when none. */
+  let downId = -1;
+
+  const isPrimaryPress = (e: PointerEvent) => e.isPrimary === true && e.button === 0;
+
+  function onPointerDown(e: PointerEvent): void {
+    downId = isPrimaryPress(e) ? e.pointerId : -1;
+  }
+
+  function onPointerCancel(): void {
+    downId = -1;
+  }
+
   function onPointerUp(e: PointerEvent): void {
+    // Only a primary-button release of a press that began on the svg is a tap.
+    const matched = downId !== -1 && downId === e.pointerId && isPrimaryPress(e);
+    if (isPrimaryPress(e) || downId === e.pointerId) downId = -1;
+    if (!matched) return;
     if (!interactive || busy || !game) return;
     const { cols, rows } = game.level;
     const rect = svg.getBoundingClientRect();
@@ -245,7 +263,9 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
 
   const onContextMenu = (e: Event) => e.preventDefault();
 
+  svg.addEventListener('pointerdown', onPointerDown as EventListener);
   svg.addEventListener('pointerup', onPointerUp as EventListener);
+  svg.addEventListener('pointercancel', onPointerCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('resize', fit);
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
@@ -291,7 +311,9 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     destroy() {
       gen++;
       cancelAll();
+      svg.removeEventListener('pointerdown', onPointerDown as EventListener);
       svg.removeEventListener('pointerup', onPointerUp as EventListener);
+      svg.removeEventListener('pointercancel', onPointerCancel);
       panel.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('resize', fit);
       ro?.disconnect();
