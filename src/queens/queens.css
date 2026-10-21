@@ -1,0 +1,134 @@
+/* Queens page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
+   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+:root {
+  --queens-bg: #1d1b28; /* effective board background (BOARD_BG_EFFECTIVE) */
+  --queens-line: rgba(0, 0, 0, 0.45);
+  --queens-edge: #0e0c1a;
+  --queens-queen: #f4f5fb;
+  --queens-conflict: #ff5c7a;
+}
+
+/* ---------- Page ---------- */
+/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
+.queens-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
+}
+
+.queens-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.queens-stage {
+  position: relative;
+  width: 100%;
+}
+
+.queens-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%; /* narrowed to the board panel's width by the app */
+  padding: 0 4px;
+}
+
+.queens-stats {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.queens-controls {
+  display: flex;
+  gap: var(--space);
+}
+
+/* ---------- Board ---------- */
+.queens-board {
+  display: flex;
+  justify-content: center;
+}
+
+.queens-board--locked .queens-grid {
+  pointer-events: none;
+}
+
+.queens-panel {
+  padding: 12px; /* matches PANEL_PAD in board.ts */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.queens-grid {
+  --cell: 40px;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Hairlines and 3px region borders are inset shadows so every cell is exactly --cell wide. */
+.queens-cell {
+  --st: 0 0 0 0 transparent;
+  --sr: 0 0 0 0 transparent;
+  --sb: 0 0 0 0 transparent;
+  --sl: 0 0 0 0 transparent;
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  background: color-mix(in srgb, var(--c) 35%, var(--queens-bg));
+  font-size: calc(var(--cell) * 0.62);
+  line-height: 1;
+  color: var(--queens-queen);
+  box-shadow: var(--st), var(--sr), var(--sb), var(--sl), inset 0 0 0 0.5px var(--queens-line);
+  cursor: pointer;
+}
+
+.queens-cell.e-t { --st: inset 0 3px 0 0 var(--queens-edge); }
+.queens-cell.e-r { --sr: inset -3px 0 0 0 var(--queens-edge); }
+.queens-cell.e-b { --sb: inset 0 -3px 0 0 var(--queens-edge); }
+.queens-cell.e-l { --sl: inset 3px 0 0 0 var(--queens-edge); }
+
+.queens-cell.is-mark {
+  font-size: calc(var(--cell) * 0.4);
+  color: rgba(244, 245, 251, 0.45);
+}
+
+.queens-cell.is-conflict {
+  background-image: repeating-linear-gradient(45deg, rgba(255, 92, 122, 0.22) 0 4px, transparent 4px 9px);
+}
+
+.queens-cell.is-queen.is-conflict {
+  color: var(--queens-conflict);
+}
+
+.queens-cell.is-glow {
+  animation: queens-glow 360ms ease-out;
+}
+
+@keyframes queens-glow {
+  0% { filter: none; transform: scale(1); }
+  45% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)) brightness(1.4); transform: scale(1.12); }
+  100% { filter: none; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .queens-cell.is-glow {
+    animation: none;
+  }
+}
