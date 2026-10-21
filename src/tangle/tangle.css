@@ -74,11 +74,72 @@
   -webkit-mask: var(--tangle-heart) center / contain no-repeat;
   mask: var(--tangle-heart) center / contain no-repeat;
   --tangle-heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 14.2 2.3 8.6A3.4 3.4 0 0 1 8 4.2a3.4 3.4 0 0 1 5.7 4.4z'/%3E%3C/svg%3E");
+  color: transparent; /* the ♥ / ♡ glyph is for text readers; the mask draws the heart */
+  font-size: 0;
   transition: background-color var(--dur) var(--ease);
 }
 
 .tangle-life.is-lost {
   background: var(--tangle-life-lost);
+}
+
+/* ---------- How-to ---------- */
+.tangle-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.tangle-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.tangle-howto__demo {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  overflow: hidden;
+}
+
+/* Free arrow: slides out to the right, then reappears. */
+.tangle-howto__free {
+  animation: tangle-demo-exit 2.4s var(--ease) infinite;
+}
+
+/* Blocked arrow: slides to the blocker and back; both flash on contact. */
+.tangle-howto__bump {
+  animation: tangle-demo-bump 2.4s var(--ease) infinite;
+}
+
+.tangle-howto__flash {
+  opacity: 0;
+  animation: tangle-demo-flash 2.4s step-end infinite;
+}
+
+@keyframes tangle-demo-exit {
+  0%, 15% { transform: translateX(0); opacity: 1; }
+  45% { transform: translateX(3.8px); opacity: 1; }
+  46%, 85% { transform: translateX(3.8px); opacity: 0; }
+  86% { transform: translateX(0); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes tangle-demo-bump {
+  0%, 55% { transform: translateX(0); }
+  65%, 70% { transform: translateX(1.1px); }
+  80%, 100% { transform: translateX(0); }
+}
+
+@keyframes tangle-demo-flash {
+  0% { opacity: 0; }
+  65% { opacity: 1; }
+  76% { opacity: 0; }
 }
 
 /* ---------- Board ---------- */
@@ -135,5 +196,11 @@
   .tangle-stage .tangle-board,
   .tangle-life {
     transition: none;
+  }
+
+  .tangle-howto__free,
+  .tangle-howto__bump,
+  .tangle-howto__flash {
+    animation: none;
   }
 }
