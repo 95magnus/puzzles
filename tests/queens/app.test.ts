@@ -212,3 +212,18 @@ test('how-to opens on the first visit only', () => {
   mount('#/');
   expect(document.querySelector('.modal')).toBeNull();
 });
+
+test('pagehide without a change leaves another tab save alone; after a move the move is saved', async () => {
+  mount('#/');
+  const p = dailyPuzzle();
+  const cells = solutionCells(p);
+  const other = '0'.repeat(p.size * p.size).split('');
+  other[cells[1]] = '2';
+  saveQueensDaily({ date: DATE, cells: other.join(''), elapsedMs: 5000, solved: false });
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadQueensDaily(DATE)!.cells).toBe(other.join(''));
+  expect(loadQueensDaily(DATE)!.elapsedMs).toBe(5000);
+  await queenAt(p, cells[0]);
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadQueensDaily(DATE)!.cells).not.toBe(other.join(''));
+});

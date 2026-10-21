@@ -81,18 +81,20 @@ export function tanglePreview(): SVGSVGElement {
   return svg;
 }
 
+/** Region id per cell (= PALETTE index); every region is orthogonally connected and the queens below are its only solution. */
+export const QUEENS_PREVIEW_REGIONS: number[][] = [
+  [0, 0, 1, 1, 1],
+  [0, 2, 2, 3, 3],
+  [0, 2, 3, 3, 4],
+  [4, 2, 3, 4, 4],
+  [4, 4, 4, 4, 4],
+];
+
 /** Queens: 5×5 board of tinted regions with thick region borders and five queens. */
 export function queensPreview(): SVGSVGElement {
   const svg = frame();
   const N = 5, size = 12, o = 2; // 5 cells of 12 centred in the 64 frame
-  // Region id per cell (= PALETTE index); the queens are the unique non-touching solution.
-  const regions = [
-    [0, 0, 1, 1, 1],
-    [0, 2, 2, 1, 3],
-    [0, 2, 3, 3, 3],
-    [4, 2, 3, 4, 4],
-    [4, 4, 4, 4, 4],
-  ];
+  const regions = QUEENS_PREVIEW_REGIONS;
   const queens = [[0, 2], [1, 0], [2, 3], [3, 1], [4, 4]];
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {

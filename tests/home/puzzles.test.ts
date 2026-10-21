@@ -2,7 +2,8 @@
 import { beforeEach, expect, test } from 'vitest';
 import { saveDaily, saveMinesDaily, saveQueensDaily, saveTangleDaily, type MinesStatus, type TangleStatus } from '../../src/core/storage';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
-import { flowPreview, minesPreview, queensPreview, tanglePreview } from '../../src/home/previews';
+import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, queensPreview, tanglePreview } from '../../src/home/previews';
+import { countSolutions } from '../../src/queens/solver';
 
 const DATE = '2026-10-21';
 const flow = PUZZLES.find(p => p.id === 'flow')!;
@@ -113,4 +114,10 @@ test('previews are decorative SVGs', () => {
   expect(mines.preview).toBe(minesPreview);
   expect(tangle.preview).toBe(tanglePreview);
   expect(queens.preview).toBe(queensPreview);
+});
+
+test('the Queens preview layout has exactly one solution', () => {
+  const rows = QUEENS_PREVIEW_REGIONS;
+  const regions = new Uint8Array(rows.flat());
+  expect(countSolutions({ size: rows.length, regions, solution: [] }, 10)).toBe(1);
 });

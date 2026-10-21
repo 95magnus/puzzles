@@ -77,6 +77,8 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   let baseElapsed = 0;
   let runningSince: number | null = null;
   let card: HTMLElement | null = null;
+  /** True when this tab changed the daily since it last loaded or saved it; pagehide/route-leave only write then. */
+  let dirty = false;
 
   const board = createQueensBoard(boardEl, { onAction });
   // Keep the HUD as wide as the board panel (which shrinks to its content).
@@ -121,6 +123,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
       return true;
     }
     saveQueensDaily({ date: dailyDate, cells: encode(game), elapsedMs: elapsed(), solved: game.status === 'won' });
+    dirty = false;
     return false;
   }
 
@@ -166,6 +169,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
 
   function setGame(g: GameState, fromMs: number): void {
     game = g;
+    dirty = false;
     hideCard();
     board.setGame(g);
     if (g.status === 'playing') {
@@ -183,6 +187,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   /** Shared tail of every board change: redraw, save, then handle a win. */
   async function changed(g: GameState, cells: number[]): Promise<void> {
     if (cells.length === 0) return;
+    dirty = true;
     board.update(cells);
     const won = g.status === 'won';
     if (won) {
@@ -267,7 +272,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   }
 
   function render(): void {
-    persist(); // leaving the daily must keep its clock
+    if (dirty) persist(); // leaving the daily must keep its clock
     route = parseQueensRoute(location.hash);
     const daily = route.mode === 'daily';
     dailyTab.classList.toggle('is-active', daily);
@@ -292,7 +297,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   };
   // Time spent away in the back/forward cache does not count.
   const onHide = () => {
-    persist();
+    if (dirty) persist();
     if (runningSince !== null) stopTimer();
   };
   const onShow = (e: PageTransitionEvent) => {

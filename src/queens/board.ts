@@ -89,7 +89,8 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
     c.className = cls.join(' ');
     const text = v === 1 ? '✕' : v === 2 ? '♛' : '';
     if (c.textContent !== text) c.textContent = text;
-    c.setAttribute('aria-label', `Row ${Math.floor(i / n) + 1}, column ${(i % n) + 1}, ${LABELS[v]}`);
+    const conflict = v === 2 && bad.has(i) ? ', in conflict' : '';
+    c.setAttribute('aria-label', `Row ${r + 1}, column ${c0 + 1}, ${LABELS[v]}${conflict}`);
   }
 
   function refreshConflicts(): void {
@@ -127,6 +128,7 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
   function onPointer(e: PointerEvent): void {
     if (!interactive || !game) return;
     if (e.type === 'pointerdown') {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
       try {
         grid.setPointerCapture?.(e.pointerId);

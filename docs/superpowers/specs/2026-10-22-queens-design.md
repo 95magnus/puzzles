@@ -19,7 +19,7 @@ Tagline: *One queen per row, column and colour.*
 **Out of scope (v1)** — hints, auto-✕ around a placed queen, a logical-difficulty rating, stats/streaks, share button, keyboard play, sizes above 9 (the palette has 9 colours). The design must not block adding these later.
 
 **Success criteria**
-- A 9×9 board generates in < 100 ms on a laptop (main thread), so it appears instantly.
+- A 9×9 board generates in < 100 ms typically on a laptop (median ~10–20 ms; rare seeds up to ~200 ms), so it appears effectively instantly.
 - Every generated board (all presets, daily) has exactly one solution — verified by the solver in tests and at generation time.
 - Large (9×9) fits a 375 px-wide phone without scrolling.
 - A drag never places or removes a queen.
@@ -93,11 +93,11 @@ Daily seed: `seedFromString('queens-daily:' + isoDate)`, preset `medium`.
 1. **Queens.** A seeded random permutation `col[r]` with `|col[r] − col[r+1]| ≥ 2` for every r (random-order backtracking).
 2. **Regions.** Each queen seeds its own region (region id = row of the queen, then the ids are shuffled so colours don't track rows). Grow: repeatedly pick a region, favouring the smallest (weight `1 / size²` of the region), and give it one random unassigned orthogonal neighbour; until every cell is assigned. A region with no free neighbour is skipped for that step.
 3. **Shape filter.** Reject if more than one region has size 1.
-4. **Uniqueness.** Accept iff `countSolutions(puzzle, 2) === 1`.
+4. **Uniqueness and repair.** Count solutions (`countSolutions(puzzle, 2)`). When the count is 2, repair: move cells of the second solution's queens that differ from the planted solution into a neighbouring region that keeps both regions connected (never moving planted queen cells), up to 40 steps, then recount. This runs as part of every attempt, because plain region growth almost never yields a unique 8×8. Accept iff the count is 1.
 
 `generatePuzzle` tries at most 2000 attempts and throws if none is accepted (unreachable in practice; the tests prove every preset generates for 50 seeds). Deterministic per `(size, seed)`, so the daily is identical everywhere.
 
-**Performance.** The solver runs row by row with bitmasks for used columns and used regions plus the previous row's queen column for the touch rule; one call is well under 1 ms at 9×9. Target < 100 ms for `large`. If the target is missed, add a repair step (move one disputed cell into a neighbouring region and recount) before anything else.
+**Performance.** The solver runs row by row with bitmasks for used columns and used regions plus the previous row's queen column for the touch rule; one call is well under 1 ms at 9×9. A 9×9 board generates in < 100 ms typically (median ~10–20 ms; rare seeds up to ~200 ms), thanks to the repair step in every attempt.
 
 ## 5. Solver (`solver`)
 

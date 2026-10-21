@@ -13,8 +13,8 @@ let actions: InputAction[];
 const cell = (i: number) => el.querySelector<HTMLElement>(`[data-i="${i}"]`)!;
 const grid = () => el.querySelector<HTMLElement>('.queens-grid')!;
 
-function at(type: string, x: number, y: number) {
-  const ev = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y });
+function at(type: string, x: number, y: number, button = 0) {
+  const ev = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button });
   Object.defineProperty(ev, 'pointerId', { value: 1 });
   Object.defineProperty(ev, 'pointerType', { value: 'mouse' });
   grid().dispatchEvent(ev);
@@ -147,4 +147,25 @@ test('celebrate settles when setGame or destroy interrupts the wave', async () =
   expect(done).toBe(2);
   vi.useRealTimers();
   vi.unstubAllGlobals();
+});
+
+test('right and middle mouse buttons do nothing', () => {
+  board.setGame(newGame(pz(UNIQUE4)));
+  for (const b of [2, 1]) {
+    at('pointerdown', 150, 50, b);
+    at('pointerup', 150, 50, b);
+  }
+  expect(actions).toEqual([]);
+});
+
+test('conflicting queens are announced and the label refreshes', () => {
+  const s = newGame(pz(UNIQUE4));
+  cycle(s, 0); cycle(s, 0);
+  cycle(s, 3); cycle(s, 3); // same row
+  board.setGame(s);
+  expect(cell(0).getAttribute('aria-label')).toMatch(/queen, in conflict$/);
+  expect(cell(3).getAttribute('aria-label')).toMatch(/queen, in conflict$/);
+  cycle(s, 3); // queen -> empty
+  board.update([3]);
+  expect(cell(0).getAttribute('aria-label')).toMatch(/queen$/);
 });
