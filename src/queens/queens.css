@@ -137,3 +137,26 @@
     animation: none;
   }
 }
+
+/* ---------- How-to ---------- */
+.queens-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.queens-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.queens-howto__demo {
+  flex: none;
+  width: 88px;
+  height: 88px;
+}
