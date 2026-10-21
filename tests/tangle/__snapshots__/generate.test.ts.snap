@@ -1,0 +1,51 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`daily is stable 1`] = `
+{
+  "arrows": 325,
+  "first": {
+    "cells": [
+      573,
+      613,
+      614,
+      615,
+      655,
+      695,
+      735,
+      775,
+      815,
+      855,
+      895,
+      935,
+      975,
+      976,
+    ],
+    "color": 8,
+    "dir": 1,
+  },
+}
+`;
+
+exports[`deterministic (hash snapshot per preset) 1`] = `
+{
+  "arrows": 173,
+  "hash": 773596368,
+  "id": "medium",
+}
+`;
+
+exports[`deterministic (hash snapshot per preset) 2`] = `
+{
+  "arrows": 326,
+  "hash": 521379055,
+  "id": "hard",
+}
+`;
+
+exports[`deterministic (hash snapshot per preset) 3`] = `
+{
+  "arrows": 502,
+  "hash": 2788257179,
+  "id": "huge",
+}
+`;
