@@ -1,6 +1,6 @@
-import { loadDaily, loadMinesDaily } from '../core/storage';
+import { loadDaily, loadMinesDaily, loadTangleDaily } from '../core/storage';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview } from './previews';
+import { flowPreview, minesPreview, tanglePreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -10,12 +10,14 @@ export type DailyStatus =
   | { kind: 'lost'; elapsedMs: number; attempt: number };
 
 export type PuzzleEntry = {
-  id: 'flow' | 'mines';
+  id: 'flow' | 'mines' | 'tangle';
   name: string;
   tagline: string;
   href: string;
   /** Word for a finished daily: "Solved" / "Cleared". */
   doneWord: 'Solved' | 'Cleared';
+  /** Word for a lost daily; defaults to "Boom". */
+  lostWord?: string;
   preview: () => SVGSVGElement;
   dailyStatus: (date: string) => DailyStatus;
 };
@@ -51,6 +53,23 @@ export const PUZZLES: readonly PuzzleEntry[] = [
       return { kind: 'playing', elapsedMs, attempt };
     },
   },
+  {
+    id: 'tangle',
+    name: 'Tangle',
+    tagline: "Tap arrows out of the knot. Don't crash.",
+    href: './tangle.html',
+    doneWord: 'Cleared',
+    lostWord: 'Out of lives',
+    preview: tanglePreview,
+    dailyStatus(date) {
+      const save = loadTangleDaily(date);
+      if (!save) return { kind: 'new' };
+      const { elapsedMs, attempt } = save;
+      if (save.status === 'won') return { kind: 'done', elapsedMs, attempt };
+      if (save.status === 'lost') return { kind: 'lost', elapsedMs, attempt };
+      return { kind: 'playing', elapsedMs, attempt };
+    },
+  },
 ];
 
 export function statusLabel(entry: PuzzleEntry, s: DailyStatus): string {
@@ -63,6 +82,6 @@ export function statusLabel(entry: PuzzleEntry, s: DailyStatus): string {
     case 'done':
       return `${entry.doneWord} · ${formatClock(s.elapsedMs)}${tries}`;
     case 'lost':
-      return `Boom · attempt ${s.attempt}`;
+      return `${entry.lostWord ?? 'Boom'} · attempt ${s.attempt}`;
   }
 }

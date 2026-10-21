@@ -58,3 +58,25 @@ export function minesPreview(): SVGSVGElement {
   });
   return svg;
 }
+
+/** Tangle: four bent neon strokes, each ending in an arrowhead. */
+export function tanglePreview(): SVGSVGElement {
+  const svg = frame();
+  // [path, arrowhead tip x, tip y, direction dx, dy]
+  const strokes: [string, number, number, number, number][] = [
+    ['M10 18 H36 V26', 36, 26, 0, 1],
+    ['M54 12 V32 H40', 40, 32, -1, 0],
+    ['M12 54 V40 H30', 30, 40, 1, 0],
+    ['M54 54 H44 V44', 44, 44, 0, -1],
+  ];
+  strokes.forEach(([d, x, y, dx, dy], i) => {
+    const color = PALETTE[i + 1];
+    svg.append(s('path', { d, fill: 'none', stroke: color, 'stroke-width': 4, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+    // Arrowhead: triangle pointing along (dx, dy), tip at (x, y) pushed 3 further.
+    const tx = x + dx * 3, ty = y + dy * 3;
+    const bx = x - dx * 2, by = y - dy * 2;
+    const px = -dy * 4, py = dx * 4;
+    svg.append(s('path', { d: `M${tx} ${ty} L${bx + px} ${by + py} L${bx - px} ${by - py} Z`, fill: color }));
+  });
+  return svg;
+}
