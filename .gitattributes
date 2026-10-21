@@ -1,0 +1,2 @@
+# Vitest writes snapshots with LF; keep them LF on checkout so test runs don't show them as modified.
+*.snap text eol=lf
