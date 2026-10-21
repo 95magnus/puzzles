@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createQueensBoard, regionEdges, type QueensBoardHandle } from '../../src/queens/board';
 import { cycle, newGame } from '../../src/queens/game';
 import type { InputAction } from '../../src/queens/input';
@@ -105,7 +105,46 @@ test('aria-label reflects the state', () => {
   expect(cell(5).getAttribute('aria-label')).toBe('Row 2, column 2, queen');
 });
 
-test('celebrate resolves under reduced motion', async () => {
+test('board-edge cells carry outer classes for the thicker border', () => {
   board.setGame(newGame(pz(UNIQUE4)));
-  await board.celebrate();
+  expect(['o-t', 'o-l'].every((c) => cell(0).classList.contains(c))).toBe(true);
+  expect(['o-r', 'o-b'].some((c) => cell(0).classList.contains(c))).toBe(false);
+  expect(['o-b', 'o-r'].every((c) => cell(15).classList.contains(c))).toBe(true);
+  expect(['o-t', 'o-l', 'o-r', 'o-b'].some((c) => cell(5).classList.contains(c))).toBe(false);
+});
+
+function solved() {
+  const s = newGame(pz(UNIQUE4));
+  s.puzzle.solution.forEach((col, r) => { cycle(s, r * 4 + col); cycle(s, r * 4 + col); });
+  return s;
+}
+
+test('celebrate resolves immediately under reduced motion', async () => {
+  vi.stubGlobal('matchMedia', vi.fn((q: string) => ({ matches: q.includes('reduce') })));
+  board.setGame(solved());
+  let done = false;
+  void board.celebrate().then(() => { done = true; });
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(done).toBe(true);
+  vi.unstubAllGlobals();
+});
+
+test('celebrate settles when setGame or destroy interrupts the wave', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+  board.setGame(solved());
+  let done = 0;
+  void board.celebrate().then(() => { done++; });
+  await vi.advanceTimersByTimeAsync(50);
+  expect(done).toBe(0);
+  board.setGame(newGame(pz(UNIQUE4)));
+  await vi.advanceTimersByTimeAsync(0);
+  expect(done).toBe(1);
+  void board.celebrate().then(() => { done++; });
+  board.destroy();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(done).toBe(2);
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
 });

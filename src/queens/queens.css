@@ -81,7 +81,7 @@
   -webkit-user-select: none;
 }
 
-/* Hairlines and 3px region borders are inset shadows so every cell is exactly --cell wide. */
+/* Hairlines and region borders are inset shadows so every cell is exactly --cell wide. */
 .queens-cell {
   --st: 0 0 0 0 transparent;
   --sr: 0 0 0 0 transparent;
@@ -99,10 +99,15 @@
   cursor: pointer;
 }
 
-.queens-cell.e-t { --st: inset 0 3px 0 0 var(--queens-edge); }
-.queens-cell.e-r { --sr: inset -3px 0 0 0 var(--queens-edge); }
-.queens-cell.e-b { --sb: inset 0 -3px 0 0 var(--queens-edge); }
-.queens-cell.e-l { --sl: inset 3px 0 0 0 var(--queens-edge); }
+/* A region border is 3px in total: 1.5px from each neighbouring cell; the board's outer edge is 3px. */
+.queens-cell.e-t { --st: inset 0 1.5px 0 0 var(--queens-edge); }
+.queens-cell.e-r { --sr: inset -1.5px 0 0 0 var(--queens-edge); }
+.queens-cell.e-b { --sb: inset 0 -1.5px 0 0 var(--queens-edge); }
+.queens-cell.e-l { --sl: inset 1.5px 0 0 0 var(--queens-edge); }
+.queens-cell.e-t.o-t { --st: inset 0 3px 0 0 var(--queens-edge); }
+.queens-cell.e-r.o-r { --sr: inset -3px 0 0 0 var(--queens-edge); }
+.queens-cell.e-b.o-b { --sb: inset 0 -3px 0 0 var(--queens-edge); }
+.queens-cell.e-l.o-l { --sl: inset 3px 0 0 0 var(--queens-edge); }
 
 .queens-cell.is-mark {
   font-size: calc(var(--cell) * 0.4);

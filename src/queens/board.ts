@@ -63,18 +63,25 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
   let interactive = true;
   let bad = new Set<number>();
   let glowTimers: ReturnType<typeof setTimeout>[] = [];
+  let settleWave: (() => void) | null = null;
 
   function render(i: number): void {
     const s = game!;
     const v = s.cells[i];
     const n = s.puzzle.size;
     const e = regionEdges(s.puzzle, i);
+    const r = Math.floor(i / n);
+    const c0 = i % n;
     const c = cellEls[i];
     const cls = ['queens-cell'];
     if (e.t) cls.push('e-t');
     if (e.r) cls.push('e-r');
     if (e.b) cls.push('e-b');
     if (e.l) cls.push('e-l');
+    if (r === 0) cls.push('o-t');
+    if (c0 === n - 1) cls.push('o-r');
+    if (r === n - 1) cls.push('o-b');
+    if (c0 === 0) cls.push('o-l');
     if (v === 1) cls.push('is-mark');
     if (v === 2) cls.push('is-queen');
     if (bad.has(i)) cls.push('is-conflict');
@@ -157,6 +164,9 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
     for (const t of glowTimers) clearTimeout(t);
     glowTimers = [];
     for (const c of cellEls) c.classList.remove('is-glow');
+    const settle = settleWave;
+    settleWave = null;
+    settle?.();
   }
 
   return {
@@ -200,8 +210,14 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
         last = Math.max(last, delay);
         glowTimers.push(setTimeout(() => cellEls[i].classList.add('is-glow'), delay));
       }
-      return new Promise((resolve) => {
-        glowTimers.push(setTimeout(resolve, last + GLOW_MS));
+      return new Promise<void>((resolve) => {
+        settleWave = resolve;
+        glowTimers.push(
+          setTimeout(() => {
+            settleWave = null;
+            resolve();
+          }, last + GLOW_MS),
+        );
       });
     },
 
