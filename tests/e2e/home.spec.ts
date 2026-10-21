@@ -5,6 +5,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('flow:flag:howto-seen', '1');
     localStorage.setItem('flow:flag:mines-howto-seen', '1');
     localStorage.setItem('flow:flag:tangle-howto-seen', '1');
+    localStorage.setItem('flow:flag:queens-howto-seen', '1');
   });
 });
 
@@ -26,6 +27,11 @@ test('lists puzzles and opens each daily', async ({ page }) => {
   await page.locator('.puzzle-card[data-id="tangle"]').getByRole('link', { name: 'Play daily' }).click();
   await expect(page).toHaveURL(/\/tangle\.html#\/$/);
   await expect(page.locator('svg.tangle-svg')).toBeVisible();
+
+  await page.getByRole('link', { name: 'puzzles — all games' }).click();
+  await page.locator('.puzzle-card[data-id="queens"]').getByRole('link', { name: 'Play daily' }).click();
+  await expect(page).toHaveURL(/\/queens\.html#\/$/);
+  await expect(page.locator('.queens-cell').first()).toBeVisible();
 });
 
 test('shows saved daily status', async ({ page }) => {
@@ -40,14 +46,19 @@ test('shows saved daily status', async ({ page }) => {
       'tangle:daily',
       JSON.stringify({ v: 1, date, removed: '', lives: 0, elapsedMs: 5_000, status: 'lost', attempt: 2 }),
     );
+    localStorage.setItem(
+      'queens:daily',
+      JSON.stringify({ v: 1, date, cells: '', elapsedMs: 83_000, solved: true }),
+    );
   });
   await page.goto('/');
   await expect(page.locator('.puzzle-card[data-id="flow"] .status-pill')).toHaveText('Solved · 01:23');
   await expect(page.locator('.puzzle-card[data-id="mines"] .status-pill')).toHaveText('Boom · attempt 2');
   await expect(page.locator('.puzzle-card[data-id="tangle"] .status-pill')).toHaveText('Out of lives · attempt 2');
+  await expect(page.locator('.puzzle-card[data-id="queens"] .status-pill')).toHaveText('Solved · 01:23');
 });
 
-for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html']) {
+for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html']) {
   test(`no horizontal scroll at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -62,7 +73,7 @@ for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html']) {
   });
 }
 
-for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html']) {
+for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html']) {
   test(`home link stays a readable text link at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -78,12 +89,12 @@ for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html']) {
 test('headers match across games', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const boxes = [];
-  for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/']) {
+  for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/']) {
     await page.goto(path);
     boxes.push((await page.locator('.shell-header').boundingBox())!);
   }
-  const [flow, mines, tangle, home] = boxes;
-  for (const other of [mines, tangle, home]) {
+  const [flow, mines, tangle, queens, home] = boxes;
+  for (const other of [mines, tangle, queens, home]) {
     expect(Math.abs(other.x - flow.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.width - flow.width)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.height - flow.height)).toBeLessThanOrEqual(1);
