@@ -33,7 +33,7 @@ Tagline: *Tap arrows out of the knot. Don't crash.*
 - **Free:** it slides out snake-style — the head moves straight along the exit line, the body follows its own path cell by cell — until fully off the board, then it is removed.
 - **Blocked:** the head slides along the exit line until it touches the first blocking arrow, bumps (both arrows flash red), you lose a life, and the arrow slides back to its starting position. Nothing else changes.
 
-An arrow ignores taps while it animates, so a double-tap never costs a second life; other arrows stay tappable.
+An arrow ignores taps while it animates, so a double-tap never costs a second life; other arrows stay tappable. Losing a life is the exception: after a bump the whole board ignores taps for 700 ms (arrows dim slightly), so a panicked follow-up tap cannot cost another life.
 
 **Win:** every arrow removed. **Loss:** lives reach 0. After either, all taps are ignored.
 

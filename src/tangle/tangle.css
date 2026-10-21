@@ -202,6 +202,19 @@
   --c: var(--tangle-bump) !important;
 }
 
+/* Lost a life: the board dims briefly and ignores taps until the cooldown ends. */
+.tangle-arrow {
+  transition: opacity 150ms ease-out;
+}
+
+.tangle-board--stunned .tangle-svg {
+  cursor: not-allowed;
+}
+
+.tangle-board--stunned .tangle-arrow:not(.is-bump) {
+  opacity: 0.55;
+}
+
 .tangle-board--locked .tangle-svg {
   cursor: default;
 }

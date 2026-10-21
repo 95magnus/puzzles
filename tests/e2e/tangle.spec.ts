@@ -68,9 +68,9 @@ test('three bumps end the daily; Try again starts attempt 2 with full lives', as
   const hearts = ['♥♥♡', '♥♡♡', '♡♡♡'];
   for (const [k, i] of blocked.entries()) {
     await tapHead(page, level, i);
-    // Input is locked while a bump plays; wait for the HUD and the flash to finish so the next tap is not dropped.
+    // Losing a life stuns the board; wait for the HUD and the cooldown so the next tap is not dropped.
     await expect(page.locator('.tangle-lives')).toHaveText(hearts[k]);
-    await expect(page.locator('.is-bump')).toHaveCount(0);
+    await expect(page.locator('.tangle-board--stunned')).toHaveCount(0);
   }
   await expect(page.getByText('Out of lives')).toBeVisible();
   await expect(page.locator('.tangle-lives')).toHaveText('♡♡♡');

@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { loadTangleDaily, saveTangleDaily, setTanglePreset } from '../../src/core/storage';
 import { mountTangle, parseTangleRoute } from '../../src/tangle/app';
+import { BUMP_COOLDOWN_MS } from '../../src/tangle/board';
 import { buildOcc, blockersOf, analyze } from '../../src/tangle/solver';
 import { DAILY_PRESET, PRESETS, generateLevel, tangleDailySeed } from '../../src/tangle/generate';
 import type { Level } from '../../src/tangle/types';
@@ -48,7 +49,7 @@ async function tapArrow(l: Level, i: number) {
   const y = Math.floor(head / l.cols) + 0.5;
   pointer('pointerdown', x, y);
   pointer('pointerup', x, y);
-  await vi.advanceTimersByTimeAsync(500);
+  await vi.advanceTimersByTimeAsync(BUMP_COOLDOWN_MS + 100);
 }
 
 function blockedArrow(l: Level): number {

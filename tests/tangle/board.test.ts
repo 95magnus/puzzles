@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { arrowDist, bodyAt, createTangleBoard, fitCell, pickArrow, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
+import { BUMP_COOLDOWN_MS, arrowDist, bodyAt, createTangleBoard, fitCell, pickArrow, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
 import { newGame, tap } from '../../src/tangle/game';
 import { PALETTE } from '../../src/ui/palette';
 import { lvl } from './helpers';
@@ -187,6 +187,46 @@ test('a bumping arrow ignores taps until it is back', () => {
   void board.play(tap(s, 30));
   tapAt(15, 105); // arrow 2, mid-bump
   expect(taps).toEqual([]);
+});
+
+test('after a bump the whole board ignores taps until the cooldown ends', async () => {
+  stubMotion(true);
+  vi.useFakeTimers();
+  try {
+    const s = newGame(LEVEL());
+    board.setGame(s);
+    stubRect(300, 300);
+    void board.play(tap(s, 30)); // arrow 2 bumps into arrow 3
+    expect(el.classList.contains('tangle-board--stunned')).toBe(true);
+    await vi.advanceTimersByTimeAsync(BUMP_COOLDOWN_MS - 50);
+    tapAt(105, 165); // arrow 1 is free, but the board is still stunned
+    expect(taps).toEqual([]);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(el.classList.contains('tangle-board--stunned')).toBe(false);
+    tapAt(105, 165);
+    expect(taps).toEqual([53]);
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+test('an exit does not stun the board', () => {
+  stubMotion(true);
+  const s = newGame(LEVEL());
+  board.setGame(s);
+  stubRect(300, 300);
+  void board.play(tap(s, 0));
+  tapAt(105, 165);
+  expect(taps).toEqual([53]);
+});
+
+test('setGame clears a running cooldown', () => {
+  stubMotion(true);
+  const s = newGame(LEVEL());
+  board.setGame(s);
+  void board.play(tap(s, 30));
+  board.setGame(newGame(LEVEL()));
+  expect(el.classList.contains('tangle-board--stunned')).toBe(false);
 });
 
 test('the board draws a starfield behind the arrows', () => {

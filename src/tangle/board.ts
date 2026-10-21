@@ -27,6 +27,8 @@ const BUMP_LEG_MAX_MS = 140;
 /** How far past `distance` the head slides so it visibly touches the blocker. */
 const BUMP_CONTACT = 0.7;
 const FLASH_MS = 200;
+/** After a bump costs a life, the whole board ignores taps this long (from the tap). */
+export const BUMP_COOLDOWN_MS = 700;
 const HEAD = 0.42;
 /** A tap hits the nearest arrow whose centre line is within this many cells. */
 const HIT_RADIUS = 0.75;
@@ -185,6 +187,8 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
   /** Arrows mid-animation; taps on them are ignored so a double-tap never costs two lives. */
   const moving = new Set<number>();
   let interactive = true;
+  /** Pending end of a post-bump cooldown; 0 when none. */
+  let stunTimer = 0;
   const starId = `tangle-stars-${++boardCount}`;
   /** Bumped by setGame/destroy so a superseded play() leaves the new board alone. */
   let gen = 0;
@@ -274,6 +278,20 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
 
   function cancelAll(): void {
     for (const a of [...anims]) a.cancel();
+    unstun();
+  }
+
+  /** Lose-a-life cooldown: every tap is ignored until it ends. A new bump restarts it. */
+  function stun(): void {
+    clearTimeout(stunTimer);
+    el.classList.add('tangle-board--stunned');
+    stunTimer = window.setTimeout(unstun, BUMP_COOLDOWN_MS);
+  }
+
+  function unstun(): void {
+    clearTimeout(stunTimer);
+    stunTimer = 0;
+    el.classList.remove('tangle-board--stunned');
   }
 
   function flash(arrows: number[]): Promise<void> {
@@ -345,7 +363,7 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     const matched = downId !== -1 && downId === e.pointerId && isPrimaryPress(e);
     if (isPrimaryPress(e) || downId === e.pointerId) downId = -1;
     if (!matched) return;
-    if (!interactive || !game) return;
+    if (!interactive || stunTimer || !game) return;
     const { level } = game;
     const rect = svg.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
@@ -398,6 +416,7 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
       if (r.kind === 'ignored' || !game) return;
       const g0 = gen;
       moving.add(r.arrow);
+      if (r.kind === 'bump') stun();
       try {
         if (r.kind === 'exit') await playExit(r.arrow);
         else await playBump(r.arrow, r.blocker, r.distance);
