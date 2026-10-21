@@ -1,13 +1,15 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test } from 'vitest';
-import { saveDaily, saveMinesDaily, saveTangleDaily, type MinesStatus, type TangleStatus } from '../../src/core/storage';
+import { saveDaily, saveMinesDaily, saveQueensDaily, saveTangleDaily, type MinesStatus, type TangleStatus } from '../../src/core/storage';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
-import { flowPreview, minesPreview, tanglePreview } from '../../src/home/previews';
+import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, queensPreview, tanglePreview } from '../../src/home/previews';
+import { countSolutions } from '../../src/queens/solver';
 
 const DATE = '2026-10-21';
 const flow = PUZZLES.find(p => p.id === 'flow')!;
 const mines = PUZZLES.find(p => p.id === 'mines')!;
 const tangle = PUZZLES.find(p => p.id === 'tangle')!;
+const queens = PUZZLES.find(p => p.id === 'queens')!;
 const tangleSave = (status: TangleStatus, attempt: number, elapsedMs: number) =>
   saveTangleDaily({ date: DATE, removed: '010', lives: 2, elapsedMs, status, attempt });
 const label = (p: typeof flow) => statusLabel(p, p.dailyStatus(DATE));
@@ -16,15 +18,17 @@ const minesSave = (status: MinesStatus, attempt: number, elapsedMs: number) =>
 
 beforeEach(() => localStorage.clear());
 
-test('registry lists Flow, Mines then Tangle with their pages', () => {
+test('registry lists Flow, Mines, Tangle then Queens with their pages', () => {
   expect(PUZZLES.map(p => [p.id, p.name, p.href])).toEqual([
     ['flow', 'Flow', './flow.html'],
     ['mines', 'Mines', './minesweeper.html'],
     ['tangle', 'Tangle', './tangle.html'],
+    ['queens', 'Queens', './queens.html'],
   ]);
   expect(flow.tagline).toBe('Connect matching dots. Fill every cell.');
   expect(mines.tagline).toBe('Clear the board without hitting a mine.');
   expect(tangle.tagline).toBe("Tap arrows out of the knot. Don't crash.");
+  expect(queens.tagline).toBe('One queen per row, column and colour.');
 });
 
 test('Flow: no save is Not started', () => {
@@ -72,6 +76,19 @@ test.each([
   expect(label(tangle)).toBe(text);
 });
 
+test('Queens: no save is Not started', () => {
+  expect(label(queens)).toBe('Not started');
+});
+
+test.each([
+  [false, 42_000, 'playing', 'In progress · 00:42'],
+  [true, 83_000, 'done', 'Solved · 01:23'],
+] as const)('Queens: solved=%s', (solved, ms, kind, text) => {
+  saveQueensDaily({ date: DATE, cells: '0000', elapsedMs: ms, solved });
+  expect(queens.dailyStatus(DATE).kind).toBe(kind);
+  expect(label(queens)).toBe(text);
+});
+
 test("yesterday's saves read as Not started", () => {
   saveDaily({ date: '2026-10-20', paths: [], elapsedMs: 83_000, solved: true });
   saveMinesDaily({ date: '2026-10-20', cells: '', elapsedMs: 1, status: 'won', attempt: 1 });
@@ -87,7 +104,7 @@ test('junk saves read as Not started', () => {
 });
 
 test('previews are decorative SVGs', () => {
-  for (const svg of [flowPreview(), minesPreview(), tanglePreview()]) {
+  for (const svg of [flowPreview(), minesPreview(), tanglePreview(), queensPreview()]) {
     expect(svg.tagName.toLowerCase()).toBe('svg');
     expect(svg.getAttribute('aria-hidden')).toBe('true');
     expect(svg.getAttribute('viewBox')).toBe('0 0 64 64');
@@ -96,4 +113,11 @@ test('previews are decorative SVGs', () => {
   expect(flow.preview).toBe(flowPreview);
   expect(mines.preview).toBe(minesPreview);
   expect(tangle.preview).toBe(tanglePreview);
+  expect(queens.preview).toBe(queensPreview);
+});
+
+test('the Queens preview layout has exactly one solution', () => {
+  const rows = QUEENS_PREVIEW_REGIONS;
+  const regions = new Uint8Array(rows.flat());
+  expect(countSolutions({ size: rows.length, regions, solution: [] }, 10)).toBe(1);
 });
