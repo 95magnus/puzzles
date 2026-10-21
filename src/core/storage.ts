@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -90,6 +90,69 @@ export function getMinesPreset(): MinesPreset | null {
 export function setMinesPreset(id: MinesPreset): void {
   try {
     localStorage.setItem(MINES_PRESET_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export type TangleStatus = 'playing' | 'won' | 'lost';
+export type TanglePreset = 'medium' | 'hard' | 'huge';
+/** `removed` is one char per arrow: 0 (still on the board) / 1 (removed). The level itself is regenerated from the date. */
+export type TangleDailySave = {
+  v: 1;
+  date: string;
+  removed: string;
+  lives: number;
+  elapsedMs: number;
+  status: TangleStatus;
+  /** 1-based. */
+  attempt: number;
+};
+
+const TANGLE_DAILY_KEY = 'tangle:daily';
+const TANGLE_PRESET_KEY = 'tangle:preset';
+const TANGLE_STATUSES: readonly string[] = ['playing', 'won', 'lost'];
+const TANGLE_PRESETS: readonly string[] = ['medium', 'hard', 'huge'];
+
+/** Shape check only; whether `removed` fits today's level is `restore`'s job. */
+export function loadTangleDaily(date: string): TangleDailySave | null {
+  try {
+    const raw = localStorage.getItem(TANGLE_DAILY_KEY);
+    if (raw === null) return null;
+    const o = JSON.parse(raw) as TangleDailySave | null;
+    if (typeof o !== 'object' || o === null) return null;
+    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+    if (typeof o.removed !== 'string' || !/^[01]*$/.test(o.removed)) return null;
+    if (!Number.isInteger(o.lives) || o.lives < 0 || o.lives > 3) return null;
+    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
+    if (!TANGLE_STATUSES.includes(o.status)) return null;
+    if (!Number.isInteger(o.attempt) || o.attempt < 1) return null;
+    return { v: 1, date: o.date, removed: o.removed, lives: o.lives, elapsedMs: o.elapsedMs, status: o.status, attempt: o.attempt };
+  } catch {
+    return null;
+  }
+}
+
+export function saveTangleDaily(save: Omit<TangleDailySave, 'v'>): void {
+  try {
+    localStorage.setItem(TANGLE_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getTanglePreset(): TanglePreset | null {
+  try {
+    const v = localStorage.getItem(TANGLE_PRESET_KEY);
+    return v !== null && TANGLE_PRESETS.includes(v) ? (v as TanglePreset) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setTanglePreset(id: TanglePreset): void {
+  try {
+    localStorage.setItem(TANGLE_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }
