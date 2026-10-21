@@ -7,13 +7,13 @@
 }
 
 /* ---------- Page ---------- */
-/* Header + subtitle + HUD + panel padding must stay within PAGE_CHROME (150px) in board.ts. */
+/* board.ts measures this chrome and sizes the board to fit what is left of the viewport; keep it tight. */
 .tangle-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space);
-  padding: 0 16px calc(var(--space) * 2);
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
 }
 
 .tangle-sub {

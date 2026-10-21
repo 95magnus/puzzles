@@ -16,9 +16,8 @@ export type Pt = [x: number, y: number];
 const SVG_NS = 'http://www.w3.org/2000/svg';
 /** Must match `.tangle-panel` padding in tangle.css. */
 const PANEL_PAD = 12;
-/** Vertical space for header, subtitle, HUD and panel padding, so 40×40 fits 1280×720 at ≥ 14 px. */
-const PAGE_CHROME = 150;
-const MIN_CELL = 14;
+/** Cell size bounds in px. Fitting the viewport wins over legibility down to MIN_CELL. */
+const MIN_CELL = 12;
 const MAX_CELL = 28;
 /** Animation speed in cells per second. */
 const SPEED = 30;
@@ -29,6 +28,21 @@ const BUMP_LEG_MAX_MS = 200;
 const BUMP_CONTACT = 0.7;
 const FLASH_MS = 250;
 const HEAD = 0.42;
+
+/** Whole-pixel cell size that fits `cols × rows` into `availW × availH` px, clamped to [MIN_CELL, MAX_CELL]. */
+export function fitCell(cols: number, rows: number, availW: number, availH: number): number {
+  return Math.min(MAX_CELL, Math.max(MIN_CELL, Math.floor(Math.min(availW / cols, availH / rows))));
+}
+
+/**
+ * Height of the page content in px. Not `scrollHeight`: the body's `min-height: 100vh` floors that at
+ * the viewport, so a board that once shrank could never grow back.
+ */
+function contentHeight(): number {
+  let bottom = 0;
+  for (const c of document.body.children) bottom = Math.max(bottom, c.getBoundingClientRect().bottom);
+  return bottom + window.scrollY;
+}
 
 function reducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -93,6 +107,8 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
   el.appendChild(panel);
 
   let game: GameState | null = null;
+  /** Cell size last applied by fit(); 0 forces the next fit to apply. */
+  let cellPx = 0;
   let groups = new Map<number, SVGGElement>();
   let interactive = true;
   let busy = false;
@@ -134,9 +150,12 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
     const w = el.clientWidth;
     if (w <= 0) return;
     const { cols, rows } = game.level;
-    const byWidth = (w - 2 * PANEL_PAD) / cols;
-    const byHeight = (window.innerHeight - PAGE_CHROME) / rows;
-    const size = Math.min(MAX_CELL, Math.max(MIN_CELL, Math.floor(Math.min(byWidth, byHeight))));
+    // Everything on the page except the svg (header, subtitle, HUD, panel padding), measured with the
+    // svg at its current size. It does not depend on the svg's size, so re-fitting cannot loop.
+    const chrome = Math.max(0, contentHeight() - svg.getBoundingClientRect().height);
+    const size = fitCell(cols, rows, w - 2 * PANEL_PAD, window.innerHeight - chrome);
+    if (size === cellPx) return;
+    cellPx = size;
     svg.style.width = cols * size + 'px';
     svg.style.height = rows * size + 'px';
   }
@@ -270,6 +289,8 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
   window.addEventListener('resize', fit);
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
   ro?.observe(el);
+  // Web fonts change the chrome's height once loaded.
+  void document.fonts?.ready.then(() => fit());
 
   return {
     setGame(s) {
@@ -279,6 +300,7 @@ export function createTangleBoard(el: HTMLElement, opts: { onTap: (cell: number)
       game = s;
       const { cols, rows, arrows } = s.level;
       svg.setAttribute('viewBox', `0 0 ${cols} ${rows}`);
+      cellPx = 0;
       svg.textContent = '';
       groups = new Map();
       for (let i = 0; i < arrows.length; i++) {
