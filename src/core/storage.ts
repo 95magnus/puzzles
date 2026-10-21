@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -153,6 +153,56 @@ export function getTanglePreset(): TanglePreset | null {
 export function setTanglePreset(id: TanglePreset): void {
   try {
     localStorage.setItem(TANGLE_PRESET_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export type QueensPreset = 'small' | 'medium' | 'large';
+/** `cells` is one char per cell: 0 empty, 1 cross, 2 queen. The puzzle itself is regenerated from the date. */
+export type QueensDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
+
+const QUEENS_DAILY_KEY = 'queens:daily';
+const QUEENS_PRESET_KEY = 'queens:preset';
+const QUEENS_PRESETS: readonly string[] = ['small', 'medium', 'large'];
+
+/** Shape check only; whether `cells` fits today's puzzle is `restore`'s job. */
+export function loadQueensDaily(date: string): QueensDailySave | null {
+  try {
+    const raw = localStorage.getItem(QUEENS_DAILY_KEY);
+    if (raw === null) return null;
+    const o = JSON.parse(raw) as QueensDailySave | null;
+    if (typeof o !== 'object' || o === null) return null;
+    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+    if (typeof o.cells !== 'string' || !/^[012]*$/.test(o.cells)) return null;
+    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
+    if (typeof o.solved !== 'boolean') return null;
+    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, solved: o.solved };
+  } catch {
+    return null;
+  }
+}
+
+export function saveQueensDaily(save: Omit<QueensDailySave, 'v'>): void {
+  try {
+    localStorage.setItem(QUEENS_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getQueensPreset(): QueensPreset | null {
+  try {
+    const v = localStorage.getItem(QUEENS_PRESET_KEY);
+    return v !== null && QUEENS_PRESETS.includes(v) ? (v as QueensPreset) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setQueensPreset(id: QueensPreset): void {
+  try {
+    localStorage.setItem(QUEENS_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }
