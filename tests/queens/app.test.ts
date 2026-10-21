@@ -227,3 +227,30 @@ test('pagehide without a change leaves another tab save alone; after a move the 
   window.dispatchEvent(new Event('pagehide'));
   expect(loadQueensDaily(DATE)!.cells).not.toBe(other.join(''));
 });
+
+test('pagehide keeps the clock running since the last move', async () => {
+  mount('#/');
+  const p = dailyPuzzle();
+  await queenAt(p, solutionCells(p)[0]);
+  nowMs += 90_000;
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadQueensDaily(DATE)!.elapsedMs).toBe(90_000);
+});
+
+test('pagehide keeps the clock of a daily opened without a move', () => {
+  saveQueensDaily({ date: DATE, cells: '0'.repeat(64), elapsedMs: 5000, solved: false });
+  mount('#/');
+  nowMs += 30_000;
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadQueensDaily(DATE)!.elapsedMs).toBe(35_000);
+});
+
+test('leaving the daily keeps the clock running since the last move', async () => {
+  mount('#/');
+  const p = dailyPuzzle();
+  await queenAt(p, solutionCells(p)[0]);
+  nowMs += 60_000;
+  location.hash = '#/practice';
+  window.dispatchEvent(new HashChangeEvent('hashchange'));
+  expect(loadQueensDaily(DATE)!.elapsedMs).toBe(60_000);
+});

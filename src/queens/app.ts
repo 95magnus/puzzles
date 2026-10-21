@@ -127,6 +127,13 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
     return false;
   }
 
+  /** Save on pagehide / leaving the daily: always after a change, else only when the stored board is ours, so the clock keeps running without clobbering another tab's moves. */
+  function persistOnLeave(): void {
+    if (route.mode !== 'daily' || !game) return;
+    const saved = loadQueensDaily(dailyDate);
+    if (dirty || !saved || saved.cells === encode(game)) persist();
+  }
+
   function hideCard(): void {
     card?.remove();
     card = null;
@@ -272,7 +279,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   }
 
   function render(): void {
-    if (dirty) persist(); // leaving the daily must keep its clock
+    persistOnLeave(); // leaving the daily must keep its clock
     route = parseQueensRoute(location.hash);
     const daily = route.mode === 'daily';
     dailyTab.classList.toggle('is-active', daily);
@@ -297,7 +304,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
   };
   // Time spent away in the back/forward cache does not count.
   const onHide = () => {
-    if (dirty) persist();
+    persistOnLeave();
     if (runningSince !== null) stopTimer();
   };
   const onShow = (e: PageTransitionEvent) => {
