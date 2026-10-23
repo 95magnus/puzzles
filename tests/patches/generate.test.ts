@@ -91,6 +91,16 @@ test('shape mix', () => {
   }
 });
 
+test('wide and tall are balanced', () => {
+  for (const id of IDS) {
+    const rects = BOARDS.filter((b) => b.id === id).flatMap((b) => b.p.solution);
+    const wide = rects.filter((x) => shapeOf(x) === 'wide').length;
+    const tall = rects.filter((x) => shapeOf(x) === 'tall').length;
+    expect(wide / tall, `${id} ${wide}:${tall}`).toBeGreaterThanOrEqual(0.75);
+    expect(wide / tall, `${id} ${wide}:${tall}`).toBeLessThanOrEqual(1.33);
+  }
+});
+
 test('colours', () => {
   for (const { id, seed, p } of BOARDS) {
     const { clues, solution } = p;

@@ -42,12 +42,25 @@ function weight(w: number, h: number): number {
   return Math.min(w, h) === 1 && area >= 4 ? base / 2 : base;
 }
 
-/** Tile the board: at each first uncovered cell, pick a weighted random rectangle anchored there. */
+/** First uncovered cell scanning rows (`byRow`) or columns, or -1. Either way the cells above and left of it are covered, so it is a top-left corner. */
+function firstFree(size: number, covered: Uint8Array, byRow: boolean): number {
+  for (let a = 0; a < size; a++) {
+    for (let b = 0; b < size; b++) {
+      const cell = byRow ? a * size + b : b * size + a;
+      if (!covered[cell]) return cell;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Tile the board: anchor at the first uncovered cell, scanning rows or columns at random each time (one
+ * scan order alone favours tall rectangles, its transpose wide ones), and pick a weighted random rectangle there.
+ */
 function partition(size: number, maxArea: number, rng: Rng): Rect[] {
   const covered = new Uint8Array(size * size);
   const rects: Rect[] = [];
-  for (let cell = 0; cell < size * size; cell++) {
-    if (covered[cell]) continue;
+  for (let cell = firstFree(size, covered, true); cell >= 0; cell = firstFree(size, covered, rng() < 0.5)) {
     const r = Math.floor(cell / size);
     const c = cell % size;
     const options: Rect[] = [];
@@ -138,7 +151,7 @@ function repair(size: number, maxArea: number, patches: Patch[], rng: Rng): Patc
 /** Swap in `relax(clue)` for up to `target` clues (visited in shuffled order), keeping each swap only while the board stays unique. */
 function hide(p: Puzzle, eligible: number[], target: number, relax: (c: Clue) => Clue, rng: Rng): void {
   let done = 0;
-  for (const i of shuffle(rng, eligible)) {
+  for (const i of shuffle(rng, [...eligible])) {
     if (done === target) return;
     const kept = p.clues[i];
     p.clues[i] = relax(kept);
