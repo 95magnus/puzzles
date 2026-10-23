@@ -22,7 +22,7 @@ Tagline: *Cut the grid into patches. One clue each.*
 - A 10×10 board generates in < 100 ms typically on a laptop, so it appears effectively instantly.
 - Every generated board (all presets, daily) has exactly one solution — verified by the solver in tests and at generation time.
 - Large (10×10) fits a 375 px-wide phone without scrolling.
-- A tap never places a rectangle; a drag never removes one without replacing it.
+- A tap never places a rectangle larger than 1×1; a drag never removes one without replacing it.
 
 ## 2. Rules
 
@@ -102,11 +102,11 @@ type Move = { added: Rect[]; removed: Rect[] }; // one draw, one tap-remove, or 
 Daily seed: `seedFromString('patches-daily:' + isoDate)`, preset `medium`.
 
 **Attempt** (repeat with a fresh draw from the same seeded RNG until accepted):
-1. **Partition.** Repeatedly take the first uncovered cell in reading order and pick a random rectangle anchored at its top-left that fits only uncovered cells, within the preset's area range. Weight candidates toward areas 3–6 so that at most ~10 % of rectangles are 1×1 and long 1×N strips are rare. Continue until the grid is covered.
+1. **Partition.** Repeatedly take the first uncovered cell — scanning rows or columns, chosen at random each time (a row scan alone favours tall rectangles, a column scan wide ones, so the mix balances wide and tall) — and pick a random rectangle anchored at it as top-left that fits only uncovered cells, within the preset's area range. Integer weights favour areas 3–6 so that at most ~10 % of rectangles are 1×1; long 1-wide strips (area ≥ 4) get an eighth of their area's weight, keeping them to ≤ 12 % of rectangles. Continue until the grid is covered.
 2. **Clues.** For each rectangle, place its clue on a random cell inside it, with the true shape (`shapeOf(rect)`) and the true area.
 3. **Uniqueness and repair.** `countSolutions(puzzle, 2)`. When the count is 2, find a rectangle where the second solution differs from the planted one and repair locally: move that rectangle's clue to another cell of it, or (if that does not help) split or merge it with a neighbour into a different valid partition, then recount. Up to 30 repair steps; then reject the attempt. Accept when the count is 1.
 4. **Hide information.** Visit clues in seeded random order. For each, try hiding its area; keep the change if the board stays unique. Then, in a second pass, try relaxing shapes to `any` the same way. Stop each pass when its preset target is reached. A clue never loses both its area and its shape (an `any` clue always shows an area).
-5. **Colours.** Assign each clue a `PALETTE` index greedily so that rectangles sharing an edge in the solution get different colours (9 colours; fall back to `index % 9` if greedy fails).
+5. **Colours.** Colour the solution's adjacency graph with smallest-last greedy colouring, so that rectangles sharing an edge get different colours (the graph is planar, so ≤ 6 colours; no fallback is needed), then shift by a seeded offset onto `PALETTE` indices 1–8. Index 0 (`#ff5c7a`) is reserved for invalid rectangles.
 
 `generatePuzzle` tries at most 2000 attempts and throws if none is accepted (unreachable in practice; the tests prove every preset generates for 50 seeds). Deterministic per `(size, seed)`, so the daily is identical everywhere. `size` must be 4–10.
 
@@ -136,9 +136,10 @@ Pure state machine fed pointer events with the cell under the pointer:
 - `down(cell)` → pressed on `cell`.
 - `enter(cell)` while pressed, different cell → becomes a **drag**. The preview rectangle is `normalize(start, current)`. Re-entering the start cell keeps the drag (preview 1×1).
 - `up` → if still not a drag: **tap** on the start cell → `removeAt` if a rectangle covers it, otherwise place a 1×1 rectangle there (so 1×1 clues are solvable without dragging). If a drag: `place(preview)`.
-- `cancel` (pointer cancel, leaving the board) → drop the gesture; nothing placed.
+- Off-board moves during a gesture clamp to the nearest edge cell, so a drag that overshoots an edge row or column keeps going and draws up to that edge. A `down` starts only on a board cell.
+- `cancel` (pointer cancel, lost capture, window blur) → drop the gesture; nothing placed.
 
-Pointer capture keeps the drag alive when the finger leaves the start cell; cells are resolved from coordinates via `elementFromPoint` / grid maths, not per-cell events.
+Pointer capture keeps the drag alive when the finger leaves the start cell; cells are resolved from coordinates via `elementFromPoint` / grid maths, not per-cell events. The board follows only the pointer that started the gesture; other pointers are ignored until it ends.
 
 ## 8. Visual design
 
@@ -146,9 +147,9 @@ Reuses the "Dusk" theme (background glows, glass board panel, Inter) from `ui/th
 
 - **Grid:** square cells, 1 px hairlines, board edge 3 px.
 - **Clue glyph:** centred in its cell — a small outline icon for the shape (square, wide rectangle, tall rectangle, or a dashed square for `any`) with the area number inside it in bold; shape-only clues show the icon alone. The icon carries the shape on its own, so colour is not required (colorblind safe).
-- **Placed rectangle:** a tile inset 2 px from the cell edges, rounded 8 px, filled with the clue's `PALETTE` colour at ~35 % over the board background, 2 px border in the full colour. A rectangle without exactly one clue uses neutral grey.
+- **Placed rectangle:** a tile inset 2 px from the cell edges, rounded 8 px, filled with the clue's `PALETTE` colour (indices 1–8; index 0 `#ff5c7a` is reserved for invalid rectangles) at ~35 % over the board background, 2 px border in the full colour. A rectangle without exactly one clue uses neutral grey.
 - **Invalid:** border `#ff5c7a`, faint diagonal stripe fill.
-- **Drag preview:** dashed outline with a `w×h` label pinned near the pointer (above the finger on touch); it turns red when the preview would be invalid.
+- **Drag preview:** dashed outline with a `w×h` label centred above the preview rectangle (below it when the rectangle starts on row 0), not pinned to the pointer; it turns red when the preview would be invalid.
 - **Win:** tiles pulse once in reading order (30 ms apart), then the win card slides up. Disabled under `prefers-reduced-motion`.
 - **Sizing:** cell size `clamp(30px, fit-to-panel, 56px)`; 10×10 at 30 px plus borders fits 375 px wide with the 16 px page gutter.
 
@@ -183,9 +184,9 @@ The timer starts when the board appears and stops on win. Daily number uses `dai
 **Unit (Vitest)**
 - `rect`: `normalize` for all four drag directions; `overlaps`, `contains`, `shapeOf` (1×1 is square).
 - `solver`: hand-built 4×4 / 5×5 fixtures — a unique board counts 1, a board with two solutions counts 2 (stops at the limit), an impossible board counts 0; hidden areas and `any` shapes widen candidates correctly; `solve` returns a valid cover aligned with `clues`.
-- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution rectangles tile the grid exactly; each holds exactly its clue; `countSolutions === 1` and `solution` is that solution, seeds 1..50 per preset; no clue has both hidden area and `any`; neighbouring solution rectangles have different colours; daily for a fixed date is stable; time budget for `large`; throws for size 3 and 11.
+- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution rectangles tile the grid exactly; each holds exactly its clue; `countSolutions === 1` and `solution` is that solution, seeds 1..50 per preset; no clue has both hidden area and `any`; neighbouring solution rectangles have different colours, all in `PALETTE` 1–8; 1-wide strips of area ≥ 4 are ≤ 12 % of rectangles per preset; daily for a fixed date is stable; time budget for `large`; throws for size 3 and 11.
 - `game`: place replaces overlapped rectangles and one undo restores them; tap-remove; undo of clear; invalidity for no clue, two clues, wrong area, wrong shape; win detection; actions ignored after win; encode/restore round trip and rejection of overlapping or out-of-bounds data.
-- `input`: tap on empty places 1×1; tap on a rectangle removes it; drag in each direction; re-entering the start cell keeps the drag; cancel places nothing.
+- `input`: tap on empty places 1×1; tap on a rectangle removes it; drag in each direction; re-entering the start cell keeps the drag; a drag past an edge clamps to the edge cell and places the edge rectangle; cancel places nothing; a second pointer is ignored.
 - `storage`: round trip, date mismatch, corrupt data, throwing storage.
 - `home/puzzles`: Patches entry and its status labels.
 
