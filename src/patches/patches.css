@@ -73,6 +73,7 @@
 .patches-grid {
   --cell: 40px;
   position: relative;
+  isolation: isolate; /* clue / tile / preview z-order stays inside the grid */
   display: grid;
   grid-template-columns: repeat(var(--n), var(--cell));
   grid-auto-rows: var(--cell);
@@ -97,6 +98,7 @@
 /* ---------- Clue glyph ---------- */
 .patches-clue {
   position: relative;
+  z-index: 2; /* above placed tiles so the clue stays readable; still pointer-events: none */
   display: grid;
   place-items: center;
   width: 100%;
@@ -132,6 +134,7 @@
 
 .patches-tiles {
   inset: 0;
+  z-index: 1;
 }
 
 .patches-tile,
@@ -170,6 +173,7 @@
 
 /* ---------- Drag preview ---------- */
 .patches-preview {
+  z-index: 3;
   border: 2px dashed var(--patches-ink);
   border-radius: 8px;
   color: var(--patches-ink);

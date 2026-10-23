@@ -217,6 +217,16 @@ test('celebrate pulses tiles in reading order, 30 ms apart', async () => {
   expect(done).toBe(true);
 });
 
+test('celebrate with no tiles resolves at once', async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));
+  board.setGame(newGame(puzzle()));
+  let done = false;
+  void board.celebrate().then(() => { done = true; });
+  await vi.advanceTimersByTimeAsync(0);
+  expect(done).toBe(true);
+});
+
 test('celebrate settles when setGame or destroy interrupts the wave', async () => {
   vi.useFakeTimers();
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false })));

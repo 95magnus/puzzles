@@ -247,7 +247,7 @@ export function createPatchesBoard(
     render,
 
     celebrate() {
-      if (!game || reducedMotion()) return Promise.resolve();
+      if (!game || game.rects.length === 0 || reducedMotion()) return Promise.resolve();
       clearGlow();
       const order = game.rects
         .map((x, k) => ({ k, x }))
