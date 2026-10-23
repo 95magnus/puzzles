@@ -1,4 +1,4 @@
-import { contains, fits, inBounds, overlaps, sameRect } from './rect';
+import { MIN_AREA, contains, fits, inBounds, overlaps, sameRect } from './rect';
 import type { GameState, Move, Puzzle, Rect } from './types';
 
 // Pure game state. Mutating actions return true iff something changed;
@@ -8,7 +8,7 @@ export function newGame(p: Puzzle): GameState {
   return { puzzle: p, rects: [], history: [], status: 'playing' };
 }
 
-/** `clue` is the index of the single clue inside `x` (else null); `ok` iff that clue's shape and optional area match. */
+/** `clue` is the index of the single clue inside `x` (else null); `ok` iff `x` is at least MIN_AREA cells and that clue's shape and optional area match. */
 export function checkRect(p: Puzzle, x: Rect): { clue: number | null; ok: boolean } {
   let clue: number | null = null;
   for (let i = 0; i < p.clues.length; i++) {
@@ -18,7 +18,7 @@ export function checkRect(p: Puzzle, x: Rect): { clue: number | null; ok: boolea
   }
   if (clue === null) return { clue, ok: false };
   const { shape, area } = p.clues[clue];
-  return { clue, ok: fits(shape, x) && (area === undefined || area === x.w * x.h) };
+  return { clue, ok: x.w * x.h >= MIN_AREA && fits(shape, x) && (area === undefined || area === x.w * x.h) };
 }
 
 /** Indices into `s.rects` of rectangles that break their clue. */
@@ -47,8 +47,9 @@ function commit(s: GameState, move: Move): boolean {
   return true;
 }
 
+/** Ignored for a single cell (never a patch) and for a rectangle already placed. */
 export function place(s: GameState, x: Rect): boolean {
-  if (s.status === 'won' || s.rects.some((o) => sameRect(o, x))) return false;
+  if (s.status === 'won' || x.w * x.h < MIN_AREA || s.rects.some((o) => sameRect(o, x))) return false;
   const removed = s.rects.filter((o) => overlaps(o, x));
   s.rects = s.rects.filter((o) => !removed.includes(o));
   s.rects.push(x);
@@ -63,10 +64,9 @@ export function removeAt(s: GameState, cell: number): boolean {
   return commit(s, { added: [], removed: [hit] });
 }
 
+/** A tap removes the rectangle under it; on an empty cell it does nothing. */
 export function tap(s: GameState, cell: number): boolean {
-  if (s.status === 'won') return false;
-  if (s.rects.some((x) => contains(s.puzzle.size, x, cell))) return removeAt(s, cell);
-  return place(s, { r: Math.floor(cell / s.puzzle.size), c: cell % s.puzzle.size, w: 1, h: 1 });
+  return removeAt(s, cell);
 }
 
 export function undo(s: GameState): boolean {
@@ -98,7 +98,7 @@ export function restore(p: Puzzle, text: string): GameState | null {
     if (!/^\d+,\d+,\d+,\d+$/.test(part)) return null;
     const [r, c, w, h] = part.split(',').map(Number);
     const x = { r, c, w, h };
-    if (!inBounds(p.size, x) || s.rects.some((o) => overlaps(o, x))) return null;
+    if (!inBounds(p.size, x) || x.w * x.h < MIN_AREA || s.rects.some((o) => overlaps(o, x))) return null;
     s.rects.push(x);
   }
   if (isWin(s)) s.status = 'won';

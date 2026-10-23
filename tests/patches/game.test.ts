@@ -24,8 +24,8 @@ describe('patches game', () => {
 
   it('place replaces every overlapped rect in one move', () => {
     const s = fresh();
-    place(s, R(0, 0, 1, 1));
-    place(s, R(0, 1, 1, 1));
+    place(s, R(0, 0, 1, 2));
+    place(s, R(0, 1, 1, 2));
     expect(place(s, R(0, 0, 2, 2))).toBe(true);
     expect(s.rects).toEqual([R(0, 0, 2, 2)]);
     expect(s.history).toHaveLength(3);
@@ -33,11 +33,11 @@ describe('patches game', () => {
 
   it('undo after a replacing draw restores every replaced rectangle', () => {
     const s = fresh();
-    place(s, R(0, 0, 1, 1));
-    place(s, R(0, 1, 1, 1));
+    place(s, R(0, 0, 1, 2));
+    place(s, R(0, 1, 1, 2));
     place(s, R(0, 0, 2, 2));
     expect(undo(s)).toBe(true);
-    expect([...s.rects].sort(byPos)).toEqual([R(0, 0, 1, 1), R(0, 1, 1, 1)]);
+    expect([...s.rects].sort(byPos)).toEqual([R(0, 0, 1, 2), R(0, 1, 1, 2)]);
     expect(undo(s)).toBe(true);
     expect(undo(s)).toBe(true);
     expect(s.rects).toEqual([]);
@@ -52,10 +52,19 @@ describe('patches game', () => {
     expect(s.rects).toHaveLength(1);
   });
 
-  it('tap removes a covering rectangle, else places 1×1', () => {
+  it('single cells are never patches', () => {
     const s = fresh();
-    expect(tap(s, 5)).toBe(true);
-    expect(s.rects).toEqual([R(1, 1, 1, 1)]);
+    expect(place(s, R(1, 1, 1, 1))).toBe(false);
+    expect(s.rects).toEqual([]);
+    expect(s.history).toHaveLength(0);
+    expect(checkRect(p, R(0, 0, 1, 1))).toEqual({ clue: 0, ok: false });
+  });
+
+  it('tap removes a covering rectangle and does nothing on an empty cell', () => {
+    const s = fresh();
+    expect(tap(s, 5)).toBe(false);
+    expect(s.rects).toEqual([]);
+    expect(s.history).toHaveLength(0);
     place(s, R(0, 0, 2, 2));
     expect(s.rects).toEqual([R(0, 0, 2, 2)]);
     expect(tap(s, 5)).toBe(true);
@@ -131,8 +140,8 @@ describe('patches game', () => {
     const s = fresh();
     expect(coverage(s)).toBe(0);
     place(s, R(0, 0, 2, 2));
-    place(s, R(3, 3, 1, 1));
-    expect(coverage(s)).toBe(5);
+    place(s, R(3, 2, 2, 1));
+    expect(coverage(s)).toBe(6);
   });
 
   it('encode/restore round trip', () => {
@@ -159,9 +168,10 @@ describe('patches game', () => {
   it('restore rejects bad input', () => {
     expect(restore(p, '0,0,2')).toBeNull();
     expect(restore(p, '0,0,5,1')).toBeNull();
-    expect(restore(p, '0,0,2,2;1,1,1,1')).toBeNull();
+    expect(restore(p, '0,0,2,2;1,1,2,1')).toBeNull();
     expect(restore(p, 'a,b,c,d')).toBeNull();
     expect(restore(p, '0,0,0,1')).toBeNull();
+    expect(restore(p, '1,1,1,1')).toBeNull(); // a single cell is never a patch
     expect(restore(p, '0,0,2,2;')).toBeNull();
     const empty = restore(p, '');
     expect(empty).not.toBeNull();

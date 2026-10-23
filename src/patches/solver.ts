@@ -1,7 +1,7 @@
-import { contains, fits, inBounds } from './rect';
+import { MIN_AREA, contains, fits, inBounds } from './rect';
 import type { Puzzle, Rect } from './types';
 
-/** Every rectangle that could belong to `clues[i]`: it holds the clue's cell and no other clue's, and matches its shape and area. */
+/** Every rectangle that could belong to `clues[i]`: it holds the clue's cell and no other clue's, matches its shape and area, and spans at least MIN_AREA cells. */
 export function candidates(p: Puzzle, i: number): Rect[] {
   const { size, clues } = p;
   const { cell, shape, area } = clues[i];
@@ -17,7 +17,7 @@ export function candidates(p: Puzzle, i: number): Rect[] {
       const wMax = area === undefined ? size : area / h;
       for (let w = wMin; w <= wMax; w++) {
         const probe = { r: r0, c: 0, w, h };
-        if (!fits(shape, probe)) continue;
+        if (w * h < MIN_AREA || !fits(shape, probe)) continue;
         for (let c0 = Math.max(0, cc - w + 1); c0 <= Math.min(cc, size - w); c0++) {
           if (others.some((o) => o.r >= r0 && o.r <= r1 && o.c >= c0 && o.c < c0 + w)) continue;
           out.push({ r: r0, c: c0, w, h });
@@ -136,7 +136,7 @@ export function isSolution(p: Puzzle, rects: Rect[]): boolean {
   for (let i = 0; i < clues.length; i++) {
     const x = rects[i];
     const { shape, area } = clues[i];
-    if (!inBounds(size, x) || !fits(shape, x)) return false;
+    if (!inBounds(size, x) || x.w * x.h < MIN_AREA || !fits(shape, x)) return false;
     if (area !== undefined && x.w * x.h !== area) return false;
     if (clues.some((o, j) => contains(size, x, o.cell) !== (j === i))) return false;
     for (let r = x.r; r < x.r + x.h; r++) {

@@ -22,7 +22,7 @@ Tagline: *Cut the grid into patches. One clue each.*
 - A 10×10 board generates in < 100 ms typically on a laptop, so it appears effectively instantly.
 - Every generated board (all presets, daily) has exactly one solution — verified by the solver in tests and at generation time.
 - Large (10×10) fits a 375 px-wide phone without scrolling.
-- A tap never places a rectangle larger than 1×1; a drag never removes one without replacing it.
+- A tap never places a rectangle; a drag never removes one without replacing it.
 
 ## 2. Rules
 
@@ -32,7 +32,7 @@ Tagline: *Cut the grid into patches. One clue each.*
 - a **shape**: `square` (w = h), `wide` (w > h), `tall` (h > w) or `any` (no constraint);
 - an optional **area** `w × h`. A clue with no area shows only its shape icon.
 
-A 1×1 rectangle counts as `square`.
+Every patch covers at least 2 cells: a single cell is never a patch, so no clue has area 1 and a 1×1 rectangle is never placed.
 
 **Goal.** Cover every cell with non-overlapping rectangles such that each rectangle contains exactly one clue cell and satisfies that clue's shape and area.
 
@@ -95,14 +95,14 @@ type Move = { added: Rect[]; removed: Rect[] }; // one draw, one tap-remove, or 
 
 | Preset | Size | Area range | Target hidden areas | Target `any` shapes |
 |---|---|---|---|---|
-| `small` | 6×6 | 1–6 | ~20 % | ~10 % |
-| `medium` (default, daily) | 8×8 | 1–8 | ~30 % | ~15 % |
-| `large` | 10×10 | 1–10 | ~35 % | ~15 % |
+| `small` | 6×6 | 2–6 | ~20 % | ~10 % |
+| `medium` (default, daily) | 8×8 | 2–8 | ~30 % | ~15 % |
+| `large` | 10×10 | 2–10 | ~35 % | ~15 % |
 
 Daily seed: `seedFromString('patches-daily:' + isoDate)`, preset `medium`.
 
 **Attempt** (repeat with a fresh draw from the same seeded RNG until accepted):
-1. **Partition.** Repeatedly take the first uncovered cell — scanning rows or columns, chosen at random each time (a row scan alone favours tall rectangles, a column scan wide ones, so the mix balances wide and tall) — and pick a random rectangle anchored at it as top-left that fits only uncovered cells, within the preset's area range. Integer weights favour areas 3–6 so that at most ~10 % of rectangles are 1×1; long 1-wide strips (area ≥ 4) get an eighth of their area's weight, keeping them to ≤ 12 % of rectangles. Continue until the grid is covered.
+1. **Partition.** Repeatedly take the first uncovered cell — scanning rows or columns, chosen at random each time (a row scan alone favours tall rectangles, a column scan wide ones, so the mix balances wide and tall) — and pick a random rectangle anchored at it as top-left that fits only uncovered cells, within the preset's area range. Single cells are never offered (an anchor boxed in to one cell rejects the attempt). Integer weights favour areas 3–6; long 1-wide strips (area ≥ 4) get an eighth of their area's weight, keeping them to ≤ 12 % of rectangles. Continue until the grid is covered.
 2. **Clues.** For each rectangle, place its clue on a random cell inside it, with the true shape (`shapeOf(rect)`) and the true area.
 3. **Uniqueness and repair.** `countSolutions(puzzle, 2)`. When the count is 2, find a rectangle where the second solution differs from the planted one and repair locally: move that rectangle's clue to another cell of it, or (if that does not help) split or merge it with a neighbour into a different valid partition, then recount. Up to 30 repair steps; then reject the attempt. Accept when the count is 1.
 4. **Hide information.** Visit clues in seeded random order. For each, try hiding its area; keep the change if the board stays unique. Then, in a second pass, try relaxing shapes to `any` the same way. Stop each pass when its preset target is reached. A clue never loses both its area and its shape (an `any` clue always shows an area).
@@ -134,8 +134,8 @@ Daily seed: `seedFromString('patches-daily:' + isoDate)`, preset `medium`.
 
 Pure state machine fed pointer events with the cell under the pointer:
 - `down(cell)` → pressed on `cell`.
-- `enter(cell)` while pressed, different cell → becomes a **drag**. The preview rectangle is `normalize(start, current)`. Re-entering the start cell keeps the drag (preview 1×1).
-- `up` → if still not a drag: **tap** on the start cell → `removeAt` if a rectangle covers it, otherwise place a 1×1 rectangle there (so 1×1 clues are solvable without dragging). If a drag: `place(preview)`.
+- `enter(cell)` while pressed, different cell → becomes a **drag**. The preview rectangle is `normalize(start, current)`. Re-entering the start cell keeps the drag (preview 1×1, which is never placed).
+- `up` → if still not a drag: **tap** on the start cell → `removeAt` if a rectangle covers it; on an empty cell nothing happens. If a drag: `place(preview)`, ignored when the preview is a single cell.
 - Off-board moves during a gesture clamp to the nearest edge cell, so a drag that overshoots an edge row or column keeps going and draws up to that edge. A `down` starts only on a board cell.
 - `cancel` (pointer cancel, lost capture, window blur) → drop the gesture; nothing placed.
 
@@ -182,11 +182,11 @@ The timer starts when the board appears and stops on win. Daily number uses `dai
 ## 12. Testing
 
 **Unit (Vitest)**
-- `rect`: `normalize` for all four drag directions; `overlaps`, `contains`, `shapeOf` (1×1 is square).
+- `rect`: `normalize` for all four drag directions; `overlaps`, `contains`, `shapeOf`.
 - `solver`: hand-built 4×4 / 5×5 fixtures — a unique board counts 1, a board with two solutions counts 2 (stops at the limit), an impossible board counts 0; hidden areas and `any` shapes widen candidates correctly; `solve` returns a valid cover aligned with `clues`.
-- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution rectangles tile the grid exactly; each holds exactly its clue; `countSolutions === 1` and `solution` is that solution, seeds 1..50 per preset; no clue has both hidden area and `any`; neighbouring solution rectangles have different colours, all in `PALETTE` 1–8; 1-wide strips of area ≥ 4 are ≤ 12 % of rectangles per preset; daily for a fixed date is stable; time budget for `large`; throws for size 3 and 11.
+- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution rectangles tile the grid exactly; each holds exactly its clue; `countSolutions === 1` and `solution` is that solution, seeds 1..50 per preset; no clue has both hidden area and `any`; neighbouring solution rectangles have different colours, all in `PALETTE` 1–8; no rectangle is a single cell; 1-wide strips of area ≥ 4 are ≤ 12 % of rectangles per preset; daily for a fixed date is stable; time budget for `large`; throws for size 3 and 11.
 - `game`: place replaces overlapped rectangles and one undo restores them; tap-remove; undo of clear; invalidity for no clue, two clues, wrong area, wrong shape; win detection; actions ignored after win; encode/restore round trip and rejection of overlapping or out-of-bounds data.
-- `input`: tap on empty places 1×1; tap on a rectangle removes it; drag in each direction; re-entering the start cell keeps the drag; a drag past an edge clamps to the edge cell and places the edge rectangle; cancel places nothing; a second pointer is ignored.
+- `input`: tap on empty does nothing; a single-cell drag places nothing; tap on a rectangle removes it; drag in each direction; re-entering the start cell keeps the drag; a drag past an edge clamps to the edge cell and places the edge rectangle; cancel places nothing; a second pointer is ignored.
 - `storage`: round trip, date mismatch, corrupt data, throwing storage.
 - `home/puzzles`: Patches entry and its status labels.
 

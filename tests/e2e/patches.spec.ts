@@ -18,7 +18,7 @@ async function cellCenter(page: Page, i: number) {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-/** Drag from the top-left cell to the bottom-right cell of the rect; a 1x1 is a click. */
+/** Drag from the top-left cell to the bottom-right cell of the rect. */
 async function drawRect(page: Page, size: number, rect: Rect) {
   const from = await cellCenter(page, rect.r * size + rect.c);
   const to = await cellCenter(page, (rect.r + rect.h - 1) * size + (rect.c + rect.w - 1));

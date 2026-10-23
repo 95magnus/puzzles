@@ -85,9 +85,7 @@ test('clue info', () => {
 
 test('shape mix', () => {
   for (const { id, seed, p } of BOARDS) {
-    const n = p.solution.length;
-    const ones = p.solution.filter((x) => x.w * x.h === 1).length;
-    expect(ones, `${id} ${seed}`).toBeLessThanOrEqual(Math.ceil(0.1 * n));
+    expect(p.solution.every((x) => x.w * x.h >= 2), `${id} ${seed}: no single-cell patches`).toBe(true);
     expect(p.solution.every((x) => x.w * x.h <= PRESETS[id].maxArea), `${id} ${seed}`).toBe(true);
   }
 });

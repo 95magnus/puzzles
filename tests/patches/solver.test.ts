@@ -52,8 +52,13 @@ describe('patches solver', () => {
   });
 
   it('a placement that leaves cells uncovered is not a solution', () => {
-    // One clue, area 1, on a 2x2 board: placing it covers a single cell.
-    expect(countSolutions(pz(2, [[0, 'square', 1]]), 2)).toBe(0);
+    // One clue, area 2, on a 2x2 board: placing it covers only half the board.
+    expect(countSolutions(pz(2, [[0, 'wide', 2]]), 2)).toBe(0);
+  });
+
+  it('a single cell is never a candidate', () => {
+    expect(candidates(pz(2, [[0, 'square']]), 0)).toEqual([{ r: 0, c: 0, w: 2, h: 2 }]);
+    expect(candidates(pz(2, [[0, 'square', 1]]), 0)).toEqual([]);
   });
 
   it('isSolution accepts the fixture and rejects broken variants', () => {

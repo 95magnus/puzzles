@@ -37,6 +37,9 @@ export function shapeOf(x: Rect): Exclude<Shape, 'any'> {
   return x.w === x.h ? 'square' : x.w > x.h ? 'wide' : 'tall';
 }
 
+/** Smallest patch: a single cell is never a patch. */
+export const MIN_AREA = 2;
+
 export function fits(shape: Shape, x: Rect): boolean {
   return shape === 'any' || shapeOf(x) === shape;
 }

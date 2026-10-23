@@ -99,7 +99,7 @@ test('render draws tiles with clue colours', () => {
 
 test('a rectangle without exactly one clue is grey and invalid; removing it removes the tile', () => {
   const s = newGame(puzzle());
-  place(s, { r: 2, c: 3, w: 1, h: 1 }); // cell 11, no clue
+  place(s, { r: 2, c: 3, w: 1, h: 2 }); // cells 11 and 15, no clue
   board.setGame(s);
   const t = tiles()[0];
   expect(PALETTE).not.toContain(t.style.getPropertyValue('--col'));

@@ -1,6 +1,6 @@
 import { mulberry32, randInt, seedFromString, shuffle, type Rng } from '../core/rng';
 import { PALETTE } from '../ui/palette';
-import { cellsOf, sameRect, shapeOf } from './rect';
+import { MIN_AREA, cellsOf, sameRect, shapeOf } from './rect';
 import { countSolutions, solutions } from './solver';
 import type { Clue, PresetId, Puzzle, Rect } from './types';
 
@@ -36,13 +36,13 @@ function params(size: number): Params {
 }
 
 /**
- * Area 3–6 is favoured and 1×1 is rare. Long 1×N strips (area ≥ 4) are cut to an eighth of their area's weight:
- * the anchor offers many of them on a wide-open board, and halving alone left a fifth of the rectangles as strips.
- * Integer weights keep the draw exact and deterministic.
+ * Area 3–6 is favoured (a single cell is never offered). Long 1×N strips (area ≥ 4) are cut to an eighth of their
+ * area's weight: the anchor offers many of them on a wide-open board, and halving alone left a fifth of the
+ * rectangles as strips. Integer weights keep the draw exact and deterministic.
  */
 function weight(w: number, h: number): number {
   const area = w * h;
-  const base = area === 1 ? 4 : area === 2 ? 8 : area <= 6 ? 16 : 8;
+  const base = area === 2 ? 8 : area <= 6 ? 16 : 8;
   return Math.min(w, h) === 1 && area >= 4 ? base / 8 : base;
 }
 
@@ -60,8 +60,9 @@ function firstFree(size: number, covered: Uint8Array, byRow: boolean): number {
 /**
  * Tile the board: anchor at the first uncovered cell, scanning rows or columns at random each time (one
  * scan order alone favours tall rectangles, its transpose wide ones), and pick a weighted random rectangle there.
+ * Returns null when an anchor is boxed in so that only a single cell would fit.
  */
-function partition(size: number, maxArea: number, rng: Rng): Rect[] {
+function partition(size: number, maxArea: number, rng: Rng): Rect[] | null {
   const covered = new Uint8Array(size * size);
   const rects: Rect[] = [];
   for (let cell = firstFree(size, covered, true); cell >= 0; cell = firstFree(size, covered, rng() < 0.5)) {
@@ -78,11 +79,13 @@ function partition(size: number, maxArea: number, rng: Rng): Rect[] {
       maxW = run;
       if (maxW === 0) break;
       for (let w = 1; w <= maxW && w * h <= maxArea; w++) {
+        if (w * h < MIN_AREA) continue;
         options.push({ r, c, w, h });
         weights.push(weight(w, h));
         total += weight(w, h);
       }
     }
+    if (!options.length) return null;
     let pick = rng() * total;
     let k = 0;
     while (k < options.length - 1 && (pick -= weights[k]) >= 0) k++;
@@ -210,14 +213,13 @@ export function generatePuzzle(size: number, seed: number): Puzzle {
   }
   const rng = mulberry32(seed);
   const cfg = params(size);
-  const tooManyOnes = (rects: Rect[]) => rects.filter((x) => x.w * x.h === 1).length > Math.ceil(0.1 * rects.length);
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     const rects = partition(size, cfg.maxArea, rng);
-    if (tooManyOnes(rects)) continue;
+    if (!rects) continue;
     const repaired = repair(size, cfg.maxArea, rects.map((x) => placeClue(size, x, rng)).sort(byCell), rng);
     if (!repaired) continue;
     const p = toPuzzle(size, repaired);
-    if (tooManyOnes(p.solution) || p.solution.some((x) => x.w * x.h > cfg.maxArea)) continue;
+    if (p.solution.some((x) => x.w * x.h > cfg.maxArea)) continue;
     const n = p.clues.length;
     const all = p.clues.map((_, i) => i);
     hide(p, all, Math.round(cfg.hideArea * n), dropArea, rng);
