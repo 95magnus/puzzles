@@ -103,7 +103,7 @@
   place-items: center;
   width: 100%;
   height: 100%;
-  color: var(--patches-ink);
+  color: var(--col, var(--patches-ink));
   pointer-events: none;
 }
 

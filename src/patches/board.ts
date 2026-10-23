@@ -33,7 +33,7 @@ function reducedMotion(): boolean {
   }
 }
 
-/** Outline icon in a 24-unit box; the shape alone says what the clue wants, so colour is optional. */
+/** Outline icon in a 24-unit box, drawn in the clue's colour; the shape alone says what the clue wants. */
 const ICON: Record<Shape, { x: number; y: number; w: number; h: number }> = {
   square: { x: 5, y: 5, w: 14, h: 14 },
   wide: { x: 2, y: 6.5, w: 20, h: 11 },
@@ -45,6 +45,7 @@ function clueEl(clue: Clue): HTMLElement {
   const el = document.createElement('div');
   el.className = 'patches-clue';
   el.dataset.shape = clue.shape;
+  el.style.setProperty('--col', PALETTE[clue.color % PALETTE.length]);
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');

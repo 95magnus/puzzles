@@ -60,6 +60,8 @@ test('setGame renders size² cells and one clue element per clue', () => {
   expect(clues[1].querySelector('svg')).not.toBeNull();
   expect(cell(0).querySelector('.patches-clue')).toBe(clues[0]);
   expect(cell(1).querySelector('.patches-clue')).toBeNull();
+  const order = [...p.clues].sort((a, b) => a.cell - b.cell);
+  clues.forEach((c, i) => expect(c.style.getPropertyValue('--col')).toBe(PALETTE[order[i].color]));
 });
 
 test('setGame twice replaces the board instead of stacking it', () => {
