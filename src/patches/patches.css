@@ -1,0 +1,234 @@
+/* Patches page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
+   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+:root {
+  --patches-bg: #1d1b28; /* effective board background (BOARD_BG_EFFECTIVE) */
+  --patches-line: rgba(255, 255, 255, 0.09);
+  --patches-edge: #0e0c1a;
+  --patches-ink: rgba(244, 245, 251, 0.92);
+  --patches-invalid: #ff5c7a;
+}
+
+/* ---------- Page ---------- */
+/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
+.patches-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
+}
+
+.patches-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.patches-stage {
+  position: relative;
+  width: 100%;
+}
+
+.patches-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%; /* narrowed to the board panel's width by the app */
+  padding: 0 4px;
+}
+
+.patches-stats {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.patches-controls {
+  display: flex;
+  gap: var(--space);
+}
+
+/* ---------- Board ---------- */
+.patches-board {
+  display: flex;
+  justify-content: center;
+}
+
+.patches-board--locked .patches-grid {
+  pointer-events: none;
+}
+
+.patches-panel {
+  padding: 12px; /* matches PANEL_PAD in board.ts */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.patches-grid {
+  --cell: 40px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 0;
+  background: var(--patches-bg);
+  box-shadow: 0 0 0 3px var(--patches-edge); /* the 3px board edge sits outside the cells */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The hairline is an inset shadow so every cell is exactly --cell wide. */
+.patches-cell {
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  box-shadow: inset 0 0 0 0.5px var(--patches-line);
+  cursor: pointer;
+}
+
+/* ---------- Clue glyph ---------- */
+.patches-clue {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--patches-ink);
+  pointer-events: none;
+}
+
+.patches-clue svg {
+  position: absolute;
+  inset: 8%;
+  width: 84%;
+  height: 84%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+}
+
+.patches-clue b {
+  position: relative;
+  font-size: calc(var(--cell) * 0.34);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Tiles ---------- */
+.patches-tiles,
+.patches-preview {
+  position: absolute;
+  pointer-events: none;
+}
+
+.patches-tiles {
+  inset: 0;
+}
+
+.patches-tile,
+.patches-preview {
+  left: calc(var(--c) * var(--cell));
+  top: calc(var(--r) * var(--cell));
+  /* inset 2px: a margin shrinks the box without moving its origin */
+  margin: 2px;
+  box-sizing: border-box;
+  width: calc(var(--w) * var(--cell) - 4px);
+  height: calc(var(--h) * var(--cell) - 4px);
+}
+
+.patches-tile {
+  --col: #8a8fa3;
+  position: absolute;
+  border: 2px solid var(--col);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--col) 35%, var(--patches-bg));
+}
+
+.patches-tile.is-invalid {
+  border-color: var(--patches-invalid);
+  background-image: repeating-linear-gradient(45deg, rgba(255, 92, 122, 0.22) 0 4px, transparent 4px 9px);
+}
+
+.patches-tile.is-glow {
+  animation: patches-glow 360ms ease-out;
+}
+
+@keyframes patches-glow {
+  0% { filter: none; transform: scale(1); }
+  45% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)) brightness(1.4); transform: scale(1.06); }
+  100% { filter: none; transform: scale(1); }
+}
+
+/* ---------- Drag preview ---------- */
+.patches-preview {
+  border: 2px dashed var(--patches-ink);
+  border-radius: 8px;
+  color: var(--patches-ink);
+}
+
+.patches-preview[hidden] {
+  display: none;
+}
+
+.patches-preview.is-invalid {
+  border-color: var(--patches-invalid);
+  color: var(--patches-invalid);
+}
+
+.patches-preview-label {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--patches-edge);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.patches-preview.is-below .patches-preview-label {
+  bottom: auto;
+  top: calc(100% + 4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .patches-tile.is-glow {
+    animation: none;
+  }
+}
+
+/* ---------- How-to ---------- */
+.patches-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.patches-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.patches-howto__demo {
+  flex: none;
+  width: 88px;
+  height: 88px;
+}
