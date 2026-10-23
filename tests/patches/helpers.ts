@@ -6,12 +6,12 @@ export const UNIQUE4: [number, Shape, number?][] = [[0, 'square', 4], [3, 'tall'
 export const TWO4: [number, Shape, number?][] = [[0, 'any', 8], [15, 'any', 8]]; // two 4×2 or two 2×4
 export const NONE4: [number, Shape, number?][] = [[0, 'square', 4], [5, 'square', 1], [15, 'any', 11]]; // clue 0 has no candidate
 
-/** Build a puzzle from `[cell, shape, area?]` clues (colour = index, sorted by cell), with its solution filled in by the solver (empty if unsolvable). */
+/** Build a puzzle from `[cell, shape, area?]` clues (colour = 1 + index, as index 0 is the invalid red; sorted by cell), with its solution filled in by the solver (empty if unsolvable). */
 export function pz(size: number, clues: [cell: number, shape: Shape, area?: number][]): Puzzle {
   const sorted = [...clues].sort((a, b) => a[0] - b[0]);
   const puzzle: Puzzle = {
     size,
-    clues: sorted.map(([cell, shape, area], color) => ({ cell, shape, ...(area === undefined ? {} : { area }), color })),
+    clues: sorted.map(([cell, shape, area], i) => ({ cell, shape, ...(area === undefined ? {} : { area }), color: 1 + (i % 8) })),
     solution: [],
   };
   puzzle.solution = solve(puzzle) ?? [];

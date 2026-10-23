@@ -18,9 +18,9 @@ const tiles = () => [...el.querySelectorAll<HTMLElement>('.patches-tile')];
 const preview = () => el.querySelector<HTMLElement>('.patches-preview')!;
 const puzzle = (): Puzzle => pz(4, UNIQUE4);
 
-function at(type: string, x: number, y: number, button = 0) {
+function at(type: string, x: number, y: number, button = 0, pointerId = 1) {
   const ev = new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button });
-  Object.defineProperty(ev, 'pointerId', { value: 1 });
+  Object.defineProperty(ev, 'pointerId', { value: pointerId });
   Object.defineProperty(ev, 'pointerType', { value: 'mouse' });
   grid().dispatchEvent(ev);
 }
@@ -90,7 +90,7 @@ test('render draws tiles with clue colours', () => {
   board.render();
   expect(tiles()).toHaveLength(1);
   const t = tiles()[0];
-  expect(t.style.getPropertyValue('--col')).toBe(PALETTE[0]);
+  expect(t.style.getPropertyValue('--col')).toBe(PALETTE[1]);
   expect(t.classList.contains('is-invalid')).toBe(false);
   expect(['--r', '--c', '--w', '--h'].map((k) => t.style.getPropertyValue(k))).toEqual(['0', '0', '2', '2']);
 });
@@ -148,14 +148,80 @@ test('invalid preview is flagged', () => {
   expect(preview().classList.contains('is-invalid')).toBe(true);
 });
 
-test('leaving the board clears the preview and draws nothing', () => {
+test('dragging past the right and bottom edges clamps to the edge cells and places the edge rect', () => {
+  board.setGame(newGame(puzzle()));
+  at('pointerdown', ...px(5));
+  at('pointermove', 520, 180); // right of the board, row 1
+  expect(preview().hidden).toBe(false);
+  expect(preview().querySelector('.patches-preview-label')!.textContent).toBe('3×1');
+  at('pointermove', 900, 640); // past the bottom-right corner
+  expect(preview().hidden).toBe(false);
+  expect(preview().querySelector('.patches-preview-label')!.textContent).toBe('3×3');
+  at('pointerup', 900, 640);
+  expect(actions).toEqual([{ kind: 'draw', rect: { r: 1, c: 1, w: 3, h: 3 } }]);
+  expect(preview().hidden).toBe(true);
+});
+
+test('dragging past the left and top edges clamps too; a press off the board starts nothing', () => {
+  board.setGame(newGame(puzzle()));
+  at('pointerdown', ...px(10));
+  at('pointermove', -40, -300);
+  at('pointerup', -40, -300);
+  expect(actions).toEqual([{ kind: 'draw', rect: { r: 0, c: 0, w: 3, h: 3 } }]);
+  actions.length = 0;
+  at('pointerdown', 450, 50);
+  at('pointermove', ...px(5));
+  at('pointerup', ...px(5));
+  expect(actions).toEqual([]);
+  expect(preview().hidden).toBe(true);
+});
+
+test('a press that slides off the board drags to the edge cell, or stays a tap from that edge cell', () => {
+  board.setGame(newGame(puzzle()));
+  at('pointerdown', ...px(2));
+  at('pointermove', 450, 50);
+  at('pointerup', 450, 50);
+  at('pointerdown', ...px(3));
+  at('pointermove', 450, 50);
+  at('pointerup', 450, 50);
+  expect(actions).toEqual([
+    { kind: 'draw', rect: { r: 0, c: 2, w: 2, h: 1 } },
+    { kind: 'tap', cell: 3 },
+  ]);
+});
+
+test('pointer cancel, lost capture and window blur drop the gesture', () => {
+  board.setGame(newGame(puzzle()));
+  for (const end of ['pointercancel', 'lostpointercapture', 'blur']) {
+    at('pointerdown', ...px(0));
+    at('pointermove', ...px(5));
+    expect(preview().hidden).toBe(false);
+    if (end === 'blur') window.dispatchEvent(new Event('blur'));
+    else at(end, ...px(5));
+    expect(preview().hidden, end).toBe(true);
+    at('pointerup', ...px(5));
+  }
+  expect(actions).toEqual([]);
+});
+
+test('a second pointer neither restarts the drag nor taps', () => {
   board.setGame(newGame(puzzle()));
   at('pointerdown', ...px(0));
-  at('pointermove', ...px(5));
-  at('pointermove', 500, 500);
-  expect(preview().hidden).toBe(true);
-  at('pointerup', 500, 500);
+  at('pointerdown', ...px(10), 0, 2);
+  at('pointerup', ...px(10), 0, 2);
   expect(actions).toEqual([]);
+  at('pointermove', ...px(15), 0, 2);
+  expect(preview().hidden).toBe(true);
+  at('pointercancel', ...px(15), 0, 2);
+  at('lostpointercapture', ...px(15), 0, 2);
+  at('pointermove', ...px(5));
+  expect(preview().querySelector('.patches-preview-label')!.textContent).toBe('2×2');
+  at('pointerup', ...px(5));
+  expect(actions).toEqual([{ kind: 'draw', rect: { r: 0, c: 0, w: 2, h: 2 } }]);
+  // Once the first gesture ends, another pointer may start one.
+  at('pointerdown', ...px(7), 0, 2);
+  at('pointerup', ...px(7), 0, 2);
+  expect(actions[1]).toEqual({ kind: 'tap', cell: 7 });
 });
 
 test('setInteractive(false) blocks input and clears a live preview', () => {

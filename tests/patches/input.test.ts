@@ -3,7 +3,7 @@ import { initialInput, step, type InputAction, type InputEvent, type InputState 
 
 const SIZE = 4;
 const down = (cell: number): InputEvent => ({ type: 'down', cell });
-const move = (cell: number | null): InputEvent => ({ type: 'move', cell });
+const move = (cell: number): InputEvent => ({ type: 'move', cell });
 const up: InputEvent = { type: 'up' };
 const cancel: InputEvent = { type: 'cancel' };
 
@@ -51,17 +51,12 @@ test('re-entering the start cell keeps the drag', () => {
   expect(state.mode).toBe('idle');
 });
 
-test('leaving the board cancels', () => {
-  const { state, actions } = run([down(0), move(1), move(null), up]);
-  expect(actions[2]).toEqual({ kind: 'preview', rect: null });
+test('an edge cell reached past the board edge keeps the drag and draws on release', () => {
+  // The board clamps an off-board point to the nearest edge cell: here a drag from 5 past the bottom-right corner.
+  const { state, actions } = run([down(5), move(6), move(15), move(15), up]);
+  expect(actions[2]).toEqual({ kind: 'preview', rect: { r: 1, c: 1, w: 3, h: 3 } });
   expect(actions[3]).toBeUndefined();
-  expect(state.mode).toBe('idle');
-});
-
-test('leaving the board while only pressed cancels the tap', () => {
-  const { state, actions } = run([down(0), move(null), up]);
-  expect(actions[1]).toEqual({ kind: 'preview', rect: null });
-  expect(actions[2]).toBeUndefined();
+  expect(actions[4]).toEqual({ kind: 'draw', rect: { r: 1, c: 1, w: 3, h: 3 } });
   expect(state.mode).toBe('idle');
 });
 
@@ -79,7 +74,7 @@ test('cancel while only pressed has no action', () => {
 });
 
 test('events while idle are ignored', () => {
-  const { state, actions } = run([move(3), up, cancel, move(null)]);
+  const { state, actions } = run([move(3), up, cancel, move(0)]);
   expect(actions).toEqual([undefined, undefined, undefined, undefined]);
   expect(state).toEqual(initialInput);
 });

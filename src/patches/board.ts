@@ -1,4 +1,3 @@
-import { cellFromPoint } from '../ui/board';
 import { PALETTE } from '../ui/palette';
 import { checkRect, invalid } from './game';
 import { initialInput, step, type InputEvent, type InputState } from './input';
@@ -95,6 +94,8 @@ export function createPatchesBoard(
   let cellEls: HTMLElement[] = [];
   let tileEls: HTMLElement[] = [];
   let input: InputState = initialInput;
+  /** The pointer driving the current gesture; other pointers are ignored until it ends. */
+  let activePointer: number | null = null;
   let interactive = true;
   let glowTimers: ReturnType<typeof setTimeout>[] = [];
   let settleWave: (() => void) | null = null;
@@ -167,34 +168,64 @@ export function createPatchesBoard(
     }
   }
 
-  function cellAt(e: PointerEvent): number | null {
+  /**
+   * The cell under the pointer. Off the board it is null, or with `clamp` the nearest edge cell, so a drag
+   * that overshoots an edge row or column keeps going and draws up to that edge.
+   */
+  function cellAt(e: PointerEvent, clamp: boolean): number | null {
     const n = game!.puzzle.size;
-    const hit = cellFromPoint(e.clientX, e.clientY, grid.getBoundingClientRect(), n);
-    return hit ? hit.r * n + hit.c : null;
+    const b = grid.getBoundingClientRect();
+    if (b.width <= 0 || b.height <= 0) return null;
+    const fx = (e.clientX - b.left) / b.width;
+    const fy = (e.clientY - b.top) / b.height;
+    if (!clamp && (fx < 0 || fy < 0 || fx >= 1 || fy >= 1)) return null;
+    const at = (f: number) => Math.min(n - 1, Math.max(0, Math.floor(f * n)));
+    return at(fy) * n + at(fx);
+  }
+
+  function endGesture(): void {
+    activePointer = null;
+    input = initialInput;
   }
 
   function onPointer(e: PointerEvent): void {
     if (!interactive || !game) return;
     if (e.type === 'pointerdown') {
+      // A second finger neither restarts the drag nor taps.
+      if (activePointer !== null && e.pointerId !== activePointer) return;
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault();
+      const cell = cellAt(e, false);
+      if (cell === null) return;
+      activePointer = e.pointerId;
       try {
         grid.setPointerCapture?.(e.pointerId);
       } catch {
         /* capture is best-effort */
       }
-      const cell = cellAt(e);
-      if (cell === null) return;
+      showPreview(null); // a restart after a lost pointerup must not keep the old preview
       send({ type: 'down', cell });
-    } else if (e.type === 'pointermove') {
-      send({ type: 'move', cell: cellAt(e) });
+      return;
+    }
+    if (e.pointerId !== activePointer) return;
+    if (e.type === 'pointermove') {
+      const cell = cellAt(e, true);
+      if (cell !== null) send({ type: 'move', cell });
     } else {
       send({ type: 'up' });
+      endGesture();
     }
   }
 
+  /** Window blur drops any gesture. */
   function onCancel(): void {
     send({ type: 'cancel' });
+    endGesture();
+  }
+
+  /** Pointer cancel and lost capture drop only their own pointer's gesture. */
+  function onPointerCancel(e: PointerEvent): void {
+    if (e.pointerId === activePointer) onCancel();
   }
 
   const onContextMenu = (e: Event) => e.preventDefault();
@@ -202,8 +233,8 @@ export function createPatchesBoard(
   grid.addEventListener('pointerdown', onPointer);
   grid.addEventListener('pointermove', onPointer);
   grid.addEventListener('pointerup', onPointer);
-  grid.addEventListener('pointercancel', onCancel);
-  grid.addEventListener('lostpointercapture', onCancel);
+  grid.addEventListener('pointercancel', onPointerCancel);
+  grid.addEventListener('lostpointercapture', onPointerCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onCancel);
   window.addEventListener('resize', fit);
@@ -222,7 +253,7 @@ export function createPatchesBoard(
   return {
     setGame(s) {
       game = s;
-      input = initialInput;
+      endGesture();
       clearGlow();
       showPreview(null);
       const n = s.puzzle.size;
@@ -271,7 +302,7 @@ export function createPatchesBoard(
       interactive = on;
       el.classList.toggle('patches-board--locked', !on);
       if (!on) {
-        input = initialInput;
+        endGesture();
         showPreview(null);
       }
     },
