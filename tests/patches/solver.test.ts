@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { candidates, countSolutions, isSolution, solve } from '../../src/patches/solver';
+import { candidates, countSolutions, isSolution, solutions, solve } from '../../src/patches/solver';
 import type { Rect } from '../../src/patches/types';
 import { NONE4, TWO4, UNIQUE4, pz } from './helpers';
 
@@ -65,5 +65,16 @@ describe('patches solver', () => {
     [swapped[0], swapped[1]] = [swapped[1], swapped[0]];
     expect(isSolution(p, swapped)).toBe(false);
     expect(isSolution(p, UNIQUE4_SOLUTION.slice(1))).toBe(false);
+  });
+
+  it('solutions collects distinct solutions up to the limit', () => {
+    expect(solutions(pz(4, UNIQUE4), 2)).toEqual([UNIQUE4_SOLUTION]);
+    const p = pz(4, TWO4);
+    const two = solutions(p, 2);
+    expect(two).toHaveLength(2);
+    expect(two.every((s) => isSolution(p, s))).toBe(true);
+    expect(two[0]).not.toEqual(two[1]);
+    expect(solutions(p, 1)).toHaveLength(1);
+    expect(solutions(pz(4, NONE4), 2)).toEqual([]);
   });
 });

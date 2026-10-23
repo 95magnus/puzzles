@@ -28,14 +28,14 @@ export function candidates(p: Puzzle, i: number): Rect[] {
   return out;
 }
 
-/** Search the exact cover; returns the solution count (capped at `limit`) and the first solution found. */
-function search(p: Puzzle, limit: number): { count: number; first: Rect[] | null } {
+/** Search the exact cover; returns the solution count (capped at `limit`) and the solutions found (all of them, at most `limit`). */
+function search(p: Puzzle, limit: number): { count: number; found: Rect[][] } {
   const { size, clues } = p;
   const n = clues.length;
   const cells = size * size;
   const words = Math.ceil(cells / 32);
   const cands = clues.map((_, i) => candidates(p, i));
-  if (cands.some((c) => c.length === 0) || limit <= 0) return { count: 0, first: null };
+  if (cands.some((c) => c.length === 0) || limit <= 0) return { count: 0, found: [] };
 
   // masks[i] holds candidate k's cell set at [k * words, (k + 1) * words).
   const masks = cands.map((list) => {
@@ -57,7 +57,7 @@ function search(p: Puzzle, limit: number): { count: number; first: Rect[] | null
   const chosen = new Int32Array(n);
   const reach = new Uint32Array(words);
   let count = 0;
-  let first: Rect[] | null = null;
+  const found: Rect[][] = [];
 
   const fitsNow = (m: Uint32Array, base: number): boolean => {
     for (let w = 0; w < words; w++) if (m[base + w] & covered[w]) return false;
@@ -69,7 +69,7 @@ function search(p: Puzzle, limit: number): { count: number; first: Rect[] | null
     for (let w = 0; w < words; w++) if (~covered[w]) full = false;
     if (full) {
       count++;
-      if (first === null) first = cands.map((list, i) => list[chosen[i]]);
+      found.push(cands.map((list, i) => list[chosen[i]]));
       return;
     }
     if (left === 0) return;
@@ -110,7 +110,7 @@ function search(p: Puzzle, limit: number): { count: number; first: Rect[] | null
   };
 
   go(n);
-  return { count, first };
+  return { count, found };
 }
 
 /** Count solutions (each clue gets one matching rectangle; together they tile the board), stopping at `limit`. Ignores `p.solution`. */
@@ -120,7 +120,12 @@ export function countSolutions(p: Puzzle, limit: number): number {
 
 /** The first solution found, aligned with `p.clues`, or `null` if there is none. */
 export function solve(p: Puzzle): Rect[] | null {
-  return search(p, 1).first;
+  return search(p, 1).found[0] ?? null;
+}
+
+/** Up to `limit` distinct solutions, each aligned with `p.clues`, in search order. */
+export function solutions(p: Puzzle, limit: number): Rect[][] {
+  return search(p, limit).found;
 }
 
 /** True if `rects[i]` is a valid rectangle for `p.clues[i]` and together they cover every cell exactly once. */
