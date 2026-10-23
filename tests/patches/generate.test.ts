@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { DAILY_PRESET, PRESETS, adjacent, generatePuzzle, patchesDailySeed } from '../../src/patches/generate';
+import { DAILY_PRESET, PRESETS, colourClues, generatePuzzle, patchesDailySeed } from '../../src/patches/generate';
 import { cellsOf, contains, shapeOf } from '../../src/patches/rect';
 import { countSolutions, isSolution } from '../../src/patches/solver';
 import { seedFromString } from '../../src/core/rng';
@@ -25,14 +25,24 @@ test('patchesDailySeed is namespaced', () => {
   expect(patchesDailySeed('2026-10-23')).toBe(seedFromString('patches-daily:2026-10-23'));
 });
 
-test('adjacent means sharing an edge segment', () => {
-  const a = { r: 0, c: 0, w: 2, h: 2 };
-  expect(adjacent(a, { r: 0, c: 2, w: 1, h: 1 })).toBe(true); // right, partial edge
-  expect(adjacent(a, { r: 2, c: 1, w: 3, h: 1 })).toBe(true); // below, overhanging
-  expect(adjacent({ r: 2, c: 1, w: 3, h: 1 }, a)).toBe(true);
-  expect(adjacent(a, { r: 2, c: 2, w: 1, h: 1 })).toBe(false); // corner only
-  expect(adjacent(a, { r: 0, c: 3, w: 1, h: 2 })).toBe(false); // gap
-  expect(adjacent(a, { r: 1, c: 1, w: 2, h: 2 })).toBe(false); // overlapping
+test('colourClues gives equal clues one colour and distinct clues distinct colours', () => {
+  const clues = [
+    { shape: 'wide' as const, area: 3, color: 0 },
+    { shape: 'square' as const, area: 4, color: 0 },
+    { shape: 'wide' as const, area: 3, color: 0 },
+    { shape: 'tall' as const, area: 3, color: 0 },
+    { shape: 'tall' as const, color: 0 },
+    { shape: 'tall' as const, color: 0 },
+  ];
+  colourClues(clues);
+  // Kinds sorted by area (hidden last), then shape: wide 3, tall 3, square 4, tall ?
+  expect(clues.map((c) => c.color)).toEqual([1, 3, 1, 2, 4, 4]);
+});
+
+test('colourClues cycles through 1..8 past eight kinds', () => {
+  const clues = [2, 3, 4, 5, 6, 7, 8, 9, 10].map((area) => ({ shape: 'any' as const, area, color: 0 }));
+  colourClues(clues);
+  expect(clues.map((c) => c.color)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 1]);
 });
 
 test('deterministic', () => {
@@ -110,7 +120,7 @@ test('long 1-wide strips are rare: area ≥ 4 strips are ≤ 12 % of solution re
 
 test('colours', () => {
   for (const { id, seed, p } of BOARDS) {
-    const { clues, solution } = p;
+    const { clues } = p;
     // Index 0 is the invalid red; clue colours use 1..8 only.
     for (const c of clues) {
       expect(Number.isInteger(c.color), `${id} ${seed}`).toBe(true);
@@ -118,9 +128,11 @@ test('colours', () => {
       expect(c.color, `${id} ${seed}`).toBeLessThanOrEqual(8);
       expect(PALETTE[c.color], `${id} ${seed}`).not.toBe('#ff5c7a');
     }
+    // Equal clues (same shape and shown area) always share a colour.
     for (let i = 0; i < clues.length; i++) {
       for (let j = i + 1; j < clues.length; j++) {
-        if (adjacent(solution[i], solution[j])) expect(clues[i].color, `${id} ${seed} ${i}/${j}`).not.toBe(clues[j].color);
+        const same = clues[i].shape === clues[j].shape && clues[i].area === clues[j].area;
+        if (same) expect(clues[i].color, `${id} ${seed} ${i}/${j}`).toBe(clues[j].color);
       }
     }
   }

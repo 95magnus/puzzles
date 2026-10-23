@@ -23,13 +23,6 @@ export function patchesDailySeed(isoDate: string): number {
   return seedFromString('patches-daily:' + isoDate);
 }
 
-/** True when the rectangles share an edge segment of length ≥ 1 (corners and overlaps do not count). */
-export function adjacent(a: Rect, b: Rect): boolean {
-  const rows = a.r < b.r + b.h && b.r < a.r + a.h;
-  const cols = a.c < b.c + b.w && b.c < a.c + a.w;
-  return (rows && (a.c + a.w === b.c || b.c + b.w === a.c)) || (cols && (a.r + a.h === b.r || b.r + b.h === a.r));
-}
-
 function params(size: number): Params {
   const preset = Object.values(PRESETS).find((x) => x.size === size);
   return preset ? { maxArea: preset.maxArea, hideArea: preset.hideArea, anyShape: preset.anyShape } : { maxArea: size, hideArea: 0.3, anyShape: 0.15 };
@@ -170,40 +163,19 @@ function hide(p: Puzzle, eligible: number[], target: number, relax: (c: Clue) =>
 const dropArea = (c: Clue): Clue => ({ cell: c.cell, shape: c.shape, color: c.color });
 const relaxShape = (c: Clue): Clue => ({ ...c, shape: 'any' });
 
+const SHAPE_ORDER: Clue['shape'][] = ['square', 'wide', 'tall', 'any'];
+
 /**
- * Smallest-last greedy colouring of the solution's adjacency graph (planar, so ≤ 6 colours), shifted by a random
- * offset onto PALETTE indices 1..8. Index 0 (#ff5c7a) is the invalid red, so no valid tile may wear it.
+ * Colour clues by what they show: every clue with the same shape and area (or the same shape with the area
+ * hidden) gets the same colour. The board's distinct clue types, sorted by area (hidden last) then shape, take
+ * PALETTE indices 1..8 in order, cycling when a board has more than eight. Index 0 (#ff5c7a) is the invalid red,
+ * so no valid tile may wear it.
  */
-function colour(p: Puzzle, rng: Rng): void {
-  const n = p.clues.length;
-  const nbrs: number[][] = Array.from({ length: n }, () => []);
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (adjacent(p.solution[i], p.solution[j])) {
-        nbrs[i].push(j);
-        nbrs[j].push(i);
-      }
-    }
-  }
-  const degree = nbrs.map((x) => x.length);
-  const removed = new Array<boolean>(n).fill(false);
-  const order: number[] = [];
-  for (let left = n; left > 0; left--) {
-    let v = -1;
-    for (let i = 0; i < n; i++) if (!removed[i] && (v < 0 || degree[i] < degree[v])) v = i;
-    removed[v] = true;
-    order.push(v);
-    for (const u of nbrs[v]) degree[u]--;
-  }
-  const colours = new Array<number>(n).fill(-1);
-  for (const v of order.reverse()) {
-    let k = 0;
-    while (nbrs[v].some((u) => colours[u] === k)) k++;
-    colours[v] = k;
-  }
+export function colourClues(clues: Pick<Clue, 'shape' | 'area' | 'color'>[]): void {
+  const key = (c: Pick<Clue, 'shape' | 'area'>) => (c.area ?? 99) * SHAPE_ORDER.length + SHAPE_ORDER.indexOf(c.shape);
+  const kinds = [...new Set(clues.map(key))].sort((a, b) => a - b);
   const hues = PALETTE.length - 1;
-  const offset = randInt(rng, hues);
-  p.clues.forEach((c, i) => (c.color = 1 + ((colours[i] + offset) % hues)));
+  for (const c of clues) c.color = 1 + (kinds.indexOf(key(c)) % hues);
 }
 
 /** Deterministic per `(size, seed)`; the clues have exactly one solution, `solution`. */
@@ -225,7 +197,7 @@ export function generatePuzzle(size: number, seed: number): Puzzle {
     hide(p, all, Math.round(cfg.hideArea * n), dropArea, rng);
     const shown = all.filter((i) => p.clues[i].area !== undefined);
     hide(p, shown, Math.round(cfg.anyShape * n), relaxShape, rng);
-    colour(p, rng);
+    colourClues(p.clues);
     return p;
   }
   throw new Error('patches: no unique puzzle');
