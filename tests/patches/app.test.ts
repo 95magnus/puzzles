@@ -141,7 +141,10 @@ test('solving shows the win card and locks the board', async () => {
   expect(root.querySelector('.patches-stage')!.classList.contains('is-dimmed')).toBe(false);
   const save = loadPatchesDaily(DATE)!;
   expect(save.solved).toBe(true);
-  await drawRect(p, p.solution[0]); // would remove a tile if the board were live
+  const tiles = root.querySelectorAll('.patches-tile').length;
+  const { r, c } = p.solution[0];
+  await drawRect(p, { r, c, w: 1, h: 1 }); // a tap on a placed tile would remove it if the board were live
+  expect(root.querySelectorAll('.patches-tile')).toHaveLength(tiles);
   expect(loadPatchesDaily(DATE)!.rects).toBe(save.rects);
   expect(text('.patches-cover')).toBe('64/64');
 });
@@ -183,6 +186,19 @@ test('persist never overwrites a solved save from another tab', async () => {
   expect(save.solved).toBe(true);
   expect(save.rects).toBe(done);
   expect(text('.end-card__title')).toBe('Patched up');
+});
+
+test('a solved save that does not fit the puzzle is overwritten by the player progress', async () => {
+  savePatchesDaily({ date: DATE, rects: '0,0,2,2;1,1,2,2', elapsedMs: 9_000, solved: true });
+  mount('#/');
+  expect(text('.end-card__title')).toBe('');
+  const p = dailyPuzzle();
+  const x = p.solution[0];
+  await drawRect(p, x);
+  expect(text('.patches-cover')).toBe(`${x.w * x.h}/64`);
+  const save = loadPatchesDaily(DATE)!;
+  expect(save.rects).toBe(`${x.r},${x.c},${x.w},${x.h}`);
+  expect(save.solved).toBe(false);
 });
 
 test('practice seed route is deterministic; Clear empties the board; New board changes the puzzle', async () => {

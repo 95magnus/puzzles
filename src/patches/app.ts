@@ -117,7 +117,9 @@ export function mountPatches(root: HTMLElement, deps: { now?: () => Date } = {})
   function persist(): boolean {
     if (route.mode !== 'daily' || !game) return false;
     const saved = loadPatchesDaily(dailyDate);
-    if (saved?.solved && game.status !== 'won') {
+    // Honour a solved save only if it really restores to a won board; a bad one is overwritten like any other.
+    const done = saved?.solved && game.status !== 'won' && restore(game.puzzle, saved.rects)?.status === 'won';
+    if (done) {
       loadDaily();
       return true;
     }
