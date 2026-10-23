@@ -1,3 +1,4 @@
+import { solve } from '../../src/patches/solver';
 import type { Puzzle, Shape } from '../../src/patches/types';
 
 // Only solution: [{0,0,2,2}, {0,3,1,4}, {0,2,1,2}, {2,0,3,1}, {3,0,3,1}] (r,c,w,h), aligned with clues.
@@ -5,12 +6,14 @@ export const UNIQUE4: [number, Shape, number?][] = [[0, 'square', 4], [3, 'tall'
 export const TWO4: [number, Shape, number?][] = [[0, 'any', 8], [15, 'any', 8]]; // two 4×2 or two 2×4
 export const NONE4: [number, Shape, number?][] = [[0, 'square', 4], [5, 'square', 1], [15, 'any', 11]]; // clue 0 has no candidate
 
-/** Build a puzzle from `[cell, shape, area?]` clues (colour = index, sorted by cell); `solution` is filled in once the solver exists. */
+/** Build a puzzle from `[cell, shape, area?]` clues (colour = index, sorted by cell), with its solution filled in by the solver (empty if unsolvable). */
 export function pz(size: number, clues: [cell: number, shape: Shape, area?: number][]): Puzzle {
   const sorted = [...clues].sort((a, b) => a[0] - b[0]);
-  return {
+  const puzzle: Puzzle = {
     size,
-    clues: sorted.map(([cell, shape, area], color) => ({ cell, shape, area, color })),
+    clues: sorted.map(([cell, shape, area], color) => ({ cell, shape, ...(area === undefined ? {} : { area }), color })),
     solution: [],
   };
+  puzzle.solution = solve(puzzle) ?? [];
+  return puzzle;
 }
