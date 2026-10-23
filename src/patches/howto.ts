@@ -20,7 +20,7 @@ const DEMO: { r: number; c: number; w: number; h: number; clue: [r: number, c: n
 
 function demoSvg(): string {
   const parts = DEMO.map((d, i) => {
-    const col = PALETTE[i];
+    const col = PALETTE[i + 1]; // index 0 is the invalid red
     const rect = `<rect x="${d.c + 0.06}" y="${d.r + 0.06}" width="${d.w - 0.12}" height="${d.h - 0.12}" rx=".12" fill="${col}" fill-opacity=".4" stroke="${col}" stroke-width=".08"/>`;
     const num = `<text x="${d.clue[1] + 0.5}" y="${d.clue[0] + 0.5}" text-anchor="middle" dominant-baseline="central" font-size=".5" font-weight="700" fill="#f4f5fb">${d.area}</text>`;
     return rect + num;

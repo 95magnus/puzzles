@@ -35,11 +35,15 @@ function params(size: number): Params {
   return preset ? { maxArea: preset.maxArea, hideArea: preset.hideArea, anyShape: preset.anyShape } : { maxArea: size, hideArea: 0.3, anyShape: 0.15 };
 }
 
-/** Area 3–6 is favoured, 1×1 is rare, and long 1×N strips are halved. */
+/**
+ * Area 3–6 is favoured and 1×1 is rare. Long 1×N strips (area ≥ 4) are cut to an eighth of their area's weight:
+ * the anchor offers many of them on a wide-open board, and halving alone left a fifth of the rectangles as strips.
+ * Integer weights keep the draw exact and deterministic.
+ */
 function weight(w: number, h: number): number {
   const area = w * h;
-  const base = area === 1 ? 1 : area === 2 ? 2 : area <= 6 ? 4 : 2;
-  return Math.min(w, h) === 1 && area >= 4 ? base / 2 : base;
+  const base = area === 1 ? 4 : area === 2 ? 8 : area <= 6 ? 16 : 8;
+  return Math.min(w, h) === 1 && area >= 4 ? base / 8 : base;
 }
 
 /** First uncovered cell scanning rows (`byRow`) or columns, or -1. Either way the cells above and left of it are covered, so it is a top-left corner. */
@@ -163,7 +167,10 @@ function hide(p: Puzzle, eligible: number[], target: number, relax: (c: Clue) =>
 const dropArea = (c: Clue): Clue => ({ cell: c.cell, shape: c.shape, color: c.color });
 const relaxShape = (c: Clue): Clue => ({ ...c, shape: 'any' });
 
-/** Smallest-last greedy colouring of the solution's adjacency graph (planar, so ≤ 6 colours), shifted by a random offset. */
+/**
+ * Smallest-last greedy colouring of the solution's adjacency graph (planar, so ≤ 6 colours), shifted by a random
+ * offset onto PALETTE indices 1..8. Index 0 (#ff5c7a) is the invalid red, so no valid tile may wear it.
+ */
 function colour(p: Puzzle, rng: Rng): void {
   const n = p.clues.length;
   const nbrs: number[][] = Array.from({ length: n }, () => []);
@@ -191,8 +198,9 @@ function colour(p: Puzzle, rng: Rng): void {
     while (nbrs[v].some((u) => colours[u] === k)) k++;
     colours[v] = k;
   }
-  const offset = randInt(rng, PALETTE.length);
-  p.clues.forEach((c, i) => (c.color = (colours[i] + offset) % PALETTE.length));
+  const hues = PALETTE.length - 1;
+  const offset = randInt(rng, hues);
+  p.clues.forEach((c, i) => (c.color = 1 + ((colours[i] + offset) % hues)));
 }
 
 /** Deterministic per `(size, seed)`; the clues have exactly one solution, `solution`. */

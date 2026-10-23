@@ -3,6 +3,7 @@ import { DAILY_PRESET, PRESETS, adjacent, generatePuzzle, patchesDailySeed } fro
 import { cellsOf, contains, shapeOf } from '../../src/patches/rect';
 import { countSolutions, isSolution } from '../../src/patches/solver';
 import { seedFromString } from '../../src/core/rng';
+import { PALETTE } from '../../src/ui/palette';
 import type { PresetId } from '../../src/patches/types';
 
 const IDS: PresetId[] = ['small', 'medium', 'large'];
@@ -101,10 +102,24 @@ test('wide and tall are balanced', () => {
   }
 });
 
+test('long 1-wide strips are rare: area ≥ 4 strips are ≤ 12 % of solution rects per preset', () => {
+  for (const id of IDS) {
+    const rects = BOARDS.filter((b) => b.id === id).flatMap((b) => b.p.solution);
+    const strips = rects.filter((x) => Math.min(x.w, x.h) === 1 && x.w * x.h >= 4).length;
+    expect(strips / rects.length, `${id} ${strips}/${rects.length}`).toBeLessThanOrEqual(0.12);
+  }
+});
+
 test('colours', () => {
   for (const { id, seed, p } of BOARDS) {
     const { clues, solution } = p;
-    expect(clues.every((c) => Number.isInteger(c.color) && c.color >= 0 && c.color <= 8)).toBe(true);
+    // Index 0 is the invalid red; clue colours use 1..8 only.
+    for (const c of clues) {
+      expect(Number.isInteger(c.color), `${id} ${seed}`).toBe(true);
+      expect(c.color, `${id} ${seed}`).toBeGreaterThanOrEqual(1);
+      expect(c.color, `${id} ${seed}`).toBeLessThanOrEqual(8);
+      expect(PALETTE[c.color], `${id} ${seed}`).not.toBe('#ff5c7a');
+    }
     for (let i = 0; i < clues.length; i++) {
       for (let j = i + 1; j < clues.length; j++) {
         if (adjacent(solution[i], solution[j])) expect(clues[i].color, `${id} ${seed} ${i}/${j}`).not.toBe(clues[j].color);
