@@ -215,10 +215,18 @@ test('practice seed route is deterministic; Clear empties the board; New board c
   );
   const first = clueSig();
   const x = p.solution[0];
+  const clr = root.querySelector<HTMLButtonElement>('[data-action="clear"]')!;
+  expect(clr.disabled).toBe(true); // nothing to clear yet
   await drawRect(p, x);
   expect(text('.patches-cover')).toBe(`${x.w * x.h}/36`);
-  root.querySelector<HTMLButtonElement>('[data-action="clear"]')!.click();
+  expect(clr.disabled).toBe(false);
+  clr.click();
   expect(text('.patches-cover')).toBe('0/36');
+  expect(clr.disabled).toBe(true);
+  root.querySelector<HTMLButtonElement>('[data-action="undo"]')!.click(); // undo the Clear: enabled again
+  expect(text('.patches-cover')).toBe(`${x.w * x.h}/36`);
+  expect(clr.disabled).toBe(false);
+  clr.click();
   expect(loadPatchesDaily(DATE)).toBeNull();
   root.querySelector<HTMLButtonElement>('[data-action="new"]')!.click();
   expect(clueSig()).not.toBe(first);

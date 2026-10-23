@@ -105,7 +105,7 @@ export function mountPatches(root: HTMLElement, deps: { now?: () => Date } = {})
     time.textContent = formatClock(elapsed());
     for (const b of controls.querySelectorAll<HTMLButtonElement>('button')) {
       if (b.dataset.action === 'undo') b.disabled = game.history.length === 0 || game.status === 'won';
-      else if (b.dataset.action === 'clear') b.disabled = game.status === 'won';
+      else if (b.dataset.action === 'clear') b.disabled = game.rects.length === 0 || game.status === 'won';
     }
     if (card) {
       const cd = card.querySelector('.patches-countdown');
