@@ -236,3 +236,25 @@
   width: 88px;
   height: 88px;
 }
+
+.patches-howto__legend {
+  list-style: none;
+  margin: 0 0 calc(var(--space) * 2);
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.patches-howto__legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* A clue drawn at a fixed cell size, outside the board. */
+.patches-howto__icon {
+  --cell: 38px;
+  flex: none;
+  width: var(--cell);
+  height: var(--cell);
+}

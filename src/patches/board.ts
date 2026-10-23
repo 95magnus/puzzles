@@ -41,7 +41,8 @@ const ICON: Record<Shape, { x: number; y: number; w: number; h: number }> = {
   any: { x: 5, y: 5, w: 14, h: 14 },
 };
 
-function clueEl(clue: Clue): HTMLElement {
+/** A clue's icon and number, as drawn in its cell; the how-to legend reuses it. */
+export function clueEl(clue: Pick<Clue, 'shape' | 'area' | 'color'>): HTMLElement {
   const el = document.createElement('div');
   el.className = 'patches-clue';
   el.dataset.shape = clue.shape;

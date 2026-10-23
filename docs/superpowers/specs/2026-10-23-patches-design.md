@@ -160,7 +160,7 @@ Header (shared): `puzzles · Patches`, Daily / Practice tabs, "?".
 1. **Daily (playing):** subtitle `#N · Fri Oct 23 · 8×8`; board; HUD below: coverage `covered/total`, timer mm:ss; buttons **Undo** and **Clear**.
 2. **Daily (solved):** board stays visible; card "Patched up", time, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Practice:** preset switch (Small · Medium · Large) replaces the subtitle; buttons **Undo**, **Clear**, **New board** (primary). Win card offers **New board**.
-4. **How-to ("?"):** modal: split the grid into rectangles; each holds exactly one clue; the icon is the shape (square, wide, tall, any); the number is its area; drag to draw, tap to remove. A small static solved 4×4 illustration. Opens automatically on the first visit.
+4. **How-to ("?"):** modal: split the grid into rectangles; each holds exactly one clue; the icon is the shape (square, wide, tall, any); the number is its area; drag to draw, tap to remove. A small static solved 4×4 illustration, and a legend that shows each clue with the board's own icon: square, wider than tall, taller than wide, dotted (any shape), and no number (any size). Opens automatically on the first visit.
 5. **Dashboard card:** name, tagline, `patchesPreview()` SVG (a tiny 5×5 board split into coloured rectangles), daily status: "Not started", "In progress · mm:ss", "Solved · mm:ss".
 
 The timer starts when the board appears and stops on win. Daily number uses `dailyNumber` from `core/daily`.

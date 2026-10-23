@@ -237,14 +237,24 @@ test('how-to opens on the first visit only', () => {
   mount('#/');
   const modal = document.querySelector('.modal')!;
   expect(modal.textContent).toContain('How to play');
-  expect([...modal.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
+  expect([...modal.querySelectorAll('.patches-howto__body li')].map((li) => li.textContent)).toEqual([
     'Split the grid into rectangles. Every cell belongs to one.',
-    'Each rectangle holds exactly one clue.',
-    'The icon is its shape — square, wide, tall or any. The number is its area.',
+    'Each rectangle holds exactly one clue: its shape, and its size in cells.',
     'Drag to draw a rectangle. Tap one to remove it.',
     'Broken rectangles turn red.',
   ]);
   expect(modal.querySelector('svg.patches-howto__demo')).not.toBeNull();
+  // The legend explains each clue with the board's own icon, including the dotted "any shape" box.
+  const legend = [...modal.querySelectorAll('.patches-howto__legend li')];
+  expect(legend.map((li) => li.textContent)).toEqual([
+    '4A square of 4 cells',
+    '3Wider than tall, 3 cells',
+    '3Taller than wide, 3 cells',
+    '4Dotted: any shape, 4 cells',
+    'No number: any size',
+  ]);
+  expect(legend.map((li) => li.querySelector<HTMLElement>('.patches-clue')!.dataset.shape)).toEqual(['square', 'wide', 'tall', 'any', 'tall']);
+  expect(legend[3].querySelector('rect')!.getAttribute('stroke-dasharray')).not.toBeNull();
   modal.querySelector<HTMLButtonElement>('button')!.click();
   unmount!();
   unmount = undefined;

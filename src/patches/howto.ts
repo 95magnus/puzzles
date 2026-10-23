@@ -1,15 +1,43 @@
 import { PALETTE } from '../ui/palette';
 import { openModal } from '../ui/modal';
+import { clueEl } from './board';
 import { colourClues } from './generate';
 import { shapeOf } from './rect';
+import type { Clue } from './types';
 
 const RULES = [
   'Split the grid into rectangles. Every cell belongs to one.',
-  'Each rectangle holds exactly one clue.',
-  'The icon is its shape — square, wide, tall or any. The number is its area.',
+  'Each rectangle holds exactly one clue: its shape, and its size in cells.',
   'Drag to draw a rectangle. Tap one to remove it.',
   'Broken rectangles turn red.',
 ];
+
+/** What each kind of clue asks for, drawn with the board's own clue icons. */
+const LEGEND: { clue: Pick<Clue, 'shape' | 'area'>; text: string }[] = [
+  { clue: { shape: 'square', area: 4 }, text: 'A square of 4 cells' },
+  { clue: { shape: 'wide', area: 3 }, text: 'Wider than tall, 3 cells' },
+  { clue: { shape: 'tall', area: 3 }, text: 'Taller than wide, 3 cells' },
+  { clue: { shape: 'any', area: 4 }, text: 'Dotted: any shape, 4 cells' },
+  { clue: { shape: 'tall' }, text: 'No number: any size' },
+];
+
+function legendEl(): HTMLElement {
+  const clues = LEGEND.map((x) => ({ ...x.clue, color: 0 }));
+  colourClues(clues);
+  const list = document.createElement('ul');
+  list.className = 'patches-howto__legend';
+  LEGEND.forEach((x, i) => {
+    const li = document.createElement('li');
+    const icon = document.createElement('span');
+    icon.className = 'patches-howto__icon';
+    icon.appendChild(clueEl(clues[i]));
+    const text = document.createElement('span');
+    text.textContent = x.text;
+    li.append(icon, text);
+    list.appendChild(li);
+  });
+  return list;
+}
 
 /** The solved 4×4 used for the illustration: each rectangle with the cell of its clue and area. */
 const DEMO: { r: number; c: number; w: number; h: number; clue: [r: number, c: number]; area: number }[] = [
@@ -44,5 +72,5 @@ export function openPatchesHowto(returnFocusTo: HTMLElement): void {
   body.className = 'patches-howto__body';
   body.append(list);
   body.insertAdjacentHTML('beforeend', demoSvg());
-  openModal({ title: 'How to play', body: [body], returnFocus: returnFocusTo });
+  openModal({ title: 'How to play', body: [body, legendEl()], returnFocus: returnFocusTo });
 }
