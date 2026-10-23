@@ -119,3 +119,22 @@ export function queensPreview(): SVGSVGElement {
   }
   return svg;
 }
+
+/** Patches: 5×5 board cut into six rounded rectangles, each with its area as the clue. */
+export function patchesPreview(): SVGSVGElement {
+  const svg = frame();
+  const size = 12, o = 3; // 5 cells of 12 centred in the 64 frame
+  // [row, col, height, width]: the six rectangles tile the board exactly.
+  const rects: [number, number, number, number][] = [
+    [0, 0, 2, 2], [0, 2, 1, 3], [1, 2, 2, 2], [1, 4, 2, 1], [2, 0, 3, 2], [3, 2, 2, 3],
+  ];
+  rects.forEach(([r, c, h, w], i) => {
+    const x = o + c * size, y = o + r * size;
+    svg.append(s('rect', { x: x + 0.75, y: y + 0.75, width: w * size - 1.5, height: h * size - 1.5, rx: 3, fill: PALETTE[i], opacity: 0.5 }));
+    svg.append(s('rect', { x: x + 0.75, y: y + 0.75, width: w * size - 1.5, height: h * size - 1.5, rx: 3, fill: 'none', stroke: PALETTE[i], 'stroke-width': 1.2 }));
+    const t = s('text', { x: x + size / 2, y: y + size / 2 + 3.5, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 700, fill: '#eef0f7' });
+    t.textContent = String(h * w);
+    svg.append(t);
+  });
+  return svg;
+}

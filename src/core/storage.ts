@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -203,6 +203,56 @@ export function getQueensPreset(): QueensPreset | null {
 export function setQueensPreset(id: QueensPreset): void {
   try {
     localStorage.setItem(QUEENS_PRESET_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export type PatchesPreset = 'small' | 'medium' | 'large';
+/** `rects` is the game's encoding: `r,c,w,h` joined by `;` (empty when none). The puzzle itself is regenerated from the date. */
+export type PatchesDailySave = { v: 1; date: string; rects: string; elapsedMs: number; solved: boolean };
+
+const PATCHES_DAILY_KEY = 'patches:daily';
+const PATCHES_PRESET_KEY = 'patches:preset';
+const PATCHES_PRESETS: readonly string[] = ['small', 'medium', 'large'];
+
+/** Shape check only; whether `rects` fits today's puzzle is `restore`'s job. */
+export function loadPatchesDaily(date: string): PatchesDailySave | null {
+  try {
+    const raw = localStorage.getItem(PATCHES_DAILY_KEY);
+    if (raw === null) return null;
+    const o = JSON.parse(raw) as PatchesDailySave | null;
+    if (typeof o !== 'object' || o === null) return null;
+    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+    if (typeof o.rects !== 'string' || !/^[0-9,;]*$/.test(o.rects)) return null;
+    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
+    if (typeof o.solved !== 'boolean') return null;
+    return { v: 1, date: o.date, rects: o.rects, elapsedMs: o.elapsedMs, solved: o.solved };
+  } catch {
+    return null;
+  }
+}
+
+export function savePatchesDaily(save: Omit<PatchesDailySave, 'v'>): void {
+  try {
+    localStorage.setItem(PATCHES_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getPatchesPreset(): PatchesPreset | null {
+  try {
+    const v = localStorage.getItem(PATCHES_PRESET_KEY);
+    return v !== null && PATCHES_PRESETS.includes(v) ? (v as PatchesPreset) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setPatchesPreset(id: PatchesPreset): void {
+  try {
+    localStorage.setItem(PATCHES_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }
