@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'tango-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -253,6 +253,56 @@ export function getPatchesPreset(): PatchesPreset | null {
 export function setPatchesPreset(id: PatchesPreset): void {
   try {
     localStorage.setItem(PATCHES_PRESET_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export type TangoPreset = 'small' | 'medium' | 'large';
+/** `cells` is one char per cell: 0 empty, 1 sun, 2 moon. The puzzle itself is regenerated from the date. */
+export type TangoDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
+
+const TANGO_DAILY_KEY = 'tango:daily';
+const TANGO_PRESET_KEY = 'tango:preset';
+const TANGO_PRESETS: readonly string[] = ['small', 'medium', 'large'];
+
+/** Shape check only; whether `cells` fits today's puzzle is `restore`'s job. */
+export function loadTangoDaily(date: string): TangoDailySave | null {
+  try {
+    const raw = localStorage.getItem(TANGO_DAILY_KEY);
+    if (raw === null) return null;
+    const o = JSON.parse(raw) as TangoDailySave | null;
+    if (typeof o !== 'object' || o === null) return null;
+    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+    if (typeof o.cells !== 'string' || !/^[012]*$/.test(o.cells)) return null;
+    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
+    if (typeof o.solved !== 'boolean') return null;
+    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, solved: o.solved };
+  } catch {
+    return null;
+  }
+}
+
+export function saveTangoDaily(save: Omit<TangoDailySave, 'v'>): void {
+  try {
+    localStorage.setItem(TANGO_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getTangoPreset(): TangoPreset | null {
+  try {
+    const v = localStorage.getItem(TANGO_PRESET_KEY);
+    return v !== null && TANGO_PRESETS.includes(v) ? (v as TangoPreset) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setTangoPreset(id: TangoPreset): void {
+  try {
+    localStorage.setItem(TANGO_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }
