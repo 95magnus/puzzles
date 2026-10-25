@@ -2,7 +2,7 @@ import { isGiven, violations } from './game';
 import { lineCells } from './lines';
 import type { GameState, Sym } from './types';
 
-export type TangoBoardHandle = {
+export type BalancedBoardHandle = {
   /** Full render: a new board or a restored game. */
   setGame(s: GameState): void;
   /** Re-render glyphs, labels and violation classes from the current state. */
@@ -13,7 +13,7 @@ export type TangoBoardHandle = {
   destroy(): void;
 };
 
-/** Must match `.tango-panel` padding in tango.css. */
+/** Must match `.balanced-panel` padding in balanced.css. */
 const PANEL_PAD = 12;
 /** Vertical space for header, subtitle, HUD and panel padding. */
 const PAGE_CHROME = 200;
@@ -41,24 +41,24 @@ function svgEl(tag: string, attrs: Record<string, string | number>): SVGElement 
 /** A filled dot or a hollow ring in a 24-unit box, each in its own colour; the how-to reuses it. */
 export function symbolSvg(sym: 1 | 2): SVGSVGElement {
   const svg = svgEl('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' }) as SVGSVGElement;
-  svg.classList.add(sym === 1 ? 'tango-dot' : 'tango-ring');
+  svg.classList.add(sym === 1 ? 'balanced-dot' : 'balanced-ring');
   svg.appendChild(sym === 1 ? svgEl('circle', { cx: 12, cy: 12, r: 7 }) : svgEl('circle', { cx: 12, cy: 12, r: 6 }));
   return svg;
 }
 
-export function createTangoBoard(
+export function createBalancedBoard(
   el: HTMLElement,
   opts: { onTap: (cell: number) => void; onRing: (cell: number) => void },
-): TangoBoardHandle {
+): BalancedBoardHandle {
   const panel = document.createElement('div');
-  panel.className = 'tango-panel glass';
+  panel.className = 'balanced-panel glass';
   const grid = document.createElement('div');
-  grid.className = 'tango-grid';
+  grid.className = 'balanced-grid';
   grid.setAttribute('role', 'grid');
   const edgesEl = document.createElement('div');
-  edgesEl.className = 'tango-edges';
+  edgesEl.className = 'balanced-edges';
   const runsEl = document.createElement('div');
-  runsEl.className = 'tango-runs';
+  runsEl.className = 'balanced-runs';
   panel.appendChild(grid);
   el.appendChild(panel);
 
@@ -120,7 +120,7 @@ export function createTangoBoard(
   function runEl(run: { cell: number; vertical: boolean; len: number }): HTMLElement {
     const n = game!.puzzle.size;
     const e = document.createElement('div');
-    e.className = 'tango-run ' + (run.vertical ? 'is-v' : 'is-h');
+    e.className = 'balanced-run ' + (run.vertical ? 'is-v' : 'is-h');
     e.style.setProperty('--r', String(Math.floor(run.cell / n)));
     e.style.setProperty('--c', String(run.cell % n));
     e.style.setProperty('--len', String(run.len));
@@ -141,7 +141,7 @@ export function createTangoBoard(
   /** The non-given cell under a mouse event, or null. */
   function openCellOf(e: MouseEvent): number | null {
     if (!interactive || !game) return null;
-    const c = (e.target as Element).closest<HTMLElement>('.tango-cell');
+    const c = (e.target as Element).closest<HTMLElement>('.balanced-cell');
     if (!c || !grid.contains(c)) return null;
     const i = Number(c.dataset.i);
     return isGiven(game, i) ? null : i;
@@ -184,7 +184,7 @@ export function createTangoBoard(
       for (let i = 0; i < n * n; i++) {
         const c = document.createElement('button');
         c.type = 'button';
-        c.className = 'tango-cell';
+        c.className = 'balanced-cell';
         c.dataset.i = String(i);
         c.setAttribute('role', 'gridcell');
         c.classList.toggle('is-given', isGiven(s, i));
@@ -193,7 +193,7 @@ export function createTangoBoard(
       }
       edgeEls = s.puzzle.edges.map((e) => {
         const b = document.createElement('div');
-        b.className = 'tango-edge ' + (e.b === e.a + 1 ? 'is-h' : 'is-v');
+        b.className = 'balanced-edge ' + (e.b === e.a + 1 ? 'is-h' : 'is-v');
         b.dataset.edge = `${e.a}-${e.b}`;
         b.dataset.kind = e.kind;
         b.textContent = e.kind === 'eq' ? '=' : '×';
@@ -230,7 +230,7 @@ export function createTangoBoard(
 
     setInteractive(on) {
       interactive = on;
-      el.classList.toggle('tango-board--locked', !on);
+      el.classList.toggle('balanced-board--locked', !on);
     },
 
     destroy() {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { countSolutions, deduce, isSolved, propagate } from '../../src/tango/solver';
+import { countSolutions, deduce, isSolved, propagate } from '../../src/balanced/solver';
 import { CHAIN6, CONTRA4, DEDUCE4, DEDUCE4_SOLUTION, EMPTY4, sym } from './helpers';
 
-describe('tango solver', () => {
+describe('balanced solver', () => {
   it('deduces a deducible board', () => {
     expect(deduce(DEDUCE4)).toEqual(sym(DEDUCE4_SOLUTION));
     expect(countSolutions(DEDUCE4, 2)).toBe(1);

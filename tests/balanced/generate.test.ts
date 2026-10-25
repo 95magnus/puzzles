@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
-import { DAILY_PRESET, PRESETS, generatePuzzle, tangoDailySeed } from '../../src/tango/generate';
-import { countSolutions, deduce, isSolved } from '../../src/tango/solver';
+import { DAILY_PRESET, PRESETS, generatePuzzle, balancedDailySeed } from '../../src/balanced/generate';
+import { countSolutions, deduce, isSolved } from '../../src/balanced/solver';
 import { seedFromString } from '../../src/core/rng';
-import type { PresetId, Puzzle } from '../../src/tango/types';
+import type { PresetId, Puzzle } from '../../src/balanced/types';
 
 const IDS: PresetId[] = ['small', 'medium', 'large'];
 const SEEDS = Array.from({ length: 50 }, (_, i) => i + 1);
@@ -19,8 +19,8 @@ test('presets match spec', () => {
   expect(DAILY_PRESET).toBe('medium');
 });
 
-test('tangoDailySeed is namespaced', () => {
-  expect(tangoDailySeed('2026-10-25')).toBe(seedFromString('tango-daily:2026-10-25'));
+test('balancedDailySeed is namespaced', () => {
+  expect(balancedDailySeed('2026-10-25')).toBe(seedFromString('balanced-daily:2026-10-25'));
 });
 
 test('deterministic', () => {
@@ -78,7 +78,7 @@ test('every remaining clue is needed', () => {
 });
 
 test('daily is stable', () => {
-  expect(JSON.stringify(generatePuzzle(8, tangoDailySeed('2026-10-25')))).toMatchSnapshot();
+  expect(JSON.stringify(generatePuzzle(8, balancedDailySeed('2026-10-25')))).toMatchSnapshot();
 });
 
 test('fast enough', () => {

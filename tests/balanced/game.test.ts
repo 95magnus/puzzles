@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { clear, cycle, encode, filled, isGiven, isWin, newGame, restore, toggle, undo, violations } from '../../src/tango/game';
-import type { GameState, Sym } from '../../src/tango/types';
+import { clear, cycle, encode, filled, isGiven, isWin, newGame, restore, toggle, undo, violations } from '../../src/balanced/game';
+import type { GameState, Sym } from '../../src/balanced/types';
 import { CHAIN6, DEDUCE4, DEDUCE4_SOLUTION, sym, tz } from './helpers';
 
 const EMPTY6 = tz(['......', '......', '......', '......', '......', '......']);
@@ -10,7 +10,7 @@ function set(s: GameState, cell: number, v: Sym): void {
   while (s.cells[cell] !== v) cycle(s, cell);
 }
 
-describe('tango game', () => {
+describe('balanced game', () => {
   it('cycle order', () => {
     const s = newGame(DEDUCE4);
     const seen: Sym[] = [];

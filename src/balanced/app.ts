@@ -7,28 +7,28 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getFlag, getTangoPreset, loadTangoDaily, saveTangoDaily, setFlag, setTangoPreset } from '../core/storage';
+import { getFlag, getBalancedPreset, loadBalancedDaily, saveBalancedDaily, setFlag, setBalancedPreset } from '../core/storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
-import { createTangoBoard } from './board';
+import { createBalancedBoard } from './board';
 import { clear, cycle, encode, filled, isGiven, newGame, restore, toggle, undo } from './game';
-import { DAILY_PRESET, PRESETS, generatePuzzle, tangoDailySeed } from './generate';
-import { openTangoHowto } from './howto';
+import { DAILY_PRESET, PRESETS, generatePuzzle, balancedDailySeed } from './generate';
+import { openBalancedHowto } from './howto';
 import type { GameState, PresetId, Puzzle } from './types';
 
-export type TangoRoute = { mode: 'daily' } | { mode: 'practice'; preset: PresetId; seed?: number };
+export type BalancedRoute = { mode: 'daily' } | { mode: 'practice'; preset: PresetId; seed?: number };
 
 const PRESET_IDS = Object.keys(PRESETS) as PresetId[];
 const DEFAULT_PRESET: PresetId = 'medium';
 const TICK_MS = 1000;
 
-export function parseTangoRoute(hash: string): TangoRoute {
+export function parseBalancedRoute(hash: string): BalancedRoute {
   const [path, query = ''] = hash.replace(/^#/, '').split('?');
   if (path !== '/practice') return { mode: 'daily' };
   const params = new URLSearchParams(query);
   const asked = params.get('preset') as PresetId | null;
   const preset: PresetId =
-    asked !== null ? (PRESET_IDS.includes(asked) ? asked : DEFAULT_PRESET) : (getTangoPreset() ?? DEFAULT_PRESET);
+    asked !== null ? (PRESET_IDS.includes(asked) ? asked : DEFAULT_PRESET) : (getBalancedPreset() ?? DEFAULT_PRESET);
   const seed = Number(params.get('seed'));
   return params.has('seed') && Number.isInteger(seed) ? { mode: 'practice', preset, seed } : { mode: 'practice', preset };
 }
@@ -40,37 +40,37 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text = ''):
   return e;
 }
 
-export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): () => void {
+export function mountBalanced(root: HTMLElement, deps: { now?: () => Date } = {}): () => void {
   const now = deps.now ?? (() => new Date());
 
   // ---------- Static shell ----------
   root.textContent = '';
-  root.classList.add('tango-app');
-  const shellHeader = createHeader({ game: 'Tango', onHelp: () => openTangoHowto(helpBtn) });
+  root.classList.add('balanced-app');
+  const shellHeader = createHeader({ game: 'Balanced', onHelp: () => openBalancedHowto(helpBtn) });
   const header = shellHeader.el;
   const dailyTab = shellHeader.tabDaily!;
   const practiceTab = shellHeader.tabPractice!;
   const helpBtn = shellHeader.helpBtn!;
 
-  const sub = el('div', 'tango-sub');
-  const stage = el('div', 'tango-stage');
-  const boardEl = el('div', 'tango-board');
+  const sub = el('div', 'balanced-sub');
+  const stage = el('div', 'balanced-stage');
+  const boardEl = el('div', 'balanced-board');
   stage.appendChild(boardEl);
-  const hud = el('div', 'tango-hud');
-  const filledEl = el('span', 'tango-filled hud-value num');
+  const hud = el('div', 'balanced-hud');
+  const filledEl = el('span', 'balanced-filled hud-value num');
   filledEl.setAttribute('aria-label', 'Cells filled');
-  const time = el('span', 'tango-time hud-value num');
+  const time = el('span', 'balanced-time hud-value num');
   time.setAttribute('aria-label', 'Time');
-  const stats = el('div', 'tango-stats');
+  const stats = el('div', 'balanced-stats');
   stats.append(filledEl, time);
-  const controls = el('div', 'tango-controls');
+  const controls = el('div', 'balanced-controls');
   hud.append(stats, controls);
-  const main = el('main', 'tango-main');
+  const main = el('main', 'balanced-main');
   main.append(sub, stage, hud);
   root.append(header, main);
 
   // ---------- State ----------
-  let route: TangoRoute = { mode: 'daily' };
+  let route: BalancedRoute = { mode: 'daily' };
   let dailyDate = '';
   let dailyPuzzle: Puzzle | null = null;
   let game: GameState | null = null;
@@ -80,15 +80,15 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   /** True when this tab changed the daily since it last loaded or saved it; pagehide/route-leave only write then. */
   let dirty = false;
 
-  const board = createTangoBoard(boardEl, { onTap, onRing });
+  const board = createBalancedBoard(boardEl, { onTap, onRing });
   // Keep the HUD as wide as the board panel (which shrinks to its content).
-  const panel = boardEl.querySelector<HTMLElement>('.tango-panel')!;
+  const panel = boardEl.querySelector<HTMLElement>('.balanced-panel')!;
   const hudSizer = typeof ResizeObserver === 'function'
     ? new ResizeObserver(() => { hud.style.width = `min(100%, ${panel.offsetWidth}px)`; })
     : null;
   hudSizer?.observe(panel);
 
-  const play = createPlayTracker('tango');
+  const play = createPlayTracker('balanced');
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -113,7 +113,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
       else if (b.dataset.action === 'clear') b.disabled = !anyFilled || g.status === 'won';
     }
     if (card) {
-      const cd = card.querySelector('.tango-countdown');
+      const cd = card.querySelector('.balanced-countdown');
       if (cd) cd.textContent = `Next daily in ${formatCountdown(msUntilNextUtcMidnight(now()))}`;
     }
   }
@@ -121,14 +121,14 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   /** Saves the daily. Returns true if another tab had already solved it and the page reloaded that instead. */
   function persist(): boolean {
     if (route.mode !== 'daily' || !game) return false;
-    const saved = loadTangoDaily(dailyDate);
+    const saved = loadBalancedDaily(dailyDate);
     // Honour a solved save only if it really restores to a won board; a bad one is overwritten like any other.
     const done = saved?.solved && game.status !== 'won' && restore(game.puzzle, saved.cells)?.status === 'won';
     if (done) {
       loadDaily();
       return true;
     }
-    saveTangoDaily({ date: dailyDate, cells: encode(game), elapsedMs: elapsed(), solved: game.status === 'won' });
+    saveBalancedDaily({ date: dailyDate, cells: encode(game), elapsedMs: elapsed(), solved: game.status === 'won' });
     dirty = false;
     return false;
   }
@@ -136,7 +136,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   /** Save on pagehide / leaving the daily: always after a change, else only when the stored board is ours, so the clock keeps running without clobbering another tab's moves. */
   function persistOnLeave(): void {
     if (route.mode !== 'daily' || !game) return;
-    const saved = loadTangoDaily(dailyDate);
+    const saved = loadBalancedDaily(dailyDate);
     if (dirty || !saved || saved.cells === encode(game)) persist();
   }
 
@@ -160,15 +160,15 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
     const daily = route.mode === 'daily';
     card = el('section', 'end-card glass end-card--won');
     card.setAttribute('role', 'dialog');
-    card.setAttribute('aria-labelledby', 'tango-card-title');
+    card.setAttribute('aria-labelledby', 'balanced-card-title');
     const title = el('h2', 'end-card__title', 'Balanced ●○');
-    title.id = 'tango-card-title';
+    title.id = 'balanced-card-title';
     card.appendChild(title);
     card.appendChild(el('p', 'end-card__stat num', formatClock(elapsed())));
     const actions = el('div', 'end-card__actions');
     let primary: HTMLButtonElement;
     if (daily) {
-      card.appendChild(el('p', 'end-card__next tango-countdown text-2 num'));
+      card.appendChild(el('p', 'end-card__next balanced-countdown text-2 num'));
       primary = button('Play practice', true, () => { location.hash = '#/practice'; });
     } else {
       primary = button('New board', true, () => newPractice());
@@ -245,18 +245,18 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
     const date = utcDateString(now());
     if (date !== dailyDate || !dailyPuzzle) {
       dailyDate = date;
-      dailyPuzzle = generatePuzzle(PRESETS[DAILY_PRESET].size, tangoDailySeed(dailyDate));
+      dailyPuzzle = generatePuzzle(PRESETS[DAILY_PRESET].size, balancedDailySeed(dailyDate));
     }
     const puzzle = dailyPuzzle;
     sub.textContent = `#${dailyNumber(dailyDate)} · ${formatDailyLabel(dailyDate)} · ${puzzle.size}×${puzzle.size}`;
     baseControls();
-    const save = loadTangoDaily(dailyDate);
+    const save = loadBalancedDaily(dailyDate);
     const restored = save ? restore(puzzle, save.cells) : null;
     setGame(restored ?? newGame(puzzle), restored ? save!.elapsedMs : 0);
   }
 
   function presetSwitch(active: PresetId): HTMLElement {
-    const seg = el('div', 'seg tango-presets');
+    const seg = el('div', 'seg balanced-presets');
     seg.setAttribute('role', 'group');
     seg.setAttribute('aria-label', 'Board size');
     for (const id of PRESET_IDS) {
@@ -265,7 +265,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
       b.dataset.preset = id;
       b.setAttribute('aria-pressed', String(id === active));
       b.addEventListener('click', () => {
-        setTangoPreset(id);
+        setBalancedPreset(id);
         history.replaceState(null, '', '#/practice');
         route = { mode: 'practice', preset: id };
         loadPractice(id);
@@ -294,7 +294,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
 
   function render(): void {
     persistOnLeave(); // leaving the daily must keep its clock
-    route = parseTangoRoute(location.hash);
+    route = parseBalancedRoute(location.hash);
     const daily = route.mode === 'daily';
     dailyTab.classList.toggle('is-active', daily);
     practiceTab.classList.toggle('is-active', !daily);
@@ -314,7 +314,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
 
   // A hashchange to the route already shown (e.g. a late event for the initial hash) must not reset the game.
   const onHash = () => {
-    if (JSON.stringify(parseTangoRoute(location.hash)) !== JSON.stringify(route)) render();
+    if (JSON.stringify(parseBalancedRoute(location.hash)) !== JSON.stringify(route)) render();
   };
   // Time spent away in the back/forward cache does not count.
   const onHide = () => {
@@ -331,9 +331,9 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   window.addEventListener('pageshow', onShow);
   const interval = setInterval(tick, TICK_MS);
   render();
-  if (!getFlag('tango-howto-seen')) {
-    setFlag('tango-howto-seen', true);
-    openTangoHowto(helpBtn);
+  if (!getFlag('balanced-howto-seen')) {
+    setFlag('balanced-howto-seen', true);
+    openBalancedHowto(helpBtn);
   }
 
   return () => {

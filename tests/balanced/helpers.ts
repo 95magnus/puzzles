@@ -1,5 +1,5 @@
-import { deduce } from '../../src/tango/solver';
-import type { Puzzle, Sym } from '../../src/tango/types';
+import { deduce } from '../../src/balanced/solver';
+import type { Puzzle, Sym } from '../../src/balanced/types';
 
 /** `S/M/.` string → cells (S = dot 1, M = ring 2, . = empty 0). */
 export function sym(s: string): Sym[] {

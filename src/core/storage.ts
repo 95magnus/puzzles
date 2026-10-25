@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'tango-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -258,20 +258,20 @@ export function setPatchesPreset(id: PatchesPreset): void {
   }
 }
 
-export type TangoPreset = 'small' | 'medium' | 'large';
+export type BalancedPreset = 'small' | 'medium' | 'large';
 /** `cells` is one char per cell: 0 empty, 1 sun, 2 moon. The puzzle itself is regenerated from the date. */
-export type TangoDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
+export type BalancedDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
 
-const TANGO_DAILY_KEY = 'tango:daily';
-const TANGO_PRESET_KEY = 'tango:preset';
-const TANGO_PRESETS: readonly string[] = ['small', 'medium', 'large'];
+const BALANCED_DAILY_KEY = 'balanced:daily';
+const BALANCED_PRESET_KEY = 'balanced:preset';
+const BALANCED_PRESETS: readonly string[] = ['small', 'medium', 'large'];
 
 /** Shape check only; whether `cells` fits today's puzzle is `restore`'s job. */
-export function loadTangoDaily(date: string): TangoDailySave | null {
+export function loadBalancedDaily(date: string): BalancedDailySave | null {
   try {
-    const raw = localStorage.getItem(TANGO_DAILY_KEY);
+    const raw = localStorage.getItem(BALANCED_DAILY_KEY);
     if (raw === null) return null;
-    const o = JSON.parse(raw) as TangoDailySave | null;
+    const o = JSON.parse(raw) as BalancedDailySave | null;
     if (typeof o !== 'object' || o === null) return null;
     if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
     if (typeof o.cells !== 'string' || !/^[012]*$/.test(o.cells)) return null;
@@ -283,26 +283,26 @@ export function loadTangoDaily(date: string): TangoDailySave | null {
   }
 }
 
-export function saveTangoDaily(save: Omit<TangoDailySave, 'v'>): void {
+export function saveBalancedDaily(save: Omit<BalancedDailySave, 'v'>): void {
   try {
-    localStorage.setItem(TANGO_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+    localStorage.setItem(BALANCED_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
   } catch {
     /* storage unavailable */
   }
 }
 
-export function getTangoPreset(): TangoPreset | null {
+export function getBalancedPreset(): BalancedPreset | null {
   try {
-    const v = localStorage.getItem(TANGO_PRESET_KEY);
-    return v !== null && TANGO_PRESETS.includes(v) ? (v as TangoPreset) : null;
+    const v = localStorage.getItem(BALANCED_PRESET_KEY);
+    return v !== null && BALANCED_PRESETS.includes(v) ? (v as BalancedPreset) : null;
   } catch {
     return null;
   }
 }
 
-export function setTangoPreset(id: TangoPreset): void {
+export function setBalancedPreset(id: BalancedPreset): void {
   try {
-    localStorage.setItem(TANGO_PRESET_KEY, id);
+    localStorage.setItem(BALANCED_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }

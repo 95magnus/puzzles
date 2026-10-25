@@ -139,8 +139,8 @@ export function patchesPreview(): SVGSVGElement {
   return svg;
 }
 
-/** 4×4 Tango board part-way through: dots, rings and two edge clues. */
-export function tangoPreview(): SVGSVGElement {
+/** 4×4 Balanced board part-way through: dots, rings and two edge clues. */
+export function balancedPreview(): SVGSVGElement {
   const svg = frame();
   for (const i of [1, 2, 3]) {
     svg.append(s('line', { x1: i * CELL, y1: 3, x2: i * CELL, y2: 61, stroke: 'rgba(255,255,255,.08)' }));

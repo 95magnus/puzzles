@@ -21,20 +21,20 @@ const DEMO_EDGES: { a: number; b: number; text: string }[] = [
 function demoEl(): HTMLElement {
   const n = 4;
   const grid = document.createElement('div');
-  grid.className = 'tango-grid tango-howto__demo';
+  grid.className = 'balanced-grid balanced-howto__demo';
   grid.style.setProperty('--n', String(n));
   grid.setAttribute('aria-hidden', 'true');
   for (const ch of DEMO) {
     const c = document.createElement('div');
-    c.className = 'tango-cell';
+    c.className = 'balanced-cell';
     c.appendChild(symbolSvg(ch === 'S' ? 1 : 2));
     grid.appendChild(c);
   }
   const edges = document.createElement('div');
-  edges.className = 'tango-edges';
+  edges.className = 'balanced-edges';
   for (const e of DEMO_EDGES) {
     const b = document.createElement('div');
-    b.className = 'tango-edge ' + (e.b === e.a + 1 ? 'is-h' : 'is-v');
+    b.className = 'balanced-edge ' + (e.b === e.a + 1 ? 'is-h' : 'is-v');
     b.textContent = e.text;
     b.style.setProperty('--r', String(Math.floor(e.a / n)));
     b.style.setProperty('--c', String(e.a % n));
@@ -45,7 +45,7 @@ function demoEl(): HTMLElement {
 }
 
 /** Modal with the rules and a small solved board; the shared modal handles closing and focus. */
-export function openTangoHowto(returnFocusTo: HTMLElement): void {
+export function openBalancedHowto(returnFocusTo: HTMLElement): void {
   const list = document.createElement('ul');
   for (const rule of RULES) {
     const li = document.createElement('li');
@@ -53,7 +53,7 @@ export function openTangoHowto(returnFocusTo: HTMLElement): void {
     list.appendChild(li);
   }
   const body = document.createElement('div');
-  body.className = 'tango-howto__body';
+  body.className = 'balanced-howto__body';
   body.append(list, demoEl());
   openModal({ title: 'How to play', body: [body], returnFocus: returnFocusTo });
 }

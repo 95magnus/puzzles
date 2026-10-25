@@ -17,8 +17,8 @@ const MAX_SIZE = 10;
 const MAX_ATTEMPTS = 200;
 const MAX_BACKTRACKS = 10_000;
 
-export function tangoDailySeed(isoDate: string): number {
-  return seedFromString('tango-daily:' + isoDate);
+export function balancedDailySeed(isoDate: string): number {
+  return seedFromString('balanced-daily:' + isoDate);
 }
 
 function params(size: number): Params {
@@ -76,7 +76,7 @@ type Item = { given: number } | { edge: Edge };
  * `=` / `×` clues, then one shuffled pass dropping each clue the deduction solver can do without.
  */
 export function generatePuzzle(size: number, seed: number): Puzzle {
-  if (size % 2 !== 0 || size < MIN_SIZE || size > MAX_SIZE) throw new Error(`tango: unsupported size ${size}`);
+  if (size % 2 !== 0 || size < MIN_SIZE || size > MAX_SIZE) throw new Error(`balanced: unsupported size ${size}`);
   const rng = mulberry32(seed);
   const cfg = params(size);
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -110,5 +110,5 @@ export function generatePuzzle(size: number, seed: number): Puzzle {
       return { size, givens, edges: sorted, solution };
     }
   }
-  throw new Error('tango: no puzzle');
+  throw new Error('balanced: no puzzle');
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { lineCells, lineEdges, lineOf, linePatterns } from '../../src/tango/lines';
+import { lineCells, lineEdges, lineOf, linePatterns } from '../../src/balanced/lines';
 import { CHAIN6, tz } from './helpers';
 
-describe('tango lines', () => {
+describe('balanced lines', () => {
   it('linePatterns counts', () => {
     expect([4, 6, 8, 10].map((n) => linePatterns(n).length)).toEqual([6, 14, 34, 84]);
     for (const n of [4, 6, 8, 10]) {
