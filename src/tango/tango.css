@@ -1,0 +1,239 @@
+/* Tango page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
+   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+:root {
+  --tango-bg: #1d1b28; /* effective board background (BOARD_BG_EFFECTIVE) */
+  --tango-given: #2a2738;
+  --tango-line: rgba(255, 255, 255, 0.09);
+  --tango-edge: #0e0c1a;
+  --tango-ink: rgba(244, 245, 251, 0.92);
+  --tango-sun: #ffb547;
+  --tango-moon: #8fa7e6;
+  --tango-invalid: #ff5c7a;
+}
+
+/* ---------- Page ---------- */
+/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
+.tango-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
+}
+
+.tango-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tango-stage {
+  position: relative;
+  width: 100%;
+}
+
+.tango-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%; /* narrowed to the board panel's width by the app */
+  padding: 0 4px;
+}
+
+.tango-stats {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.tango-controls {
+  display: flex;
+  gap: var(--space);
+}
+
+/* ---------- Board ---------- */
+.tango-board {
+  display: flex;
+  justify-content: center;
+}
+
+.tango-board--locked .tango-grid {
+  pointer-events: none;
+}
+
+.tango-panel {
+  padding: 12px; /* matches PANEL_PAD in board.ts */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tango-grid {
+  --cell: 40px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(var(--n), var(--cell));
+  grid-auto-rows: var(--cell);
+  gap: 0;
+  background: var(--tango-bg);
+  box-shadow: 0 0 0 2px var(--tango-edge); /* the 2px board edge sits outside the cells */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The hairline is an inset shadow so every cell is exactly --cell wide. */
+.tango-cell {
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 0 0 0.5px var(--tango-line);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tango-cell:focus-visible {
+  outline: 2px solid var(--tango-ink);
+  outline-offset: -3px;
+}
+
+.tango-cell.is-given {
+  background: var(--tango-given);
+  cursor: default;
+}
+
+.tango-cell.in-bad-line {
+  background: color-mix(in srgb, var(--tango-invalid) 14%, var(--tango-bg));
+}
+
+.tango-cell.is-given.in-bad-line {
+  background: color-mix(in srgb, var(--tango-invalid) 14%, var(--tango-given));
+}
+
+.tango-cell.is-triple {
+  box-shadow: inset 0 0 0 2px var(--tango-invalid);
+}
+
+/* ---------- Glyphs ---------- */
+.tango-cell svg,
+.tango-glyph svg {
+  width: 70%;
+  height: 70%;
+  pointer-events: none;
+}
+
+.tango-sun {
+  fill: var(--tango-sun);
+  stroke: var(--tango-sun);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.tango-moon {
+  fill: var(--tango-moon);
+  stroke: none;
+}
+
+.tango-cell.is-given .tango-sun {
+  stroke-width: 2.3;
+}
+
+.tango-cell.is-given .tango-moon {
+  stroke: var(--tango-moon);
+  stroke-width: 0.5;
+}
+
+.tango-cell.is-glow {
+  animation: tango-glow 360ms ease-out;
+}
+
+@keyframes tango-glow {
+  0% { filter: none; transform: scale(1); }
+  45% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)) brightness(1.4); transform: scale(1.08); }
+  100% { filter: none; transform: scale(1); }
+}
+
+/* ---------- Edge clues ---------- */
+.tango-edges {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.tango-edge {
+  --d: calc(var(--cell) * 0.36);
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--d);
+  height: var(--d);
+  margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
+  border-radius: 50%;
+  background: var(--tango-bg);
+  box-shadow: 0 0 0 1px var(--tango-line);
+  color: var(--tango-ink);
+  font-size: calc(var(--d) * 0.78);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Between horizontal neighbours: on the vertical border to the right of cell (r, c). */
+.tango-edge.is-h {
+  left: calc((var(--c) + 1) * var(--cell));
+  top: calc((var(--r) + 0.5) * var(--cell));
+}
+
+/* Between vertical neighbours: on the horizontal border below cell (r, c). */
+.tango-edge.is-v {
+  left: calc((var(--c) + 0.5) * var(--cell));
+  top: calc((var(--r) + 1) * var(--cell));
+}
+
+.tango-edge.is-broken {
+  background: var(--tango-invalid);
+  color: #fff;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tango-cell.is-glow {
+    animation: none;
+  }
+}
+
+/* ---------- How-to ---------- */
+.tango-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.tango-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+/* The demo is a real, inert grid at a fixed cell size. */
+.tango-howto__demo {
+  --cell: 26px;
+  flex: none;
+  pointer-events: none;
+}
