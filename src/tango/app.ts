@@ -11,7 +11,7 @@ import { getFlag, getTangoPreset, loadTangoDaily, saveTangoDaily, setFlag, setTa
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createTangoBoard } from './board';
-import { clear, cycle, encode, filled, isGiven, newGame, restore, undo } from './game';
+import { clear, cycle, encode, filled, isGiven, newGame, restore, toggle, undo } from './game';
 import { DAILY_PRESET, PRESETS, generatePuzzle, tangoDailySeed } from './generate';
 import { openTangoHowto } from './howto';
 import type { GameState, PresetId, Puzzle } from './types';
@@ -80,7 +80,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   /** True when this tab changed the daily since it last loaded or saved it; pagehide/route-leave only write then. */
   let dirty = false;
 
-  const board = createTangoBoard(boardEl, { onTap });
+  const board = createTangoBoard(boardEl, { onTap, onMoon });
   // Keep the HUD as wide as the board panel (which shrinks to its content).
   const panel = boardEl.querySelector<HTMLElement>('.tango-panel')!;
   const hudSizer = typeof ResizeObserver === 'function'
@@ -223,6 +223,12 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
     const g = game;
     if (!g) return;
     await changed(g, cycle(g, cell));
+  }
+
+  async function onMoon(cell: number): Promise<void> {
+    const g = game;
+    if (!g) return;
+    await changed(g, toggle(g, cell, 2));
   }
 
   // ---------- Modes ----------

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clear, cycle, encode, filled, isGiven, isWin, newGame, restore, undo, violations } from '../../src/tango/game';
+import { clear, cycle, encode, filled, isGiven, isWin, newGame, restore, toggle, undo, violations } from '../../src/tango/game';
 import type { GameState, Sym } from '../../src/tango/types';
 import { CHAIN6, DEDUCE4, DEDUCE4_SOLUTION, sym, tz } from './helpers';
 
@@ -19,6 +19,22 @@ describe('tango game', () => {
       seen.push(s.cells[0]);
     }
     expect(seen).toEqual([1, 2, 0]);
+    expect(s.history).toHaveLength(3);
+  });
+
+  it('toggle places a symbol, or empties a cell already showing it', () => {
+    const s = newGame(DEDUCE4);
+    expect(toggle(s, 0, 2)).toBe(true);
+    expect(s.cells[0]).toBe(2);
+    expect(toggle(s, 0, 2)).toBe(true);
+    expect(s.cells[0]).toBe(0);
+    cycle(s, 0); // sun
+    expect(toggle(s, 0, 2)).toBe(true);
+    expect(s.cells[0]).toBe(2);
+    expect(s.history).toHaveLength(4);
+    undo(s);
+    expect(s.cells[0]).toBe(1);
+    expect(toggle(s, 2, 2)).toBe(false); // given
     expect(s.history).toHaveLength(3);
   });
 

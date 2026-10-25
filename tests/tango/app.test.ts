@@ -91,6 +91,19 @@ test('tapping updates the HUD and the save', async () => {
   expect(save.solved).toBe(false);
 });
 
+test('right-click places a moon and right-clicking it again empties the cell', async () => {
+  mount('#/');
+  const i = firstOpen(dailyPuzzle());
+  const rightClick = () => cell(i).dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }));
+  rightClick();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(cell(i).dataset.sym).toBe('2');
+  expect(loadTangoDaily(DATE)!.cells[i]).toBe('2');
+  rightClick();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(cell(i).dataset.sym).toBe('0');
+});
+
 test('undo button reverts and disables when history is empty', async () => {
   mount('#/');
   const p = dailyPuzzle();
@@ -236,7 +249,8 @@ test('how-to opens on the first visit only', () => {
     'Each row and column has the same number of each.',
     'No more than two of the same next to each other.',
     '= means the two cells match. × means they differ.',
-    'Tap a cell to cycle ☀, ☾, empty. Broken rules turn red.',
+    'Tap a cell to cycle ☀, ☾, empty. Right-click places a ☾.',
+    'Broken rules turn red.',
   ]);
   expect(modal.querySelectorAll('.tango-howto__demo .tango-cell')).toHaveLength(16);
   expect(modal.querySelectorAll('.tango-howto__demo .tango-edge')).toHaveLength(2);

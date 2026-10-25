@@ -57,7 +57,10 @@ export function symbolSvg(sym: 1 | 2): SVGSVGElement {
   return svg;
 }
 
-export function createTangoBoard(el: HTMLElement, opts: { onTap: (cell: number) => void }): TangoBoardHandle {
+export function createTangoBoard(
+  el: HTMLElement,
+  opts: { onTap: (cell: number) => void; onMoon: (cell: number) => void },
+): TangoBoardHandle {
   const panel = document.createElement('div');
   panel.className = 'tango-panel glass';
   const grid = document.createElement('div');
@@ -116,16 +119,29 @@ export function createTangoBoard(el: HTMLElement, opts: { onTap: (cell: number) 
     grid.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
   }
 
-  function onClick(e: MouseEvent): void {
-    if (!interactive || !game) return;
+  /** The non-given cell under a mouse event, or null. */
+  function openCellOf(e: MouseEvent): number | null {
+    if (!interactive || !game) return null;
     const c = (e.target as Element).closest<HTMLElement>('.tango-cell');
-    if (!c || !grid.contains(c)) return;
+    if (!c || !grid.contains(c)) return null;
     const i = Number(c.dataset.i);
-    if (isGiven(game, i)) return;
-    opts.onTap(i);
+    return isGiven(game, i) ? null : i;
+  }
+
+  function onClick(e: MouseEvent): void {
+    const i = openCellOf(e);
+    if (i !== null) opts.onTap(i);
+  }
+
+  /** Right-click places a moon; the browser menu never opens over the board. */
+  function onContextMenu(e: MouseEvent): void {
+    e.preventDefault();
+    const i = openCellOf(e);
+    if (i !== null) opts.onMoon(i);
   }
 
   grid.addEventListener('click', onClick);
+  grid.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('resize', fit);
   const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
   ro?.observe(el);
@@ -201,6 +217,7 @@ export function createTangoBoard(el: HTMLElement, opts: { onTap: (cell: number) 
     destroy() {
       clearGlow();
       grid.removeEventListener('click', onClick);
+      grid.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('resize', fit);
       ro?.disconnect();
       el.textContent = '';

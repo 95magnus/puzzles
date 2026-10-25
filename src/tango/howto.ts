@@ -6,7 +6,8 @@ const RULES = [
   'Each row and column has the same number of each.',
   'No more than two of the same next to each other.',
   '= means the two cells match. × means they differ.',
-  'Tap a cell to cycle ☀, ☾, empty. Broken rules turn red.',
+  'Tap a cell to cycle ☀, ☾, empty. Right-click places a ☾.',
+  'Broken rules turn red.',
 ];
 
 /** The solved 4×4 used for the illustration (S sun, M moon), with an `=` on cells 0–1 and a `×` on cells 1–5. */

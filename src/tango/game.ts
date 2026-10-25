@@ -61,6 +61,14 @@ export function cycle(s: GameState, cell: number): boolean {
   return commit(s, { cells: [cell], before: [before] });
 }
 
+/** Put `sym` on a non-given cell, or empty it when it already shows `sym` (right-click → moon). */
+export function toggle(s: GameState, cell: number, sym: 1 | 2): boolean {
+  if (s.status === 'won' || isGiven(s, cell)) return false;
+  const before = s.cells[cell];
+  s.cells[cell] = before === sym ? 0 : sym;
+  return commit(s, { cells: [cell], before: [before] });
+}
+
 export function undo(s: GameState): boolean {
   if (s.status === 'won') return false;
   const move = s.history.pop();

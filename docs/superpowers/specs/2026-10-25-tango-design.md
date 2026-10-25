@@ -12,7 +12,7 @@ Tagline: *Fill the grid with suns and moons.*
 **In scope (v1)**
 - **Daily mode:** one 8×8 board per UTC day, identical for every player. No lives; a daily is either in progress or solved.
 - **Practice mode:** unlimited random boards; presets **Small** 6×6, **Medium** 8×8 (default, same as daily), **Large** 10×10.
-- Tap a non-given cell to cycle empty → ☀ → ☾ → empty. **Undo** and **Clear** buttons.
+- Tap a non-given cell to cycle empty → ☀ → ☾ → empty. Right-click places a ☾ (right-clicking a ☾ empties it). **Undo** and **Clear** buttons.
 - Rule breaks are shown live (three in a row, unbalanced line, broken edge clue). The board is never compared with the solution.
 - Separate page `tango.html`, sharing core modules, the site header, theme and dashboard with Flow, Mines, Tangle, Queens and Patches. Static site, no backend.
 
@@ -116,6 +116,7 @@ Every constraint lives inside one line: balance and no-three by definition, and 
 
 - `newGame(puzzle)`: cells = givens, empty history, `playing`.
 - `cycle(s, cell)`: on a non-given cell, empty → ☀ → ☾ → empty; pushes a `Move`. Ignored for givens and after a win. Returns whether anything changed.
+- `toggle(s, cell, sym)`: on a non-given cell, set `sym`, or empty the cell when it already shows `sym` (right-click → ☾); pushes a `Move`. Same guards as `cycle`.
 - `undo(s)`: revert the last `Move`; ignored when history is empty or the game is won.
 - `clear(s)`: set every non-given cell to empty as one `Move` (undoable). No-op (nothing pushed) when no non-given cell is filled.
 - `violations(s)`: `Violations` (§3). A line is flagged when it holds more than `size/2` of either symbol (even partly filled) — a full line is then necessarily unbalanced, so no separate full-line check is needed. An edge is flagged only when both its cells are filled.
@@ -139,7 +140,7 @@ Header (shared): `puzzles · Tango`, Daily / Practice tabs, "?".
 1. **Daily (playing):** subtitle `#N · Sun Oct 25 · 8×8`; board; HUD below: filled `F/N²`, timer mm:ss; buttons **Undo** and **Clear**.
 2. **Daily (solved):** board stays visible; card "Balanced ☀☾", time, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Practice:** preset switch (Small · Medium · Large) replaces the subtitle; buttons **Undo**, **Clear**, **New board** (primary). Win card offers **New board**.
-4. **How-to ("?"):** modal: fill every cell with ☀ or ☾; each row and column has the same number of each; no more than two of a kind next to each other; `=` means same, `×` means different; tap to cycle. A small static solved 4×4 illustration with one `=` and one `×`. Opens automatically on the first visit.
+4. **How-to ("?"):** modal: fill every cell with ☀ or ☾; each row and column has the same number of each; no more than two of a kind next to each other; `=` means same, `×` means different; tap to cycle, right-click for a ☾. A small static solved 4×4 illustration with one `=` and one `×`. Opens automatically on the first visit.
 5. **Dashboard card:** name, tagline, `tangoPreview()` SVG (a tiny 6×6 board with suns, moons and two edge badges), daily status: "Not started", "In progress · mm:ss", "Solved · mm:ss".
 
 The timer starts when the board appears and stops on win. Daily number uses `dailyNumber` from `core/daily`.

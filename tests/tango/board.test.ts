@@ -10,7 +10,7 @@ let board: TangoBoardHandle | null = null;
 function mount(onTap = vi.fn()) {
   host = document.createElement('div');
   document.body.appendChild(host);
-  board = createTangoBoard(host, { onTap });
+  board = createTangoBoard(host, { onTap, onMoon: vi.fn() });
   const s = newGame(DEDUCE4);
   board.setGame(s);
   return { s, onTap };
@@ -79,6 +79,20 @@ describe('tango board', () => {
     for (const i of [0, 4, 8]) expect(cell(i).classList.contains('is-triple')).toBe(true);
     for (const i of [0, 4, 8, 12]) expect(cell(i).classList.contains('in-bad-line')).toBe(true);
     expect(cell(1).classList.contains('in-bad-line')).toBe(false);
+  });
+
+  it('right-click calls onMoon for non-givens and suppresses the menu', () => {
+    const onMoon = vi.fn();
+    host = document.createElement('div');
+    document.body.appendChild(host);
+    board = createTangoBoard(host, { onTap: vi.fn(), onMoon });
+    board.setGame(newGame(DEDUCE4));
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    cell(0).dispatchEvent(ev);
+    expect(ev.defaultPrevented).toBe(true);
+    expect(onMoon).toHaveBeenCalledWith(0);
+    cell(2).dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }));
+    expect(onMoon).toHaveBeenCalledTimes(1);
   });
 
   it('setInteractive(false) blocks taps', () => {
