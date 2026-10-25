@@ -54,29 +54,22 @@ export function deduce(p: Clues): Sym[] | null {
   return g && g.every((v) => v !== 0) ? g : null;
 }
 
-/** Number of solutions by plain backtracking, stopping at `limit`. For tests. */
+/**
+ * Number of solutions, stopping at `limit`: propagate, then branch on both values of the first
+ * empty cell. Exhaustive (propagation only removes impossible values), so the count is exact. For tests.
+ */
 export function countSolutions(p: Clues, limit: number): number {
-  const n = p.size;
-  const g = p.givens.slice();
-  const lines = linesOf(p);
-  const patterns = linePatterns(n);
-  const ok = (i: number) => patterns.some((pt) => fits(pt, lines[i], g));
-  if (!lines.every((_, i) => ok(i))) return 0;
+  const g = propagate(p);
+  if (!g) return 0;
+  const cell = g.indexOf(0);
+  if (cell < 0) return 1;
   let count = 0;
-  const walk = (cell: number): void => {
-    if (count >= limit) return;
-    if (cell === n * n) {
-      count++;
-      return;
-    }
-    if (g[cell] !== 0) return walk(cell + 1);
-    for (const v of [1, 2] as const) {
-      g[cell] = v;
-      if (ok(Math.floor(cell / n)) && ok(n + (cell % n))) walk(cell + 1);
-    }
-    g[cell] = 0;
-  };
-  walk(0);
+  for (const v of [1, 2] as const) {
+    if (count >= limit) break;
+    const givens = g.slice();
+    givens[cell] = v;
+    count += countSolutions({ ...p, givens }, limit - count);
+  }
   return count;
 }
 
