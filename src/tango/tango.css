@@ -9,6 +9,7 @@
   --tango-sun: #ffb547;
   --tango-moon: #8fa7e6;
   --tango-invalid: #ff5c7a;
+  --tango-badge: #3a3650;
 }
 
 /* ---------- Page ---------- */
@@ -182,10 +183,10 @@
   height: var(--d);
   margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2);
   border-radius: 50%;
-  background: var(--tango-bg);
-  box-shadow: 0 0 0 1px var(--tango-line);
-  color: var(--tango-ink);
-  font-size: calc(var(--d) * 0.78);
+  background: var(--tango-badge);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: calc(var(--d) * 0.8);
   font-weight: 700;
   line-height: 1;
 }
@@ -233,7 +234,7 @@
 
 /* The demo is a real, inert grid at a fixed cell size. */
 .tango-howto__demo {
-  --cell: 26px;
+  --cell: 30px;
   flex: none;
   pointer-events: none;
 }
