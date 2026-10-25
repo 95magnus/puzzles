@@ -5,6 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
+import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, getTanglePreset, loadTangleDaily, saveTangleDaily, setFlag, setTanglePreset } from '../core/storage';
 import { createHeader } from '../ui/header';
@@ -92,6 +93,7 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
     : null;
   hudSizer?.observe(panel);
 
+  const play = createPlayTracker('tangle');
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -218,6 +220,7 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
     if (g.status === 'playing') {
       board.setInteractive(true);
       startTimer(fromMs);
+      play.begin(route.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', preset: route.preset });
     } else {
       board.setInteractive(false);
       baseElapsed = fromMs;
@@ -232,10 +235,12 @@ export function mountTangle(root: HTMLElement, deps: { now?: () => Date } = {}):
     if (!g) return;
     const result = tap(g, cell);
     if (result.kind === 'ignored') return;
+    play.move();
     // Other arrows stay tappable while this one animates; the board ignores taps on moving arrows.
     if (g.status !== 'playing') {
       board.setInteractive(false);
       stopTimer();
+      play.end(g.status, elapsed());
     }
     // If another tab moved the daily on, the board now shows that game: nothing to animate.
     if (persist()) return;

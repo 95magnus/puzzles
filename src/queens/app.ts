@@ -5,6 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
+import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, getQueensPreset, loadQueensDaily, saveQueensDaily, setFlag, setQueensPreset } from '../core/storage';
 import { createHeader } from '../ui/header';
@@ -88,6 +89,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
     : null;
   hudSizer?.observe(panel);
 
+  const play = createPlayTracker('queens');
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -182,6 +184,7 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
     if (g.status === 'playing') {
       board.setInteractive(true);
       startTimer(fromMs);
+      play.begin(route.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', preset: route.preset });
     } else {
       board.setInteractive(false);
       baseElapsed = fromMs;
@@ -197,9 +200,11 @@ export function mountQueens(root: HTMLElement, deps: { now?: () => Date } = {}):
     dirty = true;
     board.update(cells);
     const won = g.status === 'won';
+    play.move();
     if (won) {
       stopTimer();
       board.setInteractive(false);
+      play.end('won', elapsed());
     }
     // If another tab already solved the daily, the board now shows that game.
     if (persist()) return;
