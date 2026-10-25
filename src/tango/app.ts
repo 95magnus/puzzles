@@ -80,7 +80,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
   /** True when this tab changed the daily since it last loaded or saved it; pagehide/route-leave only write then. */
   let dirty = false;
 
-  const board = createTangoBoard(boardEl, { onTap, onMoon });
+  const board = createTangoBoard(boardEl, { onTap, onRing });
   // Keep the HUD as wide as the board panel (which shrinks to its content).
   const panel = boardEl.querySelector<HTMLElement>('.tango-panel')!;
   const hudSizer = typeof ResizeObserver === 'function'
@@ -161,7 +161,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
     card = el('section', 'end-card glass end-card--won');
     card.setAttribute('role', 'dialog');
     card.setAttribute('aria-labelledby', 'tango-card-title');
-    const title = el('h2', 'end-card__title', 'Balanced ☀☾');
+    const title = el('h2', 'end-card__title', 'Balanced ●○');
     title.id = 'tango-card-title';
     card.appendChild(title);
     card.appendChild(el('p', 'end-card__stat num', formatClock(elapsed())));
@@ -225,7 +225,7 @@ export function mountTango(root: HTMLElement, deps: { now?: () => Date } = {}): 
     await changed(g, cycle(g, cell));
   }
 
-  async function onMoon(cell: number): Promise<void> {
+  async function onRing(cell: number): Promise<void> {
     const g = game;
     if (!g) return;
     await changed(g, toggle(g, cell, 2));

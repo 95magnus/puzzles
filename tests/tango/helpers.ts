@@ -1,7 +1,7 @@
 import { deduce } from '../../src/tango/solver';
 import type { Puzzle, Sym } from '../../src/tango/types';
 
-/** `S/M/.` string → cells (sun 1, moon 2, empty 0). */
+/** `S/M/.` string → cells (S = dot 1, M = ring 2, . = empty 0). */
 export function sym(s: string): Sym[] {
   return [...s].map((ch) => (ch === 'S' ? 1 : ch === 'M' ? 2 : 0));
 }

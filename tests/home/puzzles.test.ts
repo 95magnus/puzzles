@@ -34,7 +34,7 @@ test('registry lists Flow, Mines, Tangle, Queens, Patches then Tango with their 
   expect(tangle.tagline).toBe("Tap arrows out of the knot. Don't crash.");
   expect(queens.tagline).toBe('One queen per row, column and colour.');
   expect(patches.tagline).toBe('Cut the grid into patches. One clue each.');
-  expect(tango.tagline).toBe('Fill the grid with suns and moons.');
+  expect(tango.tagline).toBe('Fill the grid with dots and rings.');
 });
 
 test('Flow: no save is Not started', () => {

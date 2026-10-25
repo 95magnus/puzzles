@@ -10,7 +10,7 @@ let board: TangoBoardHandle | null = null;
 function mount(onTap = vi.fn()) {
   host = document.createElement('div');
   document.body.appendChild(host);
-  board = createTangoBoard(host, { onTap, onMoon: vi.fn() });
+  board = createTangoBoard(host, { onTap, onRing: vi.fn() });
   const s = newGame(DEDUCE4);
   board.setGame(s);
   return { s, onTap };
@@ -33,7 +33,7 @@ describe('tango board', () => {
     expect(cell(2).querySelector('svg')).not.toBeNull();
     expect(cell(0).dataset.sym).toBe('0');
     expect(cell(0).getAttribute('aria-label')).toBe('Row 1, column 1, empty');
-    expect(cell(2).getAttribute('aria-label')).toBe('Row 1, column 3, moon, given');
+    expect(cell(2).getAttribute('aria-label')).toBe('Row 1, column 3, ring, given');
     const edges = host.querySelectorAll<HTMLElement>('.tango-edge');
     expect(edges).toHaveLength(1);
     expect(edges[0].dataset.kind).toBe('neq');
@@ -51,11 +51,11 @@ describe('tango board', () => {
 
   it('render shows symbols and violation classes', () => {
     const { s } = mount();
-    cycle(s, 1); // sun
-    cycle(s, 5); // sun — breaks the × on 1–5
+    cycle(s, 1); // dot
+    cycle(s, 5); // dot — breaks the × on 1–5
     board!.render();
     expect(cell(1).dataset.sym).toBe('1');
-    expect(cell(1).getAttribute('aria-label')).toBe('Row 1, column 2, sun');
+    expect(cell(1).getAttribute('aria-label')).toBe('Row 1, column 2, dot');
     expect(host.querySelector('.tango-edge')!.classList.contains('is-broken')).toBe(true);
   });
 
@@ -72,27 +72,35 @@ describe('tango board', () => {
 
   it('marks triples and over-full lines', () => {
     const { s } = mount();
-    // Column 0: cell 8 is a given sun; make 0 and 4 suns too → a vertical triple and 3 suns in a 4-line.
+    // Column 0: cell 8 is a given dot; make 0 and 4 dots too → a vertical triple and 3 dots in a 4-line.
     cycle(s, 0);
     cycle(s, 4);
     board!.render();
     for (const i of [0, 4, 8]) expect(cell(i).classList.contains('is-triple')).toBe(true);
+    // One capsule spans the whole run instead of a box per cell.
+    const runs = host.querySelectorAll<HTMLElement>('.tango-run');
+    expect(runs).toHaveLength(1);
+    expect(runs[0].classList.contains('is-v')).toBe(true);
+    expect([runs[0].style.getPropertyValue('--r'), runs[0].style.getPropertyValue('--c'), runs[0].style.getPropertyValue('--len')]).toEqual(['0', '0', '3']);
     for (const i of [0, 4, 8, 12]) expect(cell(i).classList.contains('in-bad-line')).toBe(true);
     expect(cell(1).classList.contains('in-bad-line')).toBe(false);
+    undo(s);
+    board!.render();
+    expect(host.querySelectorAll('.tango-run')).toHaveLength(0);
   });
 
-  it('right-click calls onMoon for non-givens and suppresses the menu', () => {
-    const onMoon = vi.fn();
+  it('right-click calls onRing for non-givens and suppresses the menu', () => {
+    const onRing = vi.fn();
     host = document.createElement('div');
     document.body.appendChild(host);
-    board = createTangoBoard(host, { onTap: vi.fn(), onMoon });
+    board = createTangoBoard(host, { onTap: vi.fn(), onRing });
     board.setGame(newGame(DEDUCE4));
     const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
     cell(0).dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(true);
-    expect(onMoon).toHaveBeenCalledWith(0);
+    expect(onRing).toHaveBeenCalledWith(0);
     cell(2).dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }));
-    expect(onMoon).toHaveBeenCalledTimes(1);
+    expect(onRing).toHaveBeenCalledTimes(1);
   });
 
   it('setInteractive(false) blocks taps', () => {

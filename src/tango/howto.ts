@@ -2,15 +2,15 @@ import { openModal } from '../ui/modal';
 import { symbolSvg } from './board';
 
 const RULES = [
-  'Fill every cell with a ☀ or a ☾.',
+  'Fill every cell with a ● or a ○.',
   'Each row and column has the same number of each.',
   'No more than two of the same next to each other.',
   '= means the two cells match. × means they differ.',
-  'Tap a cell to cycle ☀, ☾, empty. Right-click places a ☾.',
+  'Tap a cell to cycle ●, ○, empty. Right-click places a ○.',
   'Broken rules turn red.',
 ];
 
-/** The solved 4×4 used for the illustration (S sun, M moon), with an `=` on cells 0–1 and a `×` on cells 1–5. */
+/** The solved 4×4 used for the illustration (S = dot, M = ring), with an `=` on cells 0–1 and a `×` on cells 1–5. */
 const DEMO = 'SSMM' + 'MMSS' + 'SMMS' + 'MSSM';
 const DEMO_EDGES: { a: number; b: number; text: string }[] = [
   { a: 0, b: 1, text: '=' },

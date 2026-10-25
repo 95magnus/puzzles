@@ -53,7 +53,7 @@ function commit(s: GameState, move: Move): boolean {
   return true;
 }
 
-/** Empty → sun → moon → empty on a non-given cell. */
+/** Empty → dot → ring → empty on a non-given cell. */
 export function cycle(s: GameState, cell: number): boolean {
   if (s.status === 'won' || isGiven(s, cell)) return false;
   const before = s.cells[cell];
@@ -61,7 +61,7 @@ export function cycle(s: GameState, cell: number): boolean {
   return commit(s, { cells: [cell], before: [before] });
 }
 
-/** Put `sym` on a non-given cell, or empty it when it already shows `sym` (right-click → moon). */
+/** Put `sym` on a non-given cell, or empty it when it already shows `sym` (right-click → ring). */
 export function toggle(s: GameState, cell: number, sym: 1 | 2): boolean {
   if (s.status === 'won' || isGiven(s, cell)) return false;
   const before = s.cells[cell];
@@ -88,7 +88,7 @@ export function clear(s: GameState): boolean {
   return commit(s, { cells, before });
 }
 
-/** One char per cell: 0 empty, 1 sun, 2 moon. */
+/** One char per cell: 0 empty, 1 dot, 2 ring. */
 export function encode(s: GameState): string {
   return s.cells.join('');
 }

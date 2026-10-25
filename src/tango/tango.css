@@ -6,8 +6,8 @@
   --tango-line: rgba(255, 255, 255, 0.09);
   --tango-edge: #0e0c1a;
   --tango-ink: rgba(244, 245, 251, 0.92);
-  --tango-sun: #ffb547;
-  --tango-moon: #8fa7e6;
+  --tango-dot: #a99bff; /* violet, filled */
+  --tango-ring: #4fd6c3; /* teal, hollow: shape alone tells them apart too */
   --tango-invalid: #ff5c7a;
   --tango-badge: #3a3650;
 }
@@ -115,45 +115,71 @@
   cursor: default;
 }
 
+/* An over-full line gets only a faint wash; the exact problem cells are drawn by .tango-run. */
 .tango-cell.in-bad-line {
-  background: color-mix(in srgb, var(--tango-invalid) 14%, var(--tango-bg));
+  background: color-mix(in srgb, var(--tango-invalid) 8%, var(--tango-bg));
 }
 
 .tango-cell.is-given.in-bad-line {
-  background: color-mix(in srgb, var(--tango-invalid) 14%, var(--tango-given));
+  background: color-mix(in srgb, var(--tango-invalid) 8%, var(--tango-given));
 }
 
-.tango-cell.is-triple {
-  box-shadow: inset 0 0 0 2px var(--tango-invalid);
-}
-
-/* ---------- Glyphs ---------- */
-.tango-cell svg,
-.tango-glyph svg {
-  width: 70%;
-  height: 70%;
+/* ---------- Runs of three ---------- */
+.tango-runs {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   pointer-events: none;
 }
 
-.tango-sun {
-  fill: var(--tango-sun);
-  stroke: var(--tango-sun);
-  stroke-width: 1.8;
-  stroke-linecap: round;
+/* One rounded capsule around the whole run, inset from the cell edges. */
+.tango-run {
+  --inset: calc(var(--cell) * 0.1);
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--tango-invalid) 80%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tango-invalid) 12%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--tango-invalid) 30%, transparent);
+  left: calc(var(--c) * var(--cell) + var(--inset));
+  top: calc(var(--r) * var(--cell) + var(--inset));
 }
 
-.tango-moon {
-  fill: var(--tango-moon);
-  stroke: none;
+.tango-run.is-h {
+  width: calc(var(--len) * var(--cell) - 2 * var(--inset));
+  height: calc(var(--cell) - 2 * var(--inset));
 }
 
-.tango-cell.is-given .tango-sun {
-  stroke-width: 2.3;
+.tango-run.is-v {
+  width: calc(var(--cell) - 2 * var(--inset));
+  height: calc(var(--len) * var(--cell) - 2 * var(--inset));
 }
 
-.tango-cell.is-given .tango-moon {
-  stroke: var(--tango-moon);
-  stroke-width: 0.5;
+/* ---------- Glyphs ---------- */
+.tango-cell svg {
+  width: 62%;
+  height: 62%;
+  pointer-events: none;
+}
+
+.tango-dot {
+  fill: var(--tango-dot);
+}
+
+.tango-ring {
+  fill: none;
+  stroke: var(--tango-ring);
+  stroke-width: 3;
+}
+
+/* Givens: a slightly heavier glyph on the tinted cell. */
+.tango-cell.is-given .tango-ring {
+  stroke-width: 3.6;
+}
+
+.tango-cell.is-given .tango-dot {
+  stroke: var(--tango-dot);
+  stroke-width: 0.8;
 }
 
 .tango-cell.is-glow {

@@ -22,7 +22,7 @@ const MAX_CELL = 56;
 const WAVE_STEP_MS = 20;
 const GLOW_MS = 360;
 const NS = 'http://www.w3.org/2000/svg';
-const NAMES = ['empty', 'sun', 'moon'] as const;
+const NAMES = ['empty', 'dot', 'ring'] as const;
 
 function reducedMotion(): boolean {
   try {
@@ -38,28 +38,17 @@ function svgEl(tag: string, attrs: Record<string, string | number>): SVGElement 
   return e;
 }
 
-/** A sun (disc with rays) or moon (crescent) in a 24-unit box; the how-to and dashboard preview reuse it. */
+/** A filled dot or a hollow ring in a 24-unit box, each in its own colour; the how-to reuses it. */
 export function symbolSvg(sym: 1 | 2): SVGSVGElement {
   const svg = svgEl('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' }) as SVGSVGElement;
-  svg.classList.add(sym === 1 ? 'tango-sun' : 'tango-moon');
-  if (sym === 1) {
-    svg.appendChild(svgEl('circle', { cx: 12, cy: 12, r: 5.2 }));
-    for (let k = 0; k < 8; k++) {
-      const a = (k * Math.PI) / 4;
-      const p = (r: number) => [12 + r * Math.cos(a), 12 + r * Math.sin(a)].map((v) => v.toFixed(2));
-      const [x1, y1] = p(7.6);
-      const [x2, y2] = p(10.4);
-      svg.appendChild(svgEl('line', { x1, y1, x2, y2 }));
-    }
-  } else {
-    svg.appendChild(svgEl('path', { d: 'M15.5 3.6a8.6 8.6 0 1 0 4.9 14.6A7 7 0 0 1 15.5 3.6z' }));
-  }
+  svg.classList.add(sym === 1 ? 'tango-dot' : 'tango-ring');
+  svg.appendChild(sym === 1 ? svgEl('circle', { cx: 12, cy: 12, r: 7 }) : svgEl('circle', { cx: 12, cy: 12, r: 6 }));
   return svg;
 }
 
 export function createTangoBoard(
   el: HTMLElement,
-  opts: { onTap: (cell: number) => void; onMoon: (cell: number) => void },
+  opts: { onTap: (cell: number) => void; onRing: (cell: number) => void },
 ): TangoBoardHandle {
   const panel = document.createElement('div');
   panel.className = 'tango-panel glass';
@@ -68,6 +57,8 @@ export function createTangoBoard(
   grid.setAttribute('role', 'grid');
   const edgesEl = document.createElement('div');
   edgesEl.className = 'tango-edges';
+  const runsEl = document.createElement('div');
+  runsEl.className = 'tango-runs';
   panel.appendChild(grid);
   el.appendChild(panel);
 
@@ -106,6 +97,34 @@ export function createTangoBoard(
       c.classList.toggle('in-bad-line', inBadLine.has(i));
     });
     edgeEls.forEach((e, i) => e.classList.toggle('is-broken', bad.edges.has(i)));
+    runsEl.replaceChildren(...runsOf(s).map(runEl));
+  }
+
+  /** Maximal runs of three or more equal symbols, as one capsule each. */
+  function runsOf(s: GameState): { cell: number; vertical: boolean; len: number }[] {
+    const n = s.puzzle.size;
+    const out: { cell: number; vertical: boolean; len: number }[] = [];
+    for (let line = 0; line < 2 * n; line++) {
+      const cells = lineCells(n, line);
+      let k = 0;
+      while (k < n) {
+        let j = k + 1;
+        while (j < n && s.cells[cells[j]] === s.cells[cells[k]]) j++;
+        if (s.cells[cells[k]] !== 0 && j - k >= 3) out.push({ cell: cells[k], vertical: line >= n, len: j - k });
+        k = j;
+      }
+    }
+    return out;
+  }
+
+  function runEl(run: { cell: number; vertical: boolean; len: number }): HTMLElement {
+    const n = game!.puzzle.size;
+    const e = document.createElement('div');
+    e.className = 'tango-run ' + (run.vertical ? 'is-v' : 'is-h');
+    e.style.setProperty('--r', String(Math.floor(run.cell / n)));
+    e.style.setProperty('--c', String(run.cell % n));
+    e.style.setProperty('--len', String(run.len));
+    return e;
   }
 
   function fit(): void {
@@ -133,11 +152,11 @@ export function createTangoBoard(
     if (i !== null) opts.onTap(i);
   }
 
-  /** Right-click places a moon; the browser menu never opens over the board. */
+  /** Right-click places a ring; the browser menu never opens over the board. */
   function onContextMenu(e: MouseEvent): void {
     e.preventDefault();
     const i = openCellOf(e);
-    if (i !== null) opts.onMoon(i);
+    if (i !== null) opts.onRing(i);
   }
 
   grid.addEventListener('click', onClick);
@@ -183,7 +202,7 @@ export function createTangoBoard(
         return b;
       });
       edgesEl.replaceChildren(...edgeEls);
-      grid.replaceChildren(...cellEls, edgesEl);
+      grid.replaceChildren(...cellEls, runsEl, edgesEl);
       grid.style.setProperty('--n', String(n));
       render();
       fit();

@@ -28,23 +28,23 @@ export function lineEdges(p: Pick<Puzzle, 'size' | 'edges'>, i: number): LineEdg
 
 const patternCache = new Map<number, Sym[][]>();
 
-/** Every balanced, triple-free sun/moon line of length `n`, in lexicographic order. Cached. */
+/** Every balanced, triple-free dot/ring line of length `n`, in lexicographic order. Cached. */
 export function linePatterns(n: number): readonly Sym[][] {
   let out = patternCache.get(n);
   if (out) return out;
   out = [];
   const cur: Sym[] = [];
-  const walk = (suns: number, moons: number): void => {
+  const walk = (dots: number, rings: number): void => {
     const k = cur.length;
     if (k === n) {
       out!.push(cur.slice());
       return;
     }
     for (const s of [1, 2] as const) {
-      if (s === 1 ? suns === n / 2 : moons === n / 2) continue;
+      if (s === 1 ? dots === n / 2 : rings === n / 2) continue;
       if (k >= 2 && cur[k - 1] === s && cur[k - 2] === s) continue;
       cur.push(s);
-      walk(suns + (s === 1 ? 1 : 0), moons + (s === 2 ? 1 : 0));
+      walk(dots + (s === 1 ? 1 : 0), rings + (s === 2 ? 1 : 0));
       cur.pop();
     }
   };

@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
 
 const cell = (page: Page, i: number) => page.locator(`.tango-cell[data-i="${i}"]`);
 
-/** Tap an empty cell until it shows `sym` (1 tap for a sun, 2 for a moon). */
+/** Tap an empty cell until it shows `sym` (1 tap for a dot, 2 for a ring). */
 async function tapTo(page: Page, i: number, sym: Sym) {
   for (let k = 0; k < sym; k++) await cell(page, i).click();
   await expect(cell(page, i)).toHaveAttribute('data-sym', String(sym));
@@ -25,7 +25,7 @@ test('solve a fixed practice board', async ({ page }) => {
   await expect(page.locator('.tango-cell')).toHaveCount(SIZE * SIZE);
   const p = practice();
   for (const i of openCells(p)) await tapTo(page, i, p.solution[i]);
-  await expect(page.getByText('Balanced ☀☾')).toBeVisible();
+  await expect(page.getByText('Balanced ●○')).toBeVisible();
 });
 
 test('three in a row shows red', async ({ page }) => {

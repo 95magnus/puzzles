@@ -91,7 +91,7 @@ test('tapping updates the HUD and the save', async () => {
   expect(save.solved).toBe(false);
 });
 
-test('right-click places a moon and right-clicking it again empties the cell', async () => {
+test('right-click places a ring and right-clicking it again empties the cell', async () => {
   mount('#/');
   const i = firstOpen(dailyPuzzle());
   const rightClick = () => cell(i).dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 }));
@@ -122,7 +122,7 @@ test('solving shows the win card and locks the board', async () => {
   mount('#/');
   const p = dailyPuzzle();
   await solve(p);
-  expect(text('.end-card__title')).toBe('Balanced ☀☾');
+  expect(text('.end-card__title')).toBe('Balanced ●○');
   expect(text('.end-card .btn--primary')).toBe('Play practice');
   expect(text('.end-card__next')).toContain('Next daily in');
   const save = loadTangoDaily(DATE)!;
@@ -147,7 +147,7 @@ test('a solved save reopens with the card', () => {
   const p = dailyPuzzle();
   saveTangoDaily({ date: DATE, cells: p.solution.join(''), elapsedMs: 9_000, solved: true });
   mount('#/');
-  expect(text('.end-card__title')).toBe('Balanced ☀☾');
+  expect(text('.end-card__title')).toBe('Balanced ●○');
   expect(text('.end-card__stat')).toBe('00:09');
 });
 
@@ -171,7 +171,7 @@ test('persist never overwrites a solved save from another tab', async () => {
   const save = loadTangoDaily(DATE)!;
   expect(save.solved).toBe(true);
   expect(save.cells).toBe(done);
-  expect(text('.end-card__title')).toBe('Balanced ☀☾');
+  expect(text('.end-card__title')).toBe('Balanced ●○');
 });
 
 test('practice seed route is deterministic; Clear empties non-givens; New board changes the puzzle', async () => {
@@ -245,11 +245,11 @@ test('how-to opens on the first visit only', () => {
   const modal = document.querySelector('.modal')!;
   expect(modal.textContent).toContain('How to play');
   expect([...modal.querySelectorAll('.tango-howto__body li')].map((li) => li.textContent)).toEqual([
-    'Fill every cell with a ☀ or a ☾.',
+    'Fill every cell with a ● or a ○.',
     'Each row and column has the same number of each.',
     'No more than two of the same next to each other.',
     '= means the two cells match. × means they differ.',
-    'Tap a cell to cycle ☀, ☾, empty. Right-click places a ☾.',
+    'Tap a cell to cycle ●, ○, empty. Right-click places a ○.',
     'Broken rules turn red.',
   ]);
   expect(modal.querySelectorAll('.tango-howto__demo .tango-cell')).toHaveLength(16);

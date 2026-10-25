@@ -99,7 +99,7 @@ export const PUZZLES: readonly PuzzleEntry[] = [
   {
     id: 'tango',
     name: 'Tango',
-    tagline: 'Fill the grid with suns and moons.',
+    tagline: 'Fill the grid with dots and rings.',
     href: './tango.html',
     doneWord: 'Solved',
     preview: tangoPreview,

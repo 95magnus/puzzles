@@ -1,4 +1,4 @@
-/** A cell's content: 0 empty, 1 sun, 2 moon. */
+/** A cell's content: 0 empty, 1 dot, 2 ring. */
 export type Sym = 0 | 1 | 2;
 
 /** An `=` (eq) or `×` (neq) clue between orthogonal neighbours `a < b`. */

@@ -28,7 +28,7 @@ describe('tango game', () => {
     expect(s.cells[0]).toBe(2);
     expect(toggle(s, 0, 2)).toBe(true);
     expect(s.cells[0]).toBe(0);
-    cycle(s, 0); // sun
+    cycle(s, 0); // dot
     expect(toggle(s, 0, 2)).toBe(true);
     expect(s.cells[0]).toBe(2);
     expect(s.history).toHaveLength(4);
