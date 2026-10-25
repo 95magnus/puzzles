@@ -5,6 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
+import { createPlayTracker } from '../core/analytics';
 import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from '../core/game';
 import { randomSeed, seedFromDate } from '../core/rng';
 import { getFlag, loadDaily, saveDaily } from '../core/storage';
@@ -133,6 +134,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   let startedAt: number | null = null;
 
   const nowMs = () => now().getTime();
+  const play = createPlayTracker('flow');
   const elapsed = () => baseMs + (startedAt === null ? 0 : Math.max(0, nowMs() - startedAt));
   const startClock = () => {
     if (startedAt === null) startedAt = nowMs();
@@ -250,6 +252,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
       void win(false);
     } else {
       board.setInteractive(true);
+      play.begin(session.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', size: session.size });
       refresh();
     }
   }
@@ -263,6 +266,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     solved = true;
     stopClock();
     board.setInteractive(false);
+    if (animate) play.end('won', elapsed()); // not a board restored already solved
     persist();
     refresh();
     const token = loadToken;
@@ -281,7 +285,10 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   function onChange(s: GameState, kind: 'move' | 'gesture-end') {
     if (!game || s.puzzle !== game.puzzle || solved) return;
     game = s;
-    if (!loading) startClock();
+    if (!loading) {
+      startClock();
+      play.move();
+    }
     if (kind === 'gesture-end' && !loading && isSolved(s)) {
       void win(true);
       return;
@@ -293,6 +300,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   function apply(next: GameState) {
     if (!game || next === game) return;
     game = next;
+    play.move();
     board.setState(next);
     persist();
     refresh();

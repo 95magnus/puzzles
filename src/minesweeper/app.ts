@@ -5,6 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
+import { createPlayTracker } from '../core/analytics';
 import { mulberry32, randomSeed } from '../core/rng';
 import { getFlag, getMinesPreset, loadMinesDaily, saveMinesDaily, setFlag, setMinesPreset } from '../core/storage';
 import { createHeader } from '../ui/header';
@@ -101,6 +102,7 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
     : null;
   hudSizer?.observe(panel);
 
+  const play = createPlayTracker('mines');
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -200,8 +202,11 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
     board.setGame(g);
     if (g.status === 'playing') {
       board.setInteractive(true);
-      if (run) startTimer(fromMs);
-      else {
+      // A blank practice board is not a game yet: it begins when the first reveal builds it.
+      if (run) {
+        startTimer(fromMs);
+        play.begin(route.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', preset: route.preset });
+      } else {
         baseElapsed = fromMs;
         runningSince = null;
       }
@@ -230,15 +235,20 @@ export function mountMines(root: HTMLElement, deps: { now?: () => Date } = {}): 
   function onAction(a: InputAction): void {
     const kind = a.kind === 'tap' ? (game.cells[a.cell] === 1 ? 'chord' : 'reveal') : a.kind;
     if (pending && kind !== 'flag') {
-      if (kind === 'reveal') generateAround(a.cell);
+      if (kind === 'reveal') {
+        generateAround(a.cell);
+        play.move();
+      }
       return;
     }
     const fn = kind === 'flag' ? toggleFlag : kind === 'chord' ? chord : reveal;
     const changed = fn(game, a.cell);
     if (changed.length === 0) return;
+    play.move();
     board.update(changed, kind === 'flag' ? undefined : a.cell);
     if (game.status !== 'playing') {
       stopTimer();
+      play.end(game.status, elapsed());
       board.setInteractive(false);
       showCard();
     }

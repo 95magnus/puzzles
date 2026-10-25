@@ -5,6 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
+import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, getPatchesPreset, loadPatchesDaily, savePatchesDaily, setFlag, setPatchesPreset } from '../core/storage';
 import { createHeader } from '../ui/header';
@@ -87,6 +88,7 @@ export function mountPatches(root: HTMLElement, deps: { now?: () => Date } = {})
     : null;
   hudSizer?.observe(panel);
 
+  const play = createPlayTracker('patches');
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -183,6 +185,7 @@ export function mountPatches(root: HTMLElement, deps: { now?: () => Date } = {})
     if (g.status === 'playing') {
       board.setInteractive(true);
       startTimer(fromMs);
+      play.begin(route.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', preset: route.preset });
     } else {
       board.setInteractive(false);
       baseElapsed = fromMs;
@@ -198,9 +201,11 @@ export function mountPatches(root: HTMLElement, deps: { now?: () => Date } = {})
     dirty = true;
     board.render();
     const won = g.status === 'won';
+    play.move();
     if (won) {
       stopTimer();
       board.setInteractive(false);
+      play.end('won', elapsed());
     }
     // If another tab already solved the daily, the board now shows that game.
     if (persist()) return;
