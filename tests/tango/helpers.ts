@@ -1,3 +1,4 @@
+import { deduce } from '../../src/tango/solver';
 import type { Puzzle, Sym } from '../../src/tango/types';
 
 /** `S/M/.` string → cells (sun 1, moon 2, empty 0). */
@@ -5,7 +6,7 @@ export function sym(s: string): Sym[] {
   return [...s].map((ch) => (ch === 'S' ? 1 : ch === 'M' ? 2 : 0));
 }
 
-/** Build a puzzle from rows of `S/M/.` givens and `[a, b, '=' | 'x']` edge clues (sorted by cell pair). */
+/** Build a puzzle from rows of `S/M/.` givens and `[a, b, '=' | 'x']` edge clues (sorted by cell pair), with its solution filled in by deduction (empty if it stalls). */
 export function tz(rows: string[], edges: [a: number, b: number, kind: '=' | 'x'][] = []): Puzzle {
   const puzzle: Puzzle = {
     size: rows.length,
@@ -15,6 +16,7 @@ export function tz(rows: string[], edges: [a: number, b: number, kind: '=' | 'x'
       .sort((x, y) => x.a - y.a || x.b - y.b),
     solution: [],
   };
+  puzzle.solution = deduce(puzzle) ?? [];
   return puzzle;
 }
 
