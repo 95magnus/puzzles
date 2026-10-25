@@ -124,7 +124,7 @@ Every constraint lives inside one line: balance and no-three by definition, and 
 
 ## 7. Board (`board`)
 
-- **Cells:** square, light background, 1 px hairline grid, 2 px border around the board. Givens get a slightly tinted background and bolder glyphs.
+- **Cells:** square, on the shared board surface (`glass` panel, as Queens and Patches), 1 px hairline grid, 2 px border around the board. Givens get a slightly tinted background and bolder glyphs.
 - **Glyphs** (inline SVG, ~70 % of the cell): ☀ amber filled disc with short rays; ☾ slate-blue crescent. Shape and colour both differ, so it works without colour.
 - **Edge clues:** a small round badge (~36 % of a cell) centred on the shared border, showing `=` or `×`, above the cells and ignoring pointer events.
 - **Violations:** triple cells get a red inset outline; flagged lines a faint red tint across the row/column; broken edges turn their badge red. Red is `#ff5c7a`, as elsewhere.
