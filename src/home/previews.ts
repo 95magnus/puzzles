@@ -138,3 +138,28 @@ export function patchesPreview(): SVGSVGElement {
   });
   return svg;
 }
+
+/** 4×4 Tango board part-way through: suns, moons and two edge clues. */
+export function tangoPreview(): SVGSVGElement {
+  const svg = frame();
+  for (const i of [1, 2, 3]) {
+    svg.append(s('line', { x1: i * CELL, y1: 3, x2: i * CELL, y2: 61, stroke: 'rgba(255,255,255,.08)' }));
+    svg.append(s('line', { x1: 3, y1: i * CELL, x2: 61, y2: i * CELL, stroke: 'rgba(255,255,255,.08)' }));
+  }
+  // '.' cells are still empty.
+  const rows = ['S.M.', 'MS..', '..SM', '.MS.'];
+  rows.forEach((row, r) => [...row].forEach((ch, c) => {
+    const cx = at(c), cy = at(r);
+    if (ch === 'S') svg.append(s('circle', { cx, cy, r: 4, fill: '#ffb547' }));
+    if (ch === 'M') svg.append(s('path', { d: `M${cx + 1.5} ${cy - 5}a5.2 5.2 0 1 0 3.8 8.4A4.2 4.2 0 0 1 ${cx + 1.5} ${cy - 5}z`, fill: '#8fa7e6' }));
+  }));
+  // A '×' on the border between cells (0,0)–(1,0) and an '=' between (1,1)–(2,1).
+  const badges: [number, number, string][] = [[at(0), CELL, '×'], [at(1), 2 * CELL, '=']];
+  for (const [cx, cy, text] of badges) {
+    svg.append(s('circle', { cx, cy, r: 4.2, fill: '#3a3650', stroke: 'rgba(255,255,255,.3)', 'stroke-width': 0.8 }));
+    const t = s('text', { x: cx, y: cy + 2.6, 'text-anchor': 'middle', 'font-size': 7, 'font-weight': 700, fill: '#fff' });
+    t.textContent = text;
+    svg.append(t);
+  }
+  return svg;
+}

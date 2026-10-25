@@ -1,6 +1,6 @@
-import { loadDaily, loadMinesDaily, loadPatchesDaily, loadQueensDaily, loadTangleDaily } from '../core/storage';
+import { loadDaily, loadMinesDaily, loadPatchesDaily, loadQueensDaily, loadTangleDaily, loadTangoDaily } from '../core/storage';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview } from './previews';
+import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, tangoPreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -10,7 +10,7 @@ export type DailyStatus =
   | { kind: 'lost'; elapsedMs: number; attempt: number };
 
 export type PuzzleEntry = {
-  id: 'flow' | 'mines' | 'tangle' | 'queens' | 'patches';
+  id: 'flow' | 'mines' | 'tangle' | 'queens' | 'patches' | 'tango';
   name: string;
   tagline: string;
   href: string;
@@ -92,6 +92,19 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     preview: patchesPreview,
     dailyStatus(date) {
       const save = loadPatchesDaily(date);
+      if (!save) return { kind: 'new' };
+      return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
+    },
+  },
+  {
+    id: 'tango',
+    name: 'Tango',
+    tagline: 'Fill the grid with suns and moons.',
+    href: './tango.html',
+    doneWord: 'Solved',
+    preview: tangoPreview,
+    dailyStatus(date) {
+      const save = loadTangoDaily(date);
       if (!save) return { kind: 'new' };
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },
