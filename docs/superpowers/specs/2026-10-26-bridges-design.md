@@ -139,7 +139,7 @@ A range with `min > max` is a contradiction → return `null`. Returns the bridg
 ## 7. Input (`input`) and board (`board`)
 
 **Gestures** (pointer events, one active pointer):
-- **Tap** (pointer up within 8 px of pointer down, not on an island): the link whose inner segment is nearest the point, within 0.5 cell of the segment's centre line → `cycle`.
+- **Tap** (pointer up before it has moved 0.4 cell, not started on an island): the link whose inner segment is nearest the point, within 0.5 cell of the segment's centre line → `cycle`.
 - **Drag from an island:** once the pointer moves ≥ 0.4 cell, snap to the dominant axis direction; if the island has a link that way, show a dashed preview to the neighbour. Releasing with the preview shown → `cycle` that link. Releasing back on the island or where there is no link → nothing.
 - **Tap on an island:** nothing.
 - **Right-click** (`contextmenu`, default prevented) on a gap → `remove`.
