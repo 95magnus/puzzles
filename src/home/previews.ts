@@ -164,7 +164,7 @@ export function balancedPreview(): SVGSVGElement {
   return svg;
 }
 
-/** Bridges: four numbered islands joined by one single and one double bridge. */
+/** Bridges: four numbered islands joined by two single bridges and one double, all satisfied. */
 export function bridgesPreview(): SVGSVGElement {
   const svg = frame();
   // [x, y, number]: a square of islands; numbers match the bridges.
@@ -176,8 +176,8 @@ export function bridgesPreview(): SVGSVGElement {
   line(18, 16, 18, 48);
   line(16, 48, 48, 48); // single, bottom
   for (const [cx, cy, n] of islands) {
-    svg.append(s('circle', { cx, cy, r: 8, fill: '#2a2740', stroke: '#4fd6c3', 'stroke-width': 1.6 }));
-    const t = s('text', { x: cx, y: cy + 3.5, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#eef0f7' });
+    svg.append(s('circle', { cx, cy, r: 8, fill: '#4fd6c3' }));
+    const t = s('text', { x: cx, y: cy + 3.5, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#10202a' });
     t.textContent = String(n);
     svg.append(t);
   }
