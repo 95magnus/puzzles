@@ -10,6 +10,7 @@ import {
   type GameState,
 } from './game';
 import { cellFromPoint } from '../ui/grid';
+import { reducedMotion } from '../ui/fit';
 import { GLYPHS, PALETTE } from '../ui/palette';
 
 export type BoardHandle = {
@@ -34,14 +35,6 @@ const RIPPLE_MS = 250;
 const CELEBRATE_MAX_MS = 600;
 
 let instance = 0;
-
-function reducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
 
 function svgEl<K extends keyof SVGElementTagNameMap>(
   tag: K,
