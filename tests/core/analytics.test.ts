@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { afterEach, expect, test, vi } from 'vitest';
-import { COUNTED_ACTIONS, createPlayTracker, track } from '../../src/core/analytics';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { COUNTED_ACTIONS, createPlayTracker, resetErrorsForTest, track, trackErrors } from '../../src/core/analytics';
 
 const w = window as { umami?: { track: (event: string, data?: unknown) => void } };
 
@@ -68,4 +68,63 @@ test('a tracker without counted actions reports only moves', () => {
   play.action('undo');
   play.end('won', 0);
   expect(spy).toHaveBeenLastCalledWith('puzzle_end', { game: 'tangle', mode: 'practice', preset: 'small', result: 'won', seconds: 0, moves: 1 });
+});
+
+describe('trackErrors', () => {
+  let spy: ReturnType<typeof vi.fn<(event: string, data?: unknown) => void>>;
+  const fail = (message: string, filename = '', lineno = 0) =>
+    window.dispatchEvent(new ErrorEvent('error', { message, filename, lineno }));
+  const reject = (reason: unknown) => {
+    const ev = new Event('unhandledrejection');
+    Object.defineProperty(ev, 'reason', { value: reason });
+    window.dispatchEvent(ev);
+  };
+
+  beforeAll(() => trackErrors('home'));
+  beforeEach(() => {
+    resetErrorsForTest();
+    spy = vi.fn<(event: string, data?: unknown) => void>();
+    w.umami = { track: spy };
+  });
+
+  test('an uncaught error sends page, message and file:line', () => {
+    fail('Boom', 'https://puzzles.solhaug.dev/assets/app-3fa1.js', 42);
+    expect(spy).toHaveBeenCalledWith('error', { page: 'home', message: 'Boom', where: 'app-3fa1.js:42' });
+  });
+
+  test('cuts the message to 120 characters', () => {
+    fail(`  ${'x'.repeat(200)}  `);
+    expect(spy).toHaveBeenCalledWith('error', { page: 'home', message: 'x'.repeat(120), where: '' });
+  });
+
+  test('skips "Script error." and empty messages', () => {
+    fail('Script error.');
+    fail('   ');
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  test('sends each distinct message once and at most 3 per page', () => {
+    for (const m of ['a', 'a', 'b', 'c', 'd']) fail(m);
+    expect(spy.mock.calls.map(([, d]) => (d as { message: string }).message)).toEqual(['a', 'b', 'c']);
+  });
+
+  test('an unhandled rejection sends its reason', () => {
+    reject(new Error('nope'));
+    reject('str');
+    expect(spy.mock.calls).toEqual([
+      ['error', { page: 'home', message: 'nope', where: '' }],
+      ['error', { page: 'home', message: 'str', where: '' }],
+    ]);
+  });
+
+  test('calling trackErrors again adds no second listener', () => {
+    trackErrors('home');
+    fail('once');
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  test('a throwing tracker does not throw out of the listener', () => {
+    w.umami = { track: () => { throw new Error('blocked'); } };
+    expect(() => fail('Boom')).not.toThrow();
+  });
 });

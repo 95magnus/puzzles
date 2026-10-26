@@ -7,8 +7,9 @@ See [README.md](README.md) for what the project is, the scripts and the layout. 
 1. Add the page to `src/pages.ts`.
 2. Add an entry to `PUZZLES` in `src/home/puzzles.ts`.
 3. Create `<game>.html` at the project root. Copy the whole `<head>` from an existing page: description, Open Graph/Twitter tags, icons, manifest and the Umami script.
-4. Add the game's `<game>-howto-seen` flag to the `beforeEach` in `tests/e2e/home.spec.ts`, or its how-to modal blocks the test.
-5. Start with a design spec and plan in `docs/superpowers/specs/` and `docs/superpowers/plans/`, like the existing puzzles.
+4. Call `trackErrors('<game>')` in `src/games/<game>/main.ts` before mounting, so uncaught errors reach Umami.
+5. Add the game's `<game>-howto-seen` flag to the `beforeEach` in `tests/e2e/home.spec.ts`, or its how-to modal blocks the test.
+6. Start with a design spec and plan in `docs/superpowers/specs/` and `docs/superpowers/plans/`, like the existing puzzles.
 
 The page's `description`/`og:description` repeats the tagline from `puzzles.ts`. Change both together.
 

@@ -55,3 +55,33 @@ export function createPlayTracker(game: string, counted: readonly string[] = [])
     },
   };
 }
+
+const MAX_ERRORS = 3;
+let errorsInstalled = false;
+const errorsSent = new Set<string>();
+
+/**
+ * Reports uncaught errors and unhandled rejections as `error` events: each distinct message once,
+ * at most three per page. Cross-origin errors arrive as a bare "Script error." and are skipped.
+ */
+export function trackErrors(page: string): void {
+  if (errorsInstalled) return;
+  errorsInstalled = true;
+  const send = (raw: string, where: string) => {
+    const message = raw.trim().slice(0, 120);
+    if (!message || message === 'Script error.' || errorsSent.has(message) || errorsSent.size >= MAX_ERRORS) return;
+    errorsSent.add(message);
+    track('error', { page, message, where });
+  };
+  window.addEventListener('error', (e) => {
+    send(e.message ?? '', e.filename ? `${e.filename.split('/').pop()}:${e.lineno}` : '');
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    send(e.reason instanceof Error ? e.reason.message : String(e.reason), '');
+  });
+}
+
+/** Tests only. */
+export function resetErrorsForTest(): void {
+  errorsSent.clear();
+}
