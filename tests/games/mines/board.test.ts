@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { createBoard, type BoardHandle } from '../../../src/games/mines/board';
+import { createMinesBoard, type MinesBoardHandle } from '../../../src/games/mines/board';
 import { newGame, restoreGame, reveal, toggleFlag } from '../../../src/games/mines/game';
 import type { InputAction } from '../../../src/games/mines/input';
 import type { GameState } from '../../../src/games/mines/types';
@@ -11,7 +11,7 @@ const TWO = () => boardFrom(['.*...', '.....', '*....'], [0, 4]);
 const idx = (r: number, c: number) => r * 5 + c;
 
 let el: HTMLElement;
-let board: BoardHandle;
+let board: MinesBoardHandle;
 let actions: InputAction[];
 let hovered: number;
 
@@ -37,7 +37,7 @@ beforeEach(() => {
   actions = [];
   hovered = -1;
   document.elementFromPoint = () => (hovered >= 0 ? cell(hovered) : document.body);
-  board = createBoard(el, { onAction: (a) => actions.push(a) });
+  board = createMinesBoard(el, { onAction: (a) => actions.push(a) });
 });
 
 afterEach(() => {

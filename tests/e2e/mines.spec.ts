@@ -34,7 +34,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('win a fixed practice board with real clicks, flags and a chord', async ({ page }) => {
-  await page.goto('/minesweeper.html#/practice?preset=classic&seed=123');
+  await page.goto('/mines.html#/practice?preset=classic&seed=123');
   await expect(page.locator('.is-revealed')).toHaveCount(0);
   // The first click generates the board around itself.
   await leftClick(page, 240);
@@ -72,7 +72,7 @@ test('win a fixed practice board with real clicks, flags and a chord', async ({ 
 });
 
 test('hitting a mine shows Boom. centred over the board, with mines revealed', async ({ page }) => {
-  await page.goto('/minesweeper.html#/practice?preset=classic&seed=123');
+  await page.goto('/mines.html#/practice?preset=classic&seed=123');
   await leftClick(page, 240);
   const b = generateBoard(PRESETS.classic, mulberry32(123), 240);
   const mine = [...b.mines.keys()].find((i) => b.mines[i] === 1)!;
@@ -90,7 +90,7 @@ test('hitting a mine shows Boom. centred over the board, with mines revealed', a
 
 test('daily: reload mid-game restores progress; reload after loss reopens the card', async ({ page }) => {
   await page.clock.setFixedTime(new Date('2026-10-21T12:00:00Z'));
-  await page.goto('/minesweeper.html#/');
+  await page.goto('/mines.html#/');
   await expect(page.locator('.mines-sub')).toHaveText('#2 · Wed Oct 21 · 30×20 · 130 mines');
   const b = generateBoard(PRESETS.expert, mulberry32(minesDailySeed('2026-10-21')));
   const g = newGame(b);

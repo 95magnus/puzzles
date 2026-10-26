@@ -23,7 +23,7 @@ test('lists puzzles and opens each daily', async ({ page }) => {
 
   await page.getByRole('link', { name: 'puzzles — all games' }).click();
   await page.locator('.puzzle-card[data-id="mines"]').getByRole('link', { name: 'Play daily' }).click();
-  await expect(page).toHaveURL(/\/minesweeper\.html#\/$/);
+  await expect(page).toHaveURL(/\/mines.html#\/$/);
   await expect(page.locator('.mines-cell').first()).toBeVisible();
 
   await page.getByRole('link', { name: 'puzzles — all games' }).click();
@@ -91,7 +91,7 @@ test('shows saved daily status', async ({ page }) => {
   await expect(page.locator('.puzzle-card[data-id="bridges"] .status-pill')).toHaveText('Solved · 01:23');
 });
 
-for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
+for (const path of ['/', '/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
   test(`no horizontal scroll at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -106,7 +106,7 @@ for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/qu
   });
 }
 
-for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
+for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
   test(`home link stays a readable text link at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -122,7 +122,7 @@ for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.
 test('headers match across games', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const boxes = [];
-  for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/']) {
+  for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/']) {
     await page.goto(path);
     boxes.push((await page.locator('.shell-header').boundingBox())!);
   }

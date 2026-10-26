@@ -5,7 +5,7 @@
 export const PAGES = {
   home: 'index.html',
   flow: 'flow.html',
-  mines: 'minesweeper.html',
+  mines: 'mines.html',
   tangle: 'tangle.html',
   queens: 'queens.html',
   patches: 'patches.html',

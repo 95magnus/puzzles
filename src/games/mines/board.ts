@@ -3,7 +3,7 @@ import { initialInput, step, type InputAction, type InputEvent, type InputState,
 import type { GameState } from './types';
 import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../../ui/fit';
 
-export type BoardHandle = {
+export type MinesBoardHandle = {
   /** Full render: a new board or a restored game. */
   setGame(s: GameState): void;
   /** Diff-update the given cells; ripple outward from `origin` when given. */
@@ -20,7 +20,7 @@ const GAP = 2;
 const MIN_CELL = 20;
 const MAX_CELL = 32;
 
-export function createBoard(el: HTMLElement, opts: { onAction: (a: InputAction) => void }): BoardHandle {
+export function createMinesBoard(el: HTMLElement, opts: { onAction: (a: InputAction) => void }): MinesBoardHandle {
   const panel = document.createElement('div');
   panel.className = 'mines-panel glass';
   const grid = document.createElement('div');

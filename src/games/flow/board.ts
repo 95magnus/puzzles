@@ -13,7 +13,7 @@ import { cellFromPoint } from '../../ui/grid';
 import { reducedMotion } from '../../ui/fit';
 import { GLYPHS, PALETTE } from '../../ui/palette';
 
-export type BoardHandle = {
+export type FlowBoardHandle = {
   setState(s: GameState): void;
   setColorblind(on: boolean): void;
   setInteractive(on: boolean): void;
@@ -51,10 +51,10 @@ const cy = (c: Cell) => c.r * CELL + CELL / 2;
 const colorOf = (p: Puzzle, k: number) => PALETTE[p.pairs[k].color % PALETTE.length];
 const sig = (path: Cell[]) => path.map(x => `${x.r},${x.c}`).join(' ');
 
-export function createBoard(
+export function createFlowBoard(
   el: HTMLElement,
   opts: { onChange: (s: GameState, kind: ChangeKind) => void },
-): BoardHandle {
+): FlowBoardHandle {
   const id = `board-${++instance}`;
   const svg = svgEl('svg', {
     class: 'board-svg',

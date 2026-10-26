@@ -9,24 +9,24 @@ import { createPlayTracker } from '../../core/analytics';
 import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from './game';
 import { randomSeed, seedFromDate } from '../../core/rng';
 import { getFlag } from '../../core/storage';
-import { loadDaily, saveDaily } from './storage';
+import { loadFlowDaily, saveFlowDaily } from './storage';
 import type { Puzzle } from './types';
 import { latestOnly, requestPuzzle, STALE } from './client';
-import { createBoard } from './board';
+import { createFlowBoard } from './board';
 import { createHeader } from '../../ui/header';
 import { createHud } from '../../ui/hud';
-import { openHowto } from './howto';
+import { openFlowHowto } from './howto';
 import { isModalOpen } from '../../ui/modal';
 import { CLEAR_CONFIRM, confirmDialog } from '../../ui/confirm';
 import { createWinCard } from './winCard';
 
-export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
+export type FlowRoute = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
 
 const MIN_SIZE = 5;
 const MAX_SIZE = 9;
 const DEFAULT_PRACTICE_SIZE = 7;
 
-export function parseRoute(hash: string): Route {
+export function parseFlowRoute(hash: string): FlowRoute {
   const raw = hash.replace(/^#/, '').replace(/^\//, '');
   const q = raw.indexOf('?');
   const path = q < 0 ? raw : raw.slice(0, q);
@@ -35,7 +35,7 @@ export function parseRoute(hash: string): Route {
   const sizeN = Number.parseInt(params.get('size') ?? '', 10);
   const size = Number.isFinite(sizeN) ? Math.min(MAX_SIZE, Math.max(MIN_SIZE, sizeN)) : DEFAULT_PRACTICE_SIZE;
   const seedRaw = params.get('seed');
-  const route: Route = { mode: 'practice', size };
+  const route: FlowRoute = { mode: 'practice', size };
   if (seedRaw !== null && /^\d+$/.test(seedRaw)) route.seed = Number(seedRaw) >>> 0;
   return route;
 }
@@ -63,7 +63,7 @@ function h<K extends keyof HTMLElementTagNameMap>(
  * Mount the whole app into `root`. Returns an unmount function (handy for tests;
  * the production entry point ignores it).
  */
-export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): () => void {
+export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): () => void {
   const now = deps.now ?? (() => new Date());
   const generate = latestOnly(requestPuzzle);
 
@@ -107,11 +107,11 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   const hud = createHud(hudEl);
   const winCard = createWinCard(stage);
-  const board = createBoard(boardEl, { onChange });
+  const board = createFlowBoard(boardEl, { onChange });
   board.setColorblind(getFlag('colorblind'));
 
   // ---------- State ----------
-  let route: Route = parseRoute(location.hash);
+  let route: FlowRoute = parseFlowRoute(location.hash);
   let session: Session | null = null;
   let game: GameState | null = null;
   let loading = false;
@@ -122,7 +122,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   let loadToken = 0;
   let practiceSize = DEFAULT_PRACTICE_SIZE;
   /** The route most recently passed to load() (what the player is looking at). */
-  let current: Route | null = null;
+  let current: FlowRoute | null = null;
   const practiceHash = () => `#/practice?size=${practiceSize}`;
   function setPracticeSize(n: number) {
     practiceSize = n;
@@ -156,10 +156,10 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   function persist() {
     if (!game || session?.mode !== 'daily') return;
-    saveDaily({ date: session.date, paths: game.paths, elapsedMs: Math.round(elapsed()), solved });
+    saveFlowDaily({ date: session.date, paths: game.paths, elapsedMs: Math.round(elapsed()), solved });
   }
 
-  function renderChrome(r: Route) {
+  function renderChrome(r: FlowRoute) {
     const daily = r.mode === 'daily';
     tabDaily.classList.toggle('is-active', daily);
     tabPractice.classList.toggle('is-active', !daily);
@@ -178,7 +178,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   }
 
   // ---------- Flow ----------
-  async function load(r: Route) {
+  async function load(r: FlowRoute) {
     const token = ++loadToken;
     current = r;
     // Mark loading BEFORE locking the board: locking may end an in-flight drag, whose
@@ -233,7 +233,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
     let s = newGame(puzzle);
     if (date !== null) {
-      const save = loadDaily(date);
+      const save = loadFlowDaily(date);
       const restored = save ? restore(puzzle, save.paths) : null;
       if (save && restored) {
         s = restored;
@@ -340,14 +340,14 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   }
 
   /** Would loading `r` just regenerate what is already on screen (or loading)? */
-  function isCurrent(r: Route): boolean {
+  function isCurrent(r: FlowRoute): boolean {
     if (!current || r.mode !== current.mode) return false;
     if (r.mode === 'daily') return true;
     return current.mode === 'practice' && r.size === current.size && r.seed === undefined;
   }
 
   function onHashChange() {
-    const next = parseRoute(location.hash);
+    const next = parseFlowRoute(location.hash);
     if (isCurrent(next)) return;
     route = next;
     void load(route);
@@ -378,7 +378,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
 
   const howtoBtn = shellHeader.helpBtn!;
   function showHowto() {
-    openHowto({
+    openFlowHowto({
       colorblind: getFlag('colorblind'),
       onColorblindChange: on => board.setColorblind(on),
       returnFocus: howtoBtn,

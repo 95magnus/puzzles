@@ -9,7 +9,7 @@ vi.mock('../../../src/games/flow/client', async () => {
   return { ...actual, requestPuzzle: vi.fn((size: number, seed: number) => Promise.resolve(generate(size, rng(seed)))) };
 });
 
-import { mountApp } from '../../../src/games/flow/app';
+import { mountFlow } from '../../../src/games/flow/app';
 
 let root: HTMLElement;
 let unmount: (() => void) | void;
@@ -20,7 +20,7 @@ const settle = async () => {
   await new Promise(r => setTimeout(r, 0));
 };
 const mount = () => {
-  unmount = mountApp(root, { now: () => new Date('2026-10-21T10:00:00Z') });
+  unmount = mountFlow(root, { now: () => new Date('2026-10-21T10:00:00Z') });
 };
 
 beforeEach(() => {

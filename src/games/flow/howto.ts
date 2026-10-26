@@ -2,7 +2,7 @@ import { setFlag } from '../../core/storage';
 import { openModal } from '../../ui/modal';
 import { GLYPHS, PALETTE } from '../../ui/palette';
 
-export type HowtoOptions = {
+export type FlowHowtoOptions = {
   colorblind: boolean;
   onColorblindChange: (on: boolean) => void;
   /** Element to refocus on close (defaults to the header "?" button). */
@@ -72,7 +72,7 @@ const STEPS: { text: string; svg: () => SVGSVGElement }[] = [
   },
 ];
 
-export function openHowto(opts: HowtoOptions): void {
+export function openFlowHowto(opts: FlowHowtoOptions): void {
   const returnTo = opts.returnFocus ?? document.querySelector<HTMLElement>('[data-action="howto"]');
   setFlag('howto-seen', true);
 

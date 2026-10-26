@@ -2,7 +2,7 @@ import { mulberry32 } from '../../core/rng';
 import { RESTART_CONFIRM } from '../../ui/confirm';
 import { mountPuzzleApp, parsePresetRoute, type BoardCtx, type PresetRoute, type PuzzleGame } from '../../ui/puzzleApp';
 import { getMinesPreset, loadMinesDaily, saveMinesDaily, setMinesPreset, type MinesDailySave } from './storage';
-import { createBoard } from './board';
+import { createMinesBoard } from './board';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from './game';
 import { DAILY_PRESET, PRESETS, generateBoard, minesDailySeed } from './generate';
 import { openMinesHowto } from './howto';
@@ -12,12 +12,6 @@ export type MinesRoute = PresetRoute<PresetId>;
 
 /** A practice board is generated on its first reveal, around that cell; until then `board` is null. */
 type Spec = { spec: BoardSpec; seed: number; board: Board | null };
-
-/** mm:ss; minutes keep counting past 59. */
-export function formatClock(ms: number): string {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
 
 function safeCount(board: Board): number {
   return board.mines.length - board.mines.reduce((s, m) => s + m, 0);
@@ -72,7 +66,7 @@ const mines: PuzzleGame<PresetId, Spec, GameState, MinesDailySave> = {
     saved.attempt > attempt || (saved.attempt === attempt && saved.status !== 'playing' && g.status === 'playing'),
 
   mountBoard(host, ctx) {
-    const board = createBoard(host, {
+    const board = createMinesBoard(host, {
       onAction: (a) => {
         const g = ctx.game();
         if (!g) return;

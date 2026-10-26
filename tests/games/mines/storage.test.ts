@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getFlag, setFlag } from '../../../src/core/storage';
 import { loadMinesDaily, saveMinesDaily, getMinesPreset, setMinesPreset } from '../../../src/games/mines/storage';
-import { loadDaily } from '../../../src/games/flow/storage';
+import { loadFlowDaily } from '../../../src/games/flow/storage';
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
@@ -26,7 +26,7 @@ test('loadMinesDaily returns null for another date or no save', () => {
 });
 test('mines daily save is independent of the Flow daily save', () => {
   saveMinesDaily(mines);
-  expect(loadDaily('2026-10-21')).toBeNull();
+  expect(loadFlowDaily('2026-10-21')).toBeNull();
 });
 test('loadMinesDaily returns null for corrupt or malformed saves', () => {
   const put = (o: unknown) => localStorage.setItem('mines:daily', typeof o === 'string' ? o : JSON.stringify(o));

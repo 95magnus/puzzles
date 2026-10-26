@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { generateWithSolution } from '../../../src/games/flow/generate';
 import { mulberry32, seedFromDate } from '../../../src/core/rng';
-import { loadDaily, saveDaily } from '../../../src/games/flow/storage';
+import { loadFlowDaily, saveFlowDaily } from '../../../src/games/flow/storage';
 import { setFlag } from '../../../src/core/storage';
 import type { Cell } from '../../../src/games/flow/types';
 
@@ -16,7 +16,7 @@ vi.mock('../../../src/games/flow/client', async () => {
   };
 });
 
-import { mountApp, parseRoute } from '../../../src/games/flow/app';
+import { mountFlow, parseFlowRoute } from '../../../src/games/flow/app';
 import { createHud } from '../../../src/ui/hud';
 import { openModal } from '../../../src/ui/modal';
 import { createWinCard } from '../../../src/games/flow/winCard';
@@ -38,7 +38,7 @@ async function settle() {
 
 function mount(nowIso: string | (() => Date)) {
   const now = typeof nowIso === 'string' ? () => new Date(nowIso) : nowIso;
-  unmount = mountApp(root, { now });
+  unmount = mountFlow(root, { now });
 }
 
 /** Stub the board's geometry so pointer events map to cells (100px per cell). */
@@ -85,15 +85,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test('parseRoute', () => {
-  expect(parseRoute('')).toEqual({ mode: 'daily' });
-  expect(parseRoute('#/')).toEqual({ mode: 'daily' });
-  expect(parseRoute('#/practice')).toEqual({ mode: 'practice', size: 7 });
-  expect(parseRoute('#/practice?size=5&seed=123')).toEqual({ mode: 'practice', size: 5, seed: 123 });
-  expect(parseRoute('#/practice?size=42')).toEqual({ mode: 'practice', size: 9 });
-  expect(parseRoute('#/practice?size=1')).toEqual({ mode: 'practice', size: 5 });
-  expect(parseRoute('#/practice?size=abc&seed=x')).toEqual({ mode: 'practice', size: 7 });
-  expect(parseRoute('#/nope')).toEqual({ mode: 'daily' });
+test('parseFlowRoute', () => {
+  expect(parseFlowRoute('')).toEqual({ mode: 'daily' });
+  expect(parseFlowRoute('#/')).toEqual({ mode: 'daily' });
+  expect(parseFlowRoute('#/practice')).toEqual({ mode: 'practice', size: 7 });
+  expect(parseFlowRoute('#/practice?size=5&seed=123')).toEqual({ mode: 'practice', size: 5, seed: 123 });
+  expect(parseFlowRoute('#/practice?size=42')).toEqual({ mode: 'practice', size: 9 });
+  expect(parseFlowRoute('#/practice?size=1')).toEqual({ mode: 'practice', size: 5 });
+  expect(parseFlowRoute('#/practice?size=abc&seed=x')).toEqual({ mode: 'practice', size: 7 });
+  expect(parseFlowRoute('#/nope')).toEqual({ mode: 'daily' });
 });
 
 test('renders header with wordmark, Daily/Practice tabs and a howto hook', async () => {
@@ -126,7 +126,7 @@ test('restores saved daily progress for today and ignores yesterday', async () =
   const today = '2026-10-21';
   const sol = solutionFor(today);
   const paths = sol.map((p, i) => (i === 0 ? p : []));
-  saveDaily({ date: today, paths, elapsedMs: 65_000, solved: false });
+  saveFlowDaily({ date: today, paths, elapsedMs: 65_000, solved: false });
   mount(today + 'T10:00:00Z');
   await settle();
   expect(hudText()).toContain(`Flows 1/${sol.length}`);
@@ -134,7 +134,7 @@ test('restores saved daily progress for today and ignores yesterday', async () =
   unmount!();
   root.replaceChildren();
 
-  saveDaily({ date: '2026-10-20', paths: solutionFor('2026-10-20'), elapsedMs: 5000, solved: true });
+  saveFlowDaily({ date: '2026-10-20', paths: solutionFor('2026-10-20'), elapsedMs: 5000, solved: true });
   mount(today + 'T10:00:00Z');
   await settle();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
@@ -144,7 +144,7 @@ test('restores saved daily progress for today and ignores yesterday', async () =
 
 test('solved daily reopens in solved state without celebrating', async () => {
   const today = '2026-10-21';
-  saveDaily({ date: today, paths: solutionFor(today), elapsedMs: 83_000, solved: true });
+  saveFlowDaily({ date: today, paths: solutionFor(today), elapsedMs: 83_000, solved: true });
   mount(today + 'T10:00:00Z');
   await settle();
   expect(winCard().hidden).toBe(false);
@@ -163,11 +163,11 @@ test('solving the daily by hand persists, celebrates and shows the win card', as
   prepBoard(7);
   const sol = solutionFor(today);
   sol.slice(0, -1).forEach(draw);
-  expect(loadDaily(today)?.paths.filter(p => p.length).length).toBe(sol.length - 1);
+  expect(loadFlowDaily(today)?.paths.filter(p => p.length).length).toBe(sol.length - 1);
   expect(winCard().hidden).toBe(true);
   draw(sol[sol.length - 1]);
   await settle();
-  expect(loadDaily(today)?.solved).toBe(true);
+  expect(loadFlowDaily(today)?.solved).toBe(true);
   expect(winCard().hidden).toBe(false);
   expect($('.board')!.classList.contains('board--dim')).toBe(true);
 });
@@ -188,12 +188,12 @@ test('timer starts on first move, ticks, and is persisted on gesture end', async
   await vi.advanceTimersByTimeAsync(3000);
   expect(hudText()).toContain('00:03');
   fire('pointerup', sol[0][1]);
-  expect(loadDaily('2026-10-21')?.elapsedMs).toBe(3000);
+  expect(loadFlowDaily('2026-10-21')?.elapsedMs).toBe(3000);
 });
 
 test('day rollover while solved loads the next daily', async () => {
   vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] });
-  saveDaily({ date: '2026-10-20', paths: solutionFor('2026-10-20'), elapsedMs: 5000, solved: true });
+  saveFlowDaily({ date: '2026-10-20', paths: solutionFor('2026-10-20'), elapsedMs: 5000, solved: true });
   let t = Date.parse('2026-10-20T23:59:58Z');
   mount(() => new Date(t));
   await vi.advanceTimersByTimeAsync(0);
@@ -244,8 +244,8 @@ test('day rollover mid-puzzle keeps it playable and offers "New daily available"
   expect(pill.classList.contains('btn')).toBe(true);
   // Still playable; progress keeps saving under its own date.
   draw(sol[1]);
-  expect(loadDaily('2026-10-20')?.paths.filter(p => p.length).length).toBe(2);
-  expect(loadDaily('2026-10-21')).toBeNull();
+  expect(loadFlowDaily('2026-10-20')?.paths.filter(p => p.length).length).toBe(2);
+  expect(loadFlowDaily('2026-10-21')).toBeNull();
   t += 5000;
   await vi.advanceTimersByTimeAsync(5000);
   expect(subtitle()).toContain('#1 · Tue Oct 20'); // not auto-replaced later either
@@ -268,7 +268,7 @@ test('solving a daily after rollover shows a sane win card that stays put', asyn
   await vi.advanceTimersByTimeAsync(3000);
   sol.slice(1).forEach(draw);
   await vi.advanceTimersByTimeAsync(0);
-  expect(loadDaily('2026-10-20')?.solved).toBe(true);
+  expect(loadFlowDaily('2026-10-20')?.solved).toBe(true);
   expect(winCard().hidden).toBe(false);
   expect(winCard().textContent).toContain('Next daily in 00:00:00');
   t += 2000;
@@ -338,7 +338,7 @@ test('Clear always asks in a dialog; Ctrl+Z undoes', async () => {
   dialogBtn('confirm').click();
   expect(clearDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
-  expect(loadDaily('2026-10-21')?.paths.every(p => p.length === 0)).toBe(true);
+  expect(loadFlowDaily('2026-10-21')?.paths.every(p => p.length === 0)).toBe(true);
 
   sol.slice(0, 4).forEach(draw);
   $<HTMLButtonElement>('[data-action="clear"]')!.click();
@@ -366,7 +366,7 @@ test('restored daily: Clear confirms, and Undo brings the paths back', async () 
   const sol = solutionFor(today);
   expect(sol.length).toBeGreaterThan(4);
   const paths = sol.map((p, i) => (i < 4 ? p : []));
-  saveDaily({ date: today, paths, elapsedMs: 10_000, solved: false });
+  saveFlowDaily({ date: today, paths, elapsedMs: 10_000, solved: false });
   mount(today + 'T10:00:00Z');
   await settle();
   expect(hudText()).toContain(`Flows 4/${sol.length}`);
@@ -377,7 +377,7 @@ test('restored daily: Clear confirms, and Undo brings the paths back', async () 
   expect(undoBtn.disabled).toBe(false);
   undoBtn.click();
   expect(hudText()).toContain(`Flows 4/${sol.length}`);
-  expect(loadDaily(today)?.paths.filter(p => p.length).length).toBe(4);
+  expect(loadFlowDaily(today)?.paths.filter(p => p.length).length).toBe(4);
 });
 
 test('a solving gesture cut short by a route change never shows the old win over the new puzzle', async () => {
@@ -401,7 +401,7 @@ test('a solving gesture cut short by a route change never shows the old win over
   expect($('.board')!.classList.contains('board--dim')).toBe(false);
   expect($('.board')!.classList.contains('board--locked')).toBe(false);
   // The finished gesture was still saved against the old daily.
-  expect(loadDaily(today)?.paths.every(p => p.length > 0)).toBe(true);
+  expect(loadFlowDaily(today)?.paths.every(p => p.length > 0)).toBe(true);
 });
 
 test('Ctrl/Cmd+Z is ignored while the how-to modal is open', async () => {
@@ -471,7 +471,7 @@ test("daily win card's Play practice opens the last practice size", async () => 
   history.replaceState(null, '', '#/practice?size=9');
   mount(today + 'T10:00:00Z');
   await settle();
-  saveDaily({ date: today, paths: solutionFor(today), elapsedMs: 1000, solved: true });
+  saveFlowDaily({ date: today, paths: solutionFor(today), elapsedMs: 1000, solved: true });
   history.replaceState(null, '', '#/');
   window.dispatchEvent(new HashChangeEvent('hashchange'));
   await settle();

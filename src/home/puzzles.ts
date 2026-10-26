@@ -1,4 +1,4 @@
-import { loadDaily } from '../games/flow/storage';
+import { loadFlowDaily } from '../games/flow/storage';
 import { loadMinesDaily } from '../games/mines/storage';
 import { loadPatchesDaily } from '../games/patches/storage';
 import { loadQueensDaily } from '../games/queens/storage';
@@ -38,7 +38,7 @@ export const PUZZLES: readonly PuzzleEntry[] = ([
     doneWord: 'Solved',
     preview: flowPreview,
     dailyStatus(date) {
-      const save = loadDaily(date);
+      const save = loadFlowDaily(date);
       if (!save) return { kind: 'new' };
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },

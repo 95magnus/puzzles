@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { createBoard, type BoardHandle } from '../../../src/games/flow/board';
+import { createFlowBoard, type FlowBoardHandle } from '../../../src/games/flow/board';
 import { GLYPHS } from '../../../src/ui/palette';
 import { isPairComplete, newGame, restore, undo, type GameState } from '../../../src/games/flow/game';
 import { P5x5_solution, P5x5_unique } from './fixtures';
@@ -10,7 +10,7 @@ const RECT = { left: 0, top: 0, width: 500, height: 500, right: 500, bottom: 500
 const at = (r: number, c: number) => ({ clientX: c * 100 + 50, clientY: r * 100 + 50 });
 
 let el: HTMLElement;
-let board: BoardHandle;
+let board: FlowBoardHandle;
 let onChange: ReturnType<typeof vi.fn<(s: GameState, kind: 'move' | 'gesture-end') => void>>;
 let rafQueue: FrameRequestCallback[];
 
@@ -59,7 +59,7 @@ beforeEach(() => {
   el = document.createElement('div');
   document.body.appendChild(el);
   onChange = vi.fn();
-  board = createBoard(el, { onChange });
+  board = createFlowBoard(el, { onChange });
   board.setState(newGame(P5x5_unique));
   const s = svg();
   s.getBoundingClientRect = () => RECT as DOMRect;

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { saveDaily } from '../../src/games/flow/storage';
+import { saveFlowDaily } from '../../src/games/flow/storage';
 import { mountHome } from '../../src/home/home';
 import { PUZZLES } from '../../src/home/puzzles';
 
@@ -46,7 +46,7 @@ test('intro shows daily number and date', () => {
 
 test('storage event re-renders pills', () => {
   unmount = mountHome(root, { now: () => new Date('2026-10-21T10:00:00Z') });
-  saveDaily({ date: '2026-10-21', paths: [], elapsedMs: 83_000, solved: true });
+  saveFlowDaily({ date: '2026-10-21', paths: [], elapsedMs: 83_000, solved: true });
   window.dispatchEvent(new StorageEvent('storage'));
   expect(pill('flow').dataset.status).toBe('done');
   expect(pill('flow').textContent).toBe('Solved · 01:23');
@@ -54,7 +54,7 @@ test('storage event re-renders pills', () => {
 
 test('becoming visible re-renders pills', () => {
   unmount = mountHome(root, { now: () => new Date('2026-10-21T10:00:00Z') });
-  saveDaily({ date: '2026-10-21', paths: [], elapsedMs: 1_000, solved: false });
+  saveFlowDaily({ date: '2026-10-21', paths: [], elapsedMs: 1_000, solved: false });
   document.dispatchEvent(new Event('visibilitychange'));
   expect(pill('flow').dataset.status).toBe('playing');
 });
@@ -62,7 +62,7 @@ test('becoming visible re-renders pills', () => {
 test('rolls over at UTC midnight', () => {
   vi.useFakeTimers();
   let t = new Date('2026-10-21T23:59:59.500Z').getTime();
-  saveDaily({ date: '2026-10-21', paths: [], elapsedMs: 83_000, solved: true });
+  saveFlowDaily({ date: '2026-10-21', paths: [], elapsedMs: 83_000, solved: true });
   unmount = mountHome(root, { now: () => new Date(t) });
   expect(text('.home-intro')).toBe('Daily #2 · Wed Oct 21');
   expect(pill('flow').dataset.status).toBe('done');

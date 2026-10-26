@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test } from 'vitest';
-import { saveDaily } from '../../src/games/flow/storage';
+import { saveFlowDaily } from '../../src/games/flow/storage';
 import { saveMinesDaily } from '../../src/games/mines/storage';
 import { savePatchesDaily } from '../../src/games/patches/storage';
 import { saveQueensDaily } from '../../src/games/queens/storage';
@@ -37,7 +37,7 @@ test('every page in src/pages.ts but the dashboard has an entry', () => {
 test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced then Bridges with their pages', () => {
   expect(PUZZLES.map(p => [p.id, p.name, p.href])).toEqual([
     ['flow', 'Flow', './flow.html'],
-    ['mines', 'Mines', './minesweeper.html'],
+    ['mines', 'Mines', './mines.html'],
     ['tangle', 'Tangle', './tangle.html'],
     ['queens', 'Queens', './queens.html'],
     ['patches', 'Patches', './patches.html'],
@@ -59,13 +59,13 @@ test('Flow: no save is Not started', () => {
 });
 
 test('Flow: unsolved save is In progress with its time', () => {
-  saveDaily({ date: DATE, paths: [], elapsedMs: 42_000, solved: false });
+  saveFlowDaily({ date: DATE, paths: [], elapsedMs: 42_000, solved: false });
   expect(flow.dailyStatus(DATE).kind).toBe('playing');
   expect(label(flow)).toBe('In progress · 00:42');
 });
 
 test('Flow: solved save is Solved with its time', () => {
-  saveDaily({ date: DATE, paths: [], elapsedMs: 83_000, solved: true });
+  saveFlowDaily({ date: DATE, paths: [], elapsedMs: 83_000, solved: true });
   expect(flow.dailyStatus(DATE).kind).toBe('done');
   expect(label(flow)).toBe('Solved · 01:23');
 });
@@ -151,7 +151,7 @@ test.each([
 });
 
 test("yesterday's saves read as Not started", () => {
-  saveDaily({ date: '2026-10-20', paths: [], elapsedMs: 83_000, solved: true });
+  saveFlowDaily({ date: '2026-10-20', paths: [], elapsedMs: 83_000, solved: true });
   saveMinesDaily({ date: '2026-10-20', cells: '', elapsedMs: 1, status: 'won', attempt: 1 });
   expect(label(flow)).toBe('Not started');
   expect(label(mines)).toBe('Not started');
