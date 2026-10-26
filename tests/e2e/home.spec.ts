@@ -8,6 +8,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('flow:flag:queens-howto-seen', '1');
     localStorage.setItem('flow:flag:patches-howto-seen', '1');
     localStorage.setItem('flow:flag:balanced-howto-seen', '1');
+    localStorage.setItem('flow:flag:bridges-howto-seen', '1');
   });
 });
 
@@ -44,6 +45,11 @@ test('lists puzzles and opens each daily', async ({ page }) => {
   await page.locator('.puzzle-card[data-id="balanced"]').getByRole('link', { name: 'Play daily' }).click();
   await expect(page).toHaveURL(/\/balanced\.html#\/$/);
   await expect(page.locator('.balanced-cell').first()).toBeVisible();
+
+  await page.getByRole('link', { name: 'puzzles — all games' }).click();
+  await page.locator('.puzzle-card[data-id="bridges"]').getByRole('link', { name: 'Play daily' }).click();
+  await expect(page).toHaveURL(/\/bridges\.html#\/$/);
+  await expect(page.locator('svg.bridges-svg')).toBeVisible();
 });
 
 test('shows saved daily status', async ({ page }) => {
@@ -70,6 +76,10 @@ test('shows saved daily status', async ({ page }) => {
       'balanced:daily',
       JSON.stringify({ v: 1, date, cells: '', elapsedMs: 83_000, solved: true }),
     );
+    localStorage.setItem(
+      'bridges:daily',
+      JSON.stringify({ v: 1, date, links: '', elapsedMs: 83_000, solved: true }),
+    );
   });
   await page.goto('/');
   await expect(page.locator('.puzzle-card[data-id="flow"] .status-pill')).toHaveText('Solved · 01:23');
@@ -78,9 +88,10 @@ test('shows saved daily status', async ({ page }) => {
   await expect(page.locator('.puzzle-card[data-id="queens"] .status-pill')).toHaveText('Solved · 01:23');
   await expect(page.locator('.puzzle-card[data-id="patches"] .status-pill')).toHaveText('Solved · 01:23');
   await expect(page.locator('.puzzle-card[data-id="balanced"] .status-pill')).toHaveText('Solved · 01:23');
+  await expect(page.locator('.puzzle-card[data-id="bridges"] .status-pill')).toHaveText('Solved · 01:23');
 });
 
-for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html']) {
+for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
   test(`no horizontal scroll at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -95,7 +106,7 @@ for (const path of ['/', '/flow.html', '/minesweeper.html', '/tangle.html', '/qu
   });
 }
 
-for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html']) {
+for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
   test(`home link stays a readable text link at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -111,12 +122,12 @@ for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.
 test('headers match across games', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const boxes = [];
-  for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/']) {
+  for (const path of ['/flow.html', '/minesweeper.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/']) {
     await page.goto(path);
     boxes.push((await page.locator('.shell-header').boundingBox())!);
   }
-  const [flow, mines, tangle, queens, patches, balanced, home] = boxes;
-  for (const other of [mines, tangle, queens, patches, balanced, home]) {
+  const [flow, mines, tangle, queens, patches, balanced, bridges, home] = boxes;
+  for (const other of [mines, tangle, queens, patches, balanced, bridges, home]) {
     expect(Math.abs(other.x - flow.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.width - flow.width)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.height - flow.height)).toBeLessThanOrEqual(1);
