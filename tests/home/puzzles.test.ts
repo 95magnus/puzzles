@@ -12,6 +12,7 @@ import type { Status as TangleStatus } from '../../src/tangle/types';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
 import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from '../../src/home/previews';
 import { countSolutions } from '../../src/queens/solver';
+import { PAGES } from '../../src/pages';
 
 const DATE = '2026-10-21';
 const flow = PUZZLES.find(p => p.id === 'flow')!;
@@ -28,6 +29,10 @@ const minesSave = (status: MinesStatus, attempt: number, elapsedMs: number) =>
   saveMinesDaily({ date: DATE, cells: 'hrf', elapsedMs, status, attempt });
 
 beforeEach(() => localStorage.clear());
+
+test('every page in src/pages.ts but the dashboard has an entry', () => {
+  expect(PUZZLES.map(p => p.id).sort()).toEqual(Object.keys(PAGES).filter(k => k !== 'home').sort());
+});
 
 test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced then Bridges with their pages', () => {
   expect(PUZZLES.map(p => [p.id, p.name, p.href])).toEqual([

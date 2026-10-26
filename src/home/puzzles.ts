@@ -5,6 +5,7 @@ import { loadQueensDaily } from '../queens/storage';
 import { loadTangleDaily } from '../tangle/storage';
 import { loadBalancedDaily } from '../balanced/storage';
 import { loadBridgesDaily } from '../bridges/storage';
+import { PAGES, type GameId } from '../pages';
 import { formatClock } from '../ui/hud';
 import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from './previews';
 
@@ -16,7 +17,7 @@ export type DailyStatus =
   | { kind: 'lost'; elapsedMs: number; attempt: number };
 
 export type PuzzleEntry = {
-  id: 'flow' | 'mines' | 'tangle' | 'queens' | 'patches' | 'balanced' | 'bridges';
+  id: GameId;
   name: string;
   tagline: string;
   href: string;
@@ -28,13 +29,12 @@ export type PuzzleEntry = {
   dailyStatus: (date: string) => DailyStatus;
 };
 
-/** Every puzzle on the site, in dashboard order. Adding a puzzle = adding an entry. */
-export const PUZZLES: readonly PuzzleEntry[] = [
+/** Every puzzle on the site, in dashboard order. Adding a puzzle = a page in src/pages.ts plus an entry here. */
+export const PUZZLES: readonly PuzzleEntry[] = ([
   {
     id: 'flow',
     name: 'Flow',
     tagline: 'Connect matching dots. Fill every cell.',
-    href: './flow.html',
     doneWord: 'Solved',
     preview: flowPreview,
     dailyStatus(date) {
@@ -47,7 +47,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'mines',
     name: 'Mines',
     tagline: 'Clear the board without hitting a mine.',
-    href: './minesweeper.html',
     doneWord: 'Cleared',
     preview: minesPreview,
     dailyStatus(date) {
@@ -63,7 +62,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'tangle',
     name: 'Tangle',
     tagline: "Tap arrows out of the knot. Don't crash.",
-    href: './tangle.html',
     doneWord: 'Cleared',
     lostWord: 'Out of lives',
     preview: tanglePreview,
@@ -80,7 +78,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'queens',
     name: 'Queens',
     tagline: 'One queen per row, column and colour.',
-    href: './queens.html',
     doneWord: 'Solved',
     preview: queensPreview,
     dailyStatus(date) {
@@ -93,7 +90,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'patches',
     name: 'Patches',
     tagline: 'Cut the grid into patches. One clue each.',
-    href: './patches.html',
     doneWord: 'Solved',
     preview: patchesPreview,
     dailyStatus(date) {
@@ -106,7 +102,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'balanced',
     name: 'Balanced',
     tagline: 'Fill the grid with dots and rings.',
-    href: './balanced.html',
     doneWord: 'Solved',
     preview: balancedPreview,
     dailyStatus(date) {
@@ -119,7 +114,6 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     id: 'bridges',
     name: 'Bridges',
     tagline: 'Connect every island. Match every number.',
-    href: './bridges.html',
     doneWord: 'Solved',
     preview: bridgesPreview,
     dailyStatus(date) {
@@ -128,7 +122,7 @@ export const PUZZLES: readonly PuzzleEntry[] = [
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },
   },
-];
+] satisfies Omit<PuzzleEntry, 'href'>[]).map((e) => ({ ...e, href: `./${PAGES[e.id]}` }));
 
 export function statusLabel(entry: PuzzleEntry, s: DailyStatus): string {
   const tries = 'attempt' in s && s.attempt !== undefined && s.attempt > 1 ? ` · attempt ${s.attempt}` : '';

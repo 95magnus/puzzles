@@ -8,6 +8,7 @@ import {
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, setFlag } from '../core/storage';
+import type { GameId } from '../pages';
 import { createHeader } from './header';
 import { confirmDialog, type ConfirmText } from './confirm';
 import { formatClock } from './hud';
@@ -59,7 +60,7 @@ export type Stat<G, Spec> = {
 
 export type PuzzleGame<P extends string, Spec, G extends { status: Status }, Save extends SaveBase> = {
   /** CSS prefix (`${id}-app`, `${id}-panel`, ...) and analytics id. */
-  id: string;
+  id: GameId;
   title: string;
   howtoFlag: FlagName;
   howto(anchor: HTMLElement): void;

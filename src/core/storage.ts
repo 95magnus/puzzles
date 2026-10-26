@@ -1,4 +1,5 @@
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen' | 'bridges-howto-seen';
+/** Flow's own flags keep their original names; every other game uses `<id>-howto-seen`. */
+type FlagName = 'howto-seen' | 'colorblind' | `${string}-howto-seen`;
 
 /**
  * Today's daily save under one localStorage key, stored as `{ v: 1, ...save }`. `parse` gets a
