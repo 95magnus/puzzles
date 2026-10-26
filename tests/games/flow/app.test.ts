@@ -582,3 +582,19 @@ test('analytics: undo and confirmed clear are counted, a cancelled clear is not'
   await settle();
   expect(events('puzzle_end')).toEqual([expect.objectContaining({ result: 'won', undo: 1, clear: 1 })]);
 });
+
+test('analytics: a tap that changes nothing is not a move', async () => {
+  setFlag('howto-seen', true);
+  const today = '2026-10-21';
+  const events = trackEvents();
+  mount(today + 'T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor(today);
+  const tap = () => { fire('pointerdown', sol[0][0]); fire('pointerup', sol[0][0]); };
+  tap(); // starts a one-cell path: a move
+  tap(); // leaves that path as it is: not a move
+  sol.forEach(draw);
+  await settle();
+  expect(events('puzzle_end')).toEqual([expect.objectContaining({ result: 'won', moves: sol.length + 1 })]);
+});

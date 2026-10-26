@@ -123,6 +123,17 @@ describe('trackErrors', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  test('an error before the tracker script loads is sent once it has', () => {
+    delete w.umami;
+    fail('Early');
+    expect(spy).not.toHaveBeenCalled();
+    w.umami = { track: spy };
+    window.dispatchEvent(new Event('load'));
+    expect(spy).toHaveBeenCalledWith('error', { page: 'home', message: 'Early', where: '' });
+    window.dispatchEvent(new Event('load'));
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
   test('a throwing tracker does not throw out of the listener', () => {
     w.umami = { track: () => { throw new Error('blocked'); } };
     expect(() => fail('Boom')).not.toThrow();

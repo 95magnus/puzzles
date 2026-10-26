@@ -291,10 +291,12 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
 
   function onChange(s: GameState, kind: 'move' | 'gesture-end') {
     if (!game || s.puzzle !== game.puzzle || solved) return;
+    const before = game.moves;
     game = s;
     if (!loading) {
       startClock();
-      if (kind === 'gesture-end') play.move(); // a whole drag is one move
+      // A whole drag is one move; a tap that left the board as it was is none.
+      if (kind === 'gesture-end' && s.moves !== before) play.move();
     }
     if (kind === 'gesture-end' && !loading && isSolved(s)) {
       void win(true);
