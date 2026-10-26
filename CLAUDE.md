@@ -22,6 +22,12 @@ The page's `description`/`og:description` repeats the tagline from `puzzles.ts`.
 - Reuse the shared helpers in `src/ui/` (`reducedMotion`, `modal`, `fit`, `grid`, `palette`, `puzzleApp`) instead of writing per-game copies.
 - After changing `public/favicon.svg`, run `npm run icons` and commit the regenerated PNGs.
 
+## Offline
+
+- `src/sw/` must not import from the rest of `src/`: the build fails if `sw.js` shares a chunk with the pages.
+- The service worker is cache-first, so `vite preview` on port 4173 shows the previous build on the first load after a rebuild. Hard refresh, or tick "Update on reload" in DevTools → Application.
+- E2E specs block service workers, except `tests/e2e/offline.spec.ts`.
+
 ## Testing
 
 - `npm run e2e` rebuilds into `dist/` and serves it on port 4173.

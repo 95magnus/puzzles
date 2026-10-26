@@ -16,7 +16,7 @@ Play at **[puzzles.solhaug.dev](https://puzzles.solhaug.dev)**.
 | **Balanced** | Fill the grid with ● and ○: equal counts per line, no three in a row, and `=` / `×` hints between cells. |
 | **Bridges** | Connect the islands with straight, non-crossing bridges so each matches its number and all join up. |
 
-Each game has a **?** button with the full rules and an animated demo. Progress and stats are saved in the browser's `localStorage`.
+Each game has a **?** button with the full rules and an animated demo. Progress and stats are saved in the browser's `localStorage`. After the first visit the site also works offline.
 
 ## Development
 
@@ -50,6 +50,8 @@ src/core/                 daily seed, RNG, storage, analytics
 src/ui/                   shared shell: header, modals, grid fitting, theme
 src/home/                 the dashboard
 src/games/<game>/         each puzzle: generator, solver, game state, board, how-to
+src/sw/                   service worker: precaches the built site for offline play
+build/offline.ts          Vite plugin that builds sw.js and lists the files to cache
 tests/                    unit tests mirroring src/, plus tests/e2e for Playwright
 docs/superpowers/         design specs and implementation plans per puzzle
 ```
