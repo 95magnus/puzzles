@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { generateWithSolution } from '../../src/core/generator';
+import { generateWithSolution } from '../../src/flow/generate';
 import { mulberry32, seedFromDate } from '../../src/core/rng';
 import { loadDaily, saveDaily, setFlag } from '../../src/core/storage';
-import type { Cell } from '../../src/core/types';
+import type { Cell } from '../../src/flow/types';
 
-vi.mock('../../src/gen/client', async () => {
-  const actual = await vi.importActual<typeof import('../../src/gen/client')>('../../src/gen/client');
-  const { generate } = await import('../../src/core/generator');
+vi.mock('../../src/flow/client', async () => {
+  const actual = await vi.importActual<typeof import('../../src/flow/client')>('../../src/flow/client');
+  const { generate } = await import('../../src/flow/generate');
   const { mulberry32: rng } = await import('../../src/core/rng');
   return {
     ...actual,
@@ -15,10 +15,10 @@ vi.mock('../../src/gen/client', async () => {
   };
 });
 
-import { mountApp, parseRoute } from '../../src/ui/app';
+import { mountApp, parseRoute } from '../../src/flow/app';
 import { createHud } from '../../src/ui/hud';
 import { openModal } from '../../src/ui/modal';
-import { createWinCard } from '../../src/ui/winCard';
+import { createWinCard } from '../../src/flow/winCard';
 
 let root: HTMLElement;
 let unmount: (() => void) | void;

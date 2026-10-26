@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
-import { countSolutions } from '../../src/core/solver';
-import type { Puzzle } from '../../src/core/types';
-import { P5x5_unique } from '../fixtures';
+import { countSolutions } from '../../src/flow/solver';
+import type { Puzzle } from '../../src/flow/types';
+import { P5x5_unique } from './fixtures';
 
 const P2x2_rows: Puzzle = {
   size: 2,

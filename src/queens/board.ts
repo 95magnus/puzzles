@@ -1,4 +1,4 @@
-import { cellFromPoint } from '../ui/board';
+import { cellFromPoint } from '../ui/grid';
 import { PALETTE } from '../ui/palette';
 import { conflicts } from './game';
 import { initialInput, step, type InputAction, type InputEvent, type InputState } from './input';

@@ -1,5 +1,5 @@
 import type { Cell, Pair, Puzzle } from './types';
-import { type Rng, shuffle } from './rng';
+import { type Rng, shuffle } from '../core/rng';
 import { countSolutions } from './solver';
 
 const MAX_PAIRS = 9; // palette size

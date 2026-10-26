@@ -1,4 +1,4 @@
-import type { Cell } from './types';
+import type { Cell } from '../flow/types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
 type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen' | 'bridges-howto-seen';

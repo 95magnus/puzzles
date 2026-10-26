@@ -1,4 +1,4 @@
-import type { Cell, Puzzle } from '../core/types';
+import type { Cell, Puzzle } from './types';
 import {
   clearPath,
   isPairComplete,
@@ -8,8 +8,9 @@ import {
   pointerUp,
   stats,
   type GameState,
-} from '../core/game';
-import { GLYPHS, PALETTE } from './palette';
+} from './game';
+import { cellFromPoint } from '../ui/grid';
+import { GLYPHS, PALETTE } from '../ui/palette';
 
 export type BoardHandle = {
   setState(s: GameState): void;
@@ -19,7 +20,6 @@ export type BoardHandle = {
   destroy(): void;
 };
 
-type Rect = { left: number; top: number; width: number; height: number };
 type ChangeKind = 'move' | 'gesture-end';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -34,15 +34,6 @@ const RIPPLE_MS = 250;
 const CELEBRATE_MAX_MS = 600;
 
 let instance = 0;
-
-/** Map a client point to a grid cell using the board's live bounding rect. */
-export function cellFromPoint(x: number, y: number, rect: Rect, size: number): Cell | null {
-  if (rect.width <= 0 || rect.height <= 0) return null;
-  const fx = (x - rect.left) / rect.width;
-  const fy = (y - rect.top) / rect.height;
-  if (fx < 0 || fy < 0 || fx >= 1 || fy >= 1) return null;
-  return { r: Math.min(size - 1, Math.floor(fy * size)), c: Math.min(size - 1, Math.floor(fx * size)) };
-}
 
 function reducedMotion(): boolean {
   try {

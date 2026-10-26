@@ -1,6 +1,6 @@
 import { test, expect, vi, afterEach } from 'vitest';
-import { requestPuzzle, latestOnly, STALE } from '../../src/gen/client';
-import { generate } from '../../src/core/generator';
+import { requestPuzzle, latestOnly, STALE } from '../../src/flow/client';
+import { generate } from '../../src/flow/generate';
 import { mulberry32 } from '../../src/core/rng';
 
 afterEach(() => vi.unstubAllGlobals());

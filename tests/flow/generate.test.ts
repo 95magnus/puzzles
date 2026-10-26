@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { generate, generateWithSolution, targetPairs } from '../../src/core/generator';
+import { generate, generateWithSolution, targetPairs } from '../../src/flow/generate';
 import { mulberry32, seedFromDate } from '../../src/core/rng';
-import { countSolutions } from '../../src/core/solver';
+import { countSolutions } from '../../src/flow/solver';
 
 const SIZES = [5, 6, 7, 8, 9];
 

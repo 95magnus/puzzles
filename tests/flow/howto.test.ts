@@ -2,14 +2,14 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getFlag } from '../../src/core/storage';
 
-vi.mock('../../src/gen/client', async () => {
-  const actual = await vi.importActual<typeof import('../../src/gen/client')>('../../src/gen/client');
-  const { generate } = await import('../../src/core/generator');
+vi.mock('../../src/flow/client', async () => {
+  const actual = await vi.importActual<typeof import('../../src/flow/client')>('../../src/flow/client');
+  const { generate } = await import('../../src/flow/generate');
   const { mulberry32: rng } = await import('../../src/core/rng');
   return { ...actual, requestPuzzle: vi.fn((size: number, seed: number) => Promise.resolve(generate(size, rng(seed)))) };
 });
 
-import { mountApp } from '../../src/ui/app';
+import { mountApp } from '../../src/flow/app';
 
 let root: HTMLElement;
 let unmount: (() => void) | void;

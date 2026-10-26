@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { generateWithSolution } from '../../src/core/generator';
+import { generateWithSolution } from '../../src/flow/generate';
 import { mulberry32, seedFromDate } from '../../src/core/rng';
-import type { Cell } from '../../src/core/types';
+import type { Cell } from '../../src/flow/types';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {

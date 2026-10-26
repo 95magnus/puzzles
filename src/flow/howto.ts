@@ -1,6 +1,6 @@
 import { setFlag } from '../core/storage';
-import { openModal } from './modal';
-import { GLYPHS, PALETTE } from './palette';
+import { openModal } from '../ui/modal';
+import { GLYPHS, PALETTE } from '../ui/palette';
 
 export type HowtoOptions = {
   colorblind: boolean;

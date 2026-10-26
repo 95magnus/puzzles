@@ -1,4 +1,4 @@
-import type { Cell, Puzzle } from '../src/core/types';
+import type { Cell, Puzzle } from '../../src/flow/types';
 
 const cells = (pts: [number, number][]): Cell[] => pts.map(([r, c]) => ({ r, c }));
 

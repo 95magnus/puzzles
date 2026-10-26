@@ -6,16 +6,16 @@ import {
   utcDateString,
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
-import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from '../core/game';
+import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from './game';
 import { randomSeed, seedFromDate } from '../core/rng';
 import { getFlag, loadDaily, saveDaily } from '../core/storage';
-import type { Puzzle } from '../core/types';
-import { latestOnly, requestPuzzle, STALE } from '../gen/client';
+import type { Puzzle } from './types';
+import { latestOnly, requestPuzzle, STALE } from './client';
 import { createBoard } from './board';
-import { createHeader } from './header';
-import { createHud } from './hud';
+import { createHeader } from '../ui/header';
+import { createHud } from '../ui/hud';
 import { openHowto } from './howto';
-import { isModalOpen } from './modal';
+import { isModalOpen } from '../ui/modal';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };

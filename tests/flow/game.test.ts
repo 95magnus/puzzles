@@ -13,9 +13,9 @@ import {
   stats,
   undo,
   type GameState,
-} from '../../src/core/game';
-import type { Cell, Puzzle } from '../../src/core/types';
-import { P5x5_solution, P5x5_unique } from '../fixtures';
+} from '../../src/flow/game';
+import type { Cell, Puzzle } from '../../src/flow/types';
+import { P5x5_solution, P5x5_unique } from './fixtures';
 
 const P = P5x5_unique;
 const c = (r: number, col: number): Cell => ({ r, c: col });

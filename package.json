@@ -11,7 +11,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "e2e": "playwright test",
-    "test:slow": "cross-env SLOW=1 vitest run tests/core/generator.test.ts"
+    "test:slow": "cross-env SLOW=1 vitest run tests/flow/generate.test.ts"
   },
   "keywords": [],
   "author": "",

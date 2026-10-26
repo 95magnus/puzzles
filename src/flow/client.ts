@@ -1,6 +1,6 @@
-import { generateWithSolution } from '../core/generator';
+import { generateWithSolution } from './generate';
 import { mulberry32 } from '../core/rng';
-import type { Puzzle } from '../core/types';
+import type { Puzzle } from './types';
 
 export const STALE: unique symbol = Symbol('stale');
 
@@ -31,7 +31,7 @@ function getWorker(): Worker | null {
   if (worker) return worker;
   try {
     if (typeof Worker === 'undefined') throw new Error('no Worker');
-    const w = new Worker(new URL('./generator.worker.ts', import.meta.url), { type: 'module' });
+    const w = new Worker(new URL('./generate.worker.ts', import.meta.url), { type: 'module' });
     w.onmessage = (e: MessageEvent<{ id: number; puzzle: Puzzle }>) => {
       const p = pending.get(e.data.id);
       if (!p) return;

@@ -1,4 +1,4 @@
-import { generateWithSolution } from '../core/generator';
+import { generateWithSolution } from './generate';
 import { mulberry32 } from '../core/rng';
 
 self.onmessage = (e: MessageEvent<{ id: number; size: number; seed: number }>) => {

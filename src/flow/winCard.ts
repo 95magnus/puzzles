@@ -1,5 +1,5 @@
 import { formatCountdown } from '../core/daily';
-import { formatClock } from './hud';
+import { formatClock } from '../ui/hud';
 
 export type WinCardOptions = {
   timeMs: number;
