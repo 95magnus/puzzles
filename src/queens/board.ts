@@ -3,6 +3,7 @@ import { PALETTE } from '../ui/palette';
 import { conflicts } from './game';
 import { initialInput, step, type InputAction, type InputEvent, type InputState } from './input';
 import type { GameState, Puzzle } from './types';
+import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../ui/fit';
 
 export type QueensBoardHandle = {
   /** Full render: a new board or a restored game. */
@@ -15,22 +16,10 @@ export type QueensBoardHandle = {
   destroy(): void;
 };
 
-/** Must match `.queens-panel` padding in queens.css. */
-const PANEL_PAD = 12;
-/** Vertical space for header, subtitle, HUD and panel padding. */
-const PAGE_CHROME = 200;
 const MIN_CELL = 32;
 const MAX_CELL = 56;
 const WAVE_STEP_MS = 40;
 const GLOW_MS = 360;
-
-function reducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
 
 /** True on each side where the neighbour is in another region or off the board. */
 export function regionEdges(p: Puzzle, cell: number): { t: boolean; r: boolean; b: boolean; l: boolean } {
@@ -106,10 +95,8 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
     const w = el.clientWidth;
     if (w <= 0) return;
     const n = game.puzzle.size;
-    const byWidth = (w - 2 * PANEL_PAD) / n;
-    const byHeight = (window.innerHeight - PAGE_CHROME) / n;
-    const size = Math.floor(Math.min(byWidth, byHeight));
-    grid.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
+    const size = fitCell(n, n, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL });
+    grid.style.setProperty('--cell', size + 'px');
   }
 
   function send(e: InputEvent): void {
@@ -158,9 +145,7 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
   grid.addEventListener('lostpointercapture', onCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onCancel);
-  window.addEventListener('resize', fit);
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
-  ro?.observe(el);
+  const stopFit = watchSize(el, fit);
 
   function clearGlow(): void {
     for (const t of glowTimers) clearTimeout(t);
@@ -232,8 +217,7 @@ export function createQueensBoard(el: HTMLElement, opts: { onAction: (a: InputAc
     destroy() {
       clearGlow();
       window.removeEventListener('blur', onCancel);
-      window.removeEventListener('resize', fit);
-      ro?.disconnect();
+      stopFit();
       el.textContent = '';
     },
   };

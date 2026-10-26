@@ -1,6 +1,7 @@
 import { neighbours } from './generate';
 import { initialInput, step, type InputAction, type InputEvent, type InputState, type Preview } from './input';
 import type { GameState } from './types';
+import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../ui/fit';
 
 export type BoardHandle = {
   /** Full render: a new board or a restored game. */
@@ -14,17 +15,10 @@ export type BoardHandle = {
 const LONG_PRESS_MS = 350;
 const RIPPLE_MAX_MS = 300;
 const RIPPLE_STEP_MS = 18;
-/** Must match `.mines-panel` padding and `.mines-grid` gap in mines.css. */
-const PANEL_PAD = 12;
+/** Must match `.mines-grid` gap in mines.css. */
 const GAP = 2;
-/** Vertical space for header, subtitle, HUD and panel padding, so Expert+ fits 1280×720. */
-const PAGE_CHROME = 200;
 const MIN_CELL = 20;
 const MAX_CELL = 32;
-
-function reducedMotion(): boolean {
-  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
 
 export function createBoard(el: HTMLElement, opts: { onAction: (a: InputAction) => void }): BoardHandle {
   const panel = document.createElement('div');
@@ -77,10 +71,9 @@ export function createBoard(el: HTMLElement, opts: { onAction: (a: InputAction) 
     const w = el.clientWidth;
     if (w <= 0) return;
     const { cols, rows } = game.board;
-    const byWidth = (w - 2 * PANEL_PAD - (cols - 1) * GAP) / cols;
-    const byHeight = (window.innerHeight - PAGE_CHROME - (rows - 1) * GAP) / rows;
-    const size = Math.floor(Math.min(byWidth, byHeight));
-    grid.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
+    // PAGE_CHROME leaves room for Expert+ to fit 1280×720.
+    const size = fitCell(cols, rows, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL, gap: GAP });
+    grid.style.setProperty('--cell', size + 'px');
   }
 
   function previewCells(p: Preview): Set<number> {
@@ -160,9 +153,7 @@ export function createBoard(el: HTMLElement, opts: { onAction: (a: InputAction) 
   grid.addEventListener('lostpointercapture', onCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onCancel);
-  window.addEventListener('resize', fit);
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
-  ro?.observe(el);
+  const stopFit = watchSize(el, fit);
 
   function resetInput(): void {
     clearLongPress();
@@ -225,8 +216,7 @@ export function createBoard(el: HTMLElement, opts: { onAction: (a: InputAction) 
     destroy() {
       clearLongPress();
       window.removeEventListener('blur', onCancel);
-      window.removeEventListener('resize', fit);
-      ro?.disconnect();
+      stopFit();
       el.textContent = '';
     },
   };

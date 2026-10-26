@@ -2,6 +2,7 @@ import { PALETTE } from '../ui/palette';
 import { checkRect, invalid } from './game';
 import { initialInput, step, type InputEvent, type InputState } from './input';
 import type { Clue, GameState, Rect, Shape } from './types';
+import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../ui/fit';
 
 export type PatchesBoardHandle = {
   /** Full render: a new board or a restored game. */
@@ -14,24 +15,12 @@ export type PatchesBoardHandle = {
   destroy(): void;
 };
 
-/** Must match `.patches-panel` padding in patches.css. */
-const PANEL_PAD = 12;
-/** Vertical space for header, subtitle, HUD and panel padding. */
-const PAGE_CHROME = 200;
 const MIN_CELL = 30;
 const MAX_CELL = 56;
 const WAVE_STEP_MS = 30;
 const GLOW_MS = 360;
 const NEUTRAL = '#8a8fa3';
 const NS = 'http://www.w3.org/2000/svg';
-
-function reducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
 
 /** Outline icon in a 24-unit box, drawn in the clue's colour; the shape alone says what the clue wants. */
 const ICON: Record<Shape, { x: number; y: number; w: number; h: number }> = {
@@ -151,10 +140,8 @@ export function createPatchesBoard(
     const w = el.clientWidth;
     if (w <= 0) return;
     const n = game.puzzle.size;
-    const byWidth = (w - 2 * PANEL_PAD) / n;
-    const byHeight = (window.innerHeight - PAGE_CHROME) / n;
-    const size = Math.floor(Math.min(byWidth, byHeight));
-    grid.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
+    const size = fitCell(n, n, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL });
+    grid.style.setProperty('--cell', size + 'px');
   }
 
   function send(e: InputEvent): void {
@@ -239,9 +226,7 @@ export function createPatchesBoard(
   grid.addEventListener('lostpointercapture', onPointerCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onCancel);
-  window.addEventListener('resize', fit);
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
-  ro?.observe(el);
+  const stopFit = watchSize(el, fit);
 
   function clearGlow(): void {
     for (const t of glowTimers) clearTimeout(t);
@@ -312,8 +297,7 @@ export function createPatchesBoard(
     destroy() {
       clearGlow();
       window.removeEventListener('blur', onCancel);
-      window.removeEventListener('resize', fit);
-      ro?.disconnect();
+      stopFit();
       el.textContent = '';
     },
   };

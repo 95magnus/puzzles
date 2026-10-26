@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { BUMP_COOLDOWN_MS, arrowDist, bodyAt, createTangleBoard, fitCell, pickArrow, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
+import { BUMP_COOLDOWN_MS, arrowDist, bodyAt, createTangleBoard, pickArrow, trackFor, type TangleBoardHandle } from '../../src/tangle/board';
 import { newGame, tap } from '../../src/tangle/game';
 import { PALETTE } from '../../src/ui/palette';
 import { lvl } from './helpers';
@@ -305,11 +305,4 @@ test('pointerup without a matching pointerdown is not a tap', () => {
   expect(taps).toEqual([]);
   tapAt(45, 15);
   expect(taps).toEqual([2]);
-});
-
-test('fitCell fits the smaller of width and height, clamped to [12, 28]', () => {
-  expect(fitCell(40, 40, 1200, 520)).toBe(13);
-  expect(fitCell(40, 40, 535, 2000)).toBe(13);
-  expect(fitCell(40, 40, 100, 100)).toBe(12);
-  expect(fitCell(10, 10, 5000, 5000)).toBe(28);
 });

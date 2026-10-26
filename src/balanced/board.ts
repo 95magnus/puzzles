@@ -1,6 +1,7 @@
 import { isGiven, violations } from './game';
 import { lineCells } from './lines';
 import type { GameState, Sym } from './types';
+import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../ui/fit';
 
 export type BalancedBoardHandle = {
   /** Full render: a new board or a restored game. */
@@ -13,24 +14,12 @@ export type BalancedBoardHandle = {
   destroy(): void;
 };
 
-/** Must match `.balanced-panel` padding in balanced.css. */
-const PANEL_PAD = 12;
-/** Vertical space for header, subtitle, HUD and panel padding. */
-const PAGE_CHROME = 200;
 const MIN_CELL = 30;
 const MAX_CELL = 56;
 const WAVE_STEP_MS = 20;
 const GLOW_MS = 360;
 const NS = 'http://www.w3.org/2000/svg';
 const NAMES = ['empty', 'dot', 'ring'] as const;
-
-function reducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
 
 function svgEl(tag: string, attrs: Record<string, string | number>): SVGElement {
   const e = document.createElementNS(NS, tag);
@@ -132,10 +121,8 @@ export function createBalancedBoard(
     const w = el.clientWidth;
     if (w <= 0) return;
     const n = game.puzzle.size;
-    const byWidth = (w - 2 * PANEL_PAD) / n;
-    const byHeight = (window.innerHeight - PAGE_CHROME) / n;
-    const size = Math.floor(Math.min(byWidth, byHeight));
-    grid.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
+    const size = fitCell(n, n, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL });
+    grid.style.setProperty('--cell', size + 'px');
   }
 
   /** The non-given cell under a mouse event, or null. */
@@ -161,9 +148,7 @@ export function createBalancedBoard(
 
   grid.addEventListener('click', onClick);
   grid.addEventListener('contextmenu', onContextMenu);
-  window.addEventListener('resize', fit);
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
-  ro?.observe(el);
+  const stopFit = watchSize(el, fit);
 
   function clearGlow(): void {
     for (const t of glowTimers) clearTimeout(t);
@@ -237,8 +222,7 @@ export function createBalancedBoard(
       clearGlow();
       grid.removeEventListener('click', onClick);
       grid.removeEventListener('contextmenu', onContextMenu);
-      window.removeEventListener('resize', fit);
-      ro?.disconnect();
+      stopFit();
       el.textContent = '';
     },
   };

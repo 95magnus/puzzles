@@ -1,6 +1,7 @@
 import { islandTotals, violations } from './game';
 import { initialInput, linkNear, step, type InputEvent, type InputState } from './input';
 import type { GameState, Puzzle } from './types';
+import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../ui/fit';
 
 export type BridgesBoardHandle = {
   /** Full render: a new board or a restored game. */
@@ -15,10 +16,6 @@ export type BridgesBoardHandle = {
   destroy(): void;
 };
 
-/** Must match `.bridges-panel` padding in bridges.css. */
-const PANEL_PAD = 12;
-/** Vertical space for header, subtitle, HUD and panel padding. */
-const PAGE_CHROME = 200;
 const MIN_CELL = 28;
 const MAX_CELL = 56;
 const ISLAND_R = 0.35;
@@ -28,14 +25,6 @@ const BLOCKED_MS = 300;
 const WAVE_STEP_MS = 40;
 const GLOW_MS = 360;
 const NS = 'http://www.w3.org/2000/svg';
-
-function reducedMotion(): boolean {
-  try {
-    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  } catch {
-    return false;
-  }
-}
 
 function svgEl(tag: string, attrs: Record<string, string | number> = {}): SVGElement {
   const e = document.createElementNS(NS, tag);
@@ -138,10 +127,8 @@ export function createBridgesBoard(
     const w = el.clientWidth;
     if (w <= 0) return;
     const n = game.puzzle.size;
-    const byWidth = (w - 2 * PANEL_PAD) / n;
-    const byHeight = (window.innerHeight - PAGE_CHROME) / n;
-    const size = Math.floor(Math.min(byWidth, byHeight));
-    panel.style.setProperty('--cell', Math.min(MAX_CELL, Math.max(MIN_CELL, size)) + 'px');
+    const size = fitCell(n, n, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL });
+    panel.style.setProperty('--cell', size + 'px');
   }
 
   /** The pointer in cell units; off-board points pass through unclamped. */
@@ -229,9 +216,7 @@ export function createBridgesBoard(
   svg.addEventListener('lostpointercapture', onPointerCancel);
   panel.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onCancel);
-  window.addEventListener('resize', fit);
-  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
-  ro?.observe(el);
+  const stopFit = watchSize(el, fit);
 
   function clearBlocked(): void {
     for (const t of blockTimers) clearTimeout(t);
@@ -351,8 +336,7 @@ export function createBridgesBoard(
       clearBlocked();
       clearGlow();
       window.removeEventListener('blur', onCancel);
-      window.removeEventListener('resize', fit);
-      ro?.disconnect();
+      stopFit();
       el.textContent = '';
     },
   };
