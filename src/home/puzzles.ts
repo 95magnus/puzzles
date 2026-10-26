@@ -1,4 +1,10 @@
-import { loadDaily, loadMinesDaily, loadPatchesDaily, loadQueensDaily, loadTangleDaily, loadBalancedDaily, loadBridgesDaily } from '../core/storage';
+import { loadDaily } from '../flow/storage';
+import { loadMinesDaily } from '../minesweeper/storage';
+import { loadPatchesDaily } from '../patches/storage';
+import { loadQueensDaily } from '../queens/storage';
+import { loadTangleDaily } from '../tangle/storage';
+import { loadBalancedDaily } from '../balanced/storage';
+import { loadBridgesDaily } from '../bridges/storage';
 import { formatClock } from '../ui/hud';
 import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from './previews';
 

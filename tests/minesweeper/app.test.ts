@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { mulberry32 } from '../../src/core/rng';
-import { saveMinesDaily, loadMinesDaily, setMinesPreset } from '../../src/core/storage';
+import { saveMinesDaily, loadMinesDaily, setMinesPreset } from '../../src/minesweeper/storage';
 import { mountMines, parseMinesRoute } from '../../src/minesweeper/app';
 import { encodeCells, newGame, reveal } from '../../src/minesweeper/game';
 import { PRESETS, generateBoard, minesDailySeed, neighbours } from '../../src/minesweeper/generate';

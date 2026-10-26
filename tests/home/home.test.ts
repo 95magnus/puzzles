@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { saveDaily } from '../../src/core/storage';
+import { saveDaily } from '../../src/flow/storage';
 import { mountHome } from '../../src/home/home';
 import { PUZZLES } from '../../src/home/puzzles';
 

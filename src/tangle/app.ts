@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getFlag, getTanglePreset, loadTangleDaily, saveTangleDaily, setFlag, setTanglePreset } from '../core/storage';
+import { getFlag, setFlag } from '../core/storage';
+import { getTanglePreset, loadTangleDaily, saveTangleDaily, setTanglePreset } from './storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createTangleBoard } from './board';

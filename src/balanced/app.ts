@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getFlag, getBalancedPreset, loadBalancedDaily, saveBalancedDaily, setFlag, setBalancedPreset } from '../core/storage';
+import { getFlag, setFlag } from '../core/storage';
+import { getBalancedPreset, loadBalancedDaily, saveBalancedDaily, setBalancedPreset } from './storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createBalancedBoard } from './board';

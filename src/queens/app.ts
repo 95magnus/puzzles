@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getFlag, getQueensPreset, loadQueensDaily, saveQueensDaily, setFlag, setQueensPreset } from '../core/storage';
+import { getFlag, setFlag } from '../core/storage';
+import { getQueensPreset, loadQueensDaily, saveQueensDaily, setQueensPreset } from './storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createQueensBoard } from './board';

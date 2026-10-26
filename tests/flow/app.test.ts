@@ -2,7 +2,8 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { generateWithSolution } from '../../src/flow/generate';
 import { mulberry32, seedFromDate } from '../../src/core/rng';
-import { loadDaily, saveDaily, setFlag } from '../../src/core/storage';
+import { loadDaily, saveDaily } from '../../src/flow/storage';
+import { setFlag } from '../../src/core/storage';
 import type { Cell } from '../../src/flow/types';
 
 vi.mock('../../src/flow/client', async () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { loadPatchesDaily, savePatchesDaily, setPatchesPreset } from '../../src/core/storage';
+import { loadPatchesDaily, savePatchesDaily, setPatchesPreset } from '../../src/patches/storage';
 import { mountPatches, parsePatchesRoute } from '../../src/patches/app';
 import { encode, newGame, place } from '../../src/patches/game';
 import { DAILY_PRESET, PRESETS, generatePuzzle, patchesDailySeed } from '../../src/patches/generate';

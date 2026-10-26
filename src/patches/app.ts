@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getFlag, getPatchesPreset, loadPatchesDaily, savePatchesDaily, setFlag, setPatchesPreset } from '../core/storage';
+import { getFlag, setFlag } from '../core/storage';
+import { getPatchesPreset, loadPatchesDaily, savePatchesDaily, setPatchesPreset } from './storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createPatchesBoard } from './board';

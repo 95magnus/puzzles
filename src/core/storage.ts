@@ -1,361 +1,53 @@
-import type { Cell } from '../flow/types';
-
-export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
 type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen' | 'bridges-howto-seen';
 
-const DAILY_KEY = 'flow:daily';
-
-function isCell(x: unknown): x is Cell {
-  const o = x as Cell | null;
-  return typeof o === 'object' && o !== null && Number.isInteger(o.r) && Number.isInteger(o.c);
+/**
+ * Today's daily save under one localStorage key, stored as `{ v: 1, ...save }`. `parse` gets a
+ * stored object already checked for v 1 and the asked date, and does the game's own shape check.
+ * Unavailable storage reads as no save, and saving to it does nothing.
+ */
+export function dailyStore<T extends { v: 1; date: string }>(key: string, parse: (o: T) => T | null) {
+  return {
+    load(date: string): T | null {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return null;
+        const o = JSON.parse(raw) as T | null;
+        if (typeof o !== 'object' || o === null) return null;
+        if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+        return parse(o);
+      } catch {
+        return null;
+      }
+    },
+    save(save: Omit<T, 'v'>): void {
+      try {
+        localStorage.setItem(key, JSON.stringify({ v: 1, ...save }));
+      } catch {
+        /* storage unavailable */
+      }
+    },
+  };
 }
 
-export function loadDaily(date: string): DailySave | null {
-  try {
-    const raw = localStorage.getItem(DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as DailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (!Array.isArray(o.paths) || !o.paths.every((p) => Array.isArray(p) && p.every(isCell))) return null;
-    if (typeof o.elapsedMs !== 'number' || typeof o.solved !== 'boolean') return null;
-    return { v: 1, date: o.date, paths: o.paths, elapsedMs: o.elapsedMs, solved: o.solved };
-  } catch {
-    return null;
-  }
-}
-
-export function saveDaily(save: Omit<DailySave, 'v'>): void {
-  try {
-    localStorage.setItem(DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type MinesStatus = 'playing' | 'won' | 'lost';
-export type MinesPreset = 'classic' | 'expert' | 'huge';
-/** `cells` is one char per cell: h(idden) / r(evealed) / f(lagged). The board itself is regenerated from the date. */
-export type MinesDailySave = {
-  v: 1;
-  date: string;
-  cells: string;
-  elapsedMs: number;
-  status: MinesStatus;
-  /** 1-based; saves from before retries existed read as 1. */
-  attempt: number;
-};
-
-const MINES_DAILY_KEY = 'mines:daily';
-const MINES_PRESET_KEY = 'mines:preset';
-const MINES_STATUSES: readonly string[] = ['playing', 'won', 'lost'];
-const MINES_PRESETS: readonly string[] = ['classic', 'expert', 'huge'];
-
-/** Shape check only; whether the cells fit today's board is `restoreGame`'s job. */
-export function loadMinesDaily(date: string): MinesDailySave | null {
-  try {
-    const raw = localStorage.getItem(MINES_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as MinesDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.cells !== 'string' || !/^[hrf]*$/.test(o.cells)) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (!MINES_STATUSES.includes(o.status)) return null;
-    const attempt = o.attempt ?? 1;
-    if (!Number.isInteger(attempt) || attempt < 1) return null;
-    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, status: o.status, attempt };
-  } catch {
-    return null;
-  }
-}
-
-export function saveMinesDaily(save: Omit<MinesDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(MINES_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getMinesPreset(): MinesPreset | null {
-  try {
-    const v = localStorage.getItem(MINES_PRESET_KEY);
-    return v !== null && MINES_PRESETS.includes(v) ? (v as MinesPreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setMinesPreset(id: MinesPreset): void {
-  try {
-    localStorage.setItem(MINES_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type TangleStatus = 'playing' | 'won' | 'lost';
-export type TanglePreset = 'medium' | 'hard' | 'huge';
-/** `removed` is one char per arrow: 1 (still on the board, alive) / 0 (removed). The level itself is regenerated from the date. */
-export type TangleDailySave = {
-  v: 1;
-  date: string;
-  removed: string;
-  lives: number;
-  elapsedMs: number;
-  status: TangleStatus;
-  /** 1-based. */
-  attempt: number;
-};
-
-const TANGLE_DAILY_KEY = 'tangle:daily';
-const TANGLE_PRESET_KEY = 'tangle:preset';
-const TANGLE_STATUSES: readonly string[] = ['playing', 'won', 'lost'];
-const TANGLE_PRESETS: readonly string[] = ['medium', 'hard', 'huge'];
-
-/** Shape check only; whether `removed` fits today's level is `restore`'s job. */
-export function loadTangleDaily(date: string): TangleDailySave | null {
-  try {
-    const raw = localStorage.getItem(TANGLE_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as TangleDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.removed !== 'string' || !/^[01]*$/.test(o.removed)) return null;
-    if (!Number.isInteger(o.lives) || o.lives < 0 || o.lives > 3) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (!TANGLE_STATUSES.includes(o.status)) return null;
-    if (!Number.isInteger(o.attempt) || o.attempt < 1) return null;
-    return { v: 1, date: o.date, removed: o.removed, lives: o.lives, elapsedMs: o.elapsedMs, status: o.status, attempt: o.attempt };
-  } catch {
-    return null;
-  }
-}
-
-export function saveTangleDaily(save: Omit<TangleDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(TANGLE_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getTanglePreset(): TanglePreset | null {
-  try {
-    const v = localStorage.getItem(TANGLE_PRESET_KEY);
-    return v !== null && TANGLE_PRESETS.includes(v) ? (v as TanglePreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setTanglePreset(id: TanglePreset): void {
-  try {
-    localStorage.setItem(TANGLE_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type QueensPreset = 'small' | 'medium' | 'large';
-/** `cells` is one char per cell: 0 empty, 1 cross, 2 queen. The puzzle itself is regenerated from the date. */
-export type QueensDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
-
-const QUEENS_DAILY_KEY = 'queens:daily';
-const QUEENS_PRESET_KEY = 'queens:preset';
-const QUEENS_PRESETS: readonly string[] = ['small', 'medium', 'large'];
-
-/** Shape check only; whether `cells` fits today's puzzle is `restore`'s job. */
-export function loadQueensDaily(date: string): QueensDailySave | null {
-  try {
-    const raw = localStorage.getItem(QUEENS_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as QueensDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.cells !== 'string' || !/^[012]*$/.test(o.cells)) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (typeof o.solved !== 'boolean') return null;
-    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, solved: o.solved };
-  } catch {
-    return null;
-  }
-}
-
-export function saveQueensDaily(save: Omit<QueensDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(QUEENS_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getQueensPreset(): QueensPreset | null {
-  try {
-    const v = localStorage.getItem(QUEENS_PRESET_KEY);
-    return v !== null && QUEENS_PRESETS.includes(v) ? (v as QueensPreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setQueensPreset(id: QueensPreset): void {
-  try {
-    localStorage.setItem(QUEENS_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type PatchesPreset = 'small' | 'medium' | 'large';
-/** `rects` is the game's encoding: `r,c,w,h` joined by `;` (empty when none). The puzzle itself is regenerated from the date. */
-export type PatchesDailySave = { v: 1; date: string; rects: string; elapsedMs: number; solved: boolean };
-
-const PATCHES_DAILY_KEY = 'patches:daily';
-const PATCHES_PRESET_KEY = 'patches:preset';
-const PATCHES_PRESETS: readonly string[] = ['small', 'medium', 'large'];
-
-/** Shape check only; whether `rects` fits today's puzzle is `restore`'s job. */
-export function loadPatchesDaily(date: string): PatchesDailySave | null {
-  try {
-    const raw = localStorage.getItem(PATCHES_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as PatchesDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.rects !== 'string' || !/^[0-9,;]*$/.test(o.rects)) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (typeof o.solved !== 'boolean') return null;
-    return { v: 1, date: o.date, rects: o.rects, elapsedMs: o.elapsedMs, solved: o.solved };
-  } catch {
-    return null;
-  }
-}
-
-export function savePatchesDaily(save: Omit<PatchesDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(PATCHES_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getPatchesPreset(): PatchesPreset | null {
-  try {
-    const v = localStorage.getItem(PATCHES_PRESET_KEY);
-    return v !== null && PATCHES_PRESETS.includes(v) ? (v as PatchesPreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setPatchesPreset(id: PatchesPreset): void {
-  try {
-    localStorage.setItem(PATCHES_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type BalancedPreset = 'small' | 'medium' | 'large';
-/** `cells` is one char per cell: 0 empty, 1 sun, 2 moon. The puzzle itself is regenerated from the date. */
-export type BalancedDailySave = { v: 1; date: string; cells: string; elapsedMs: number; solved: boolean };
-
-const BALANCED_DAILY_KEY = 'balanced:daily';
-const BALANCED_PRESET_KEY = 'balanced:preset';
-const BALANCED_PRESETS: readonly string[] = ['small', 'medium', 'large'];
-
-/** Shape check only; whether `cells` fits today's puzzle is `restore`'s job. */
-export function loadBalancedDaily(date: string): BalancedDailySave | null {
-  try {
-    const raw = localStorage.getItem(BALANCED_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as BalancedDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.cells !== 'string' || !/^[012]*$/.test(o.cells)) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (typeof o.solved !== 'boolean') return null;
-    return { v: 1, date: o.date, cells: o.cells, elapsedMs: o.elapsedMs, solved: o.solved };
-  } catch {
-    return null;
-  }
-}
-
-export function saveBalancedDaily(save: Omit<BalancedDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(BALANCED_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getBalancedPreset(): BalancedPreset | null {
-  try {
-    const v = localStorage.getItem(BALANCED_PRESET_KEY);
-    return v !== null && BALANCED_PRESETS.includes(v) ? (v as BalancedPreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setBalancedPreset(id: BalancedPreset): void {
-  try {
-    localStorage.setItem(BALANCED_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export type BridgesPreset = 'small' | 'medium' | 'large';
-/** `links` is one char per candidate link: 0 none, 1 single, 2 double. The puzzle itself is regenerated from the date. */
-export type BridgesDailySave = { v: 1; date: string; links: string; elapsedMs: number; solved: boolean };
-
-const BRIDGES_DAILY_KEY = 'bridges:daily';
-const BRIDGES_PRESET_KEY = 'bridges:preset';
-const BRIDGES_PRESETS: readonly string[] = ['small', 'medium', 'large'];
-
-/** Shape check only; whether `links` fits today's puzzle is `restore`'s job. */
-export function loadBridgesDaily(date: string): BridgesDailySave | null {
-  try {
-    const raw = localStorage.getItem(BRIDGES_DAILY_KEY);
-    if (raw === null) return null;
-    const o = JSON.parse(raw) as BridgesDailySave | null;
-    if (typeof o !== 'object' || o === null) return null;
-    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
-    if (typeof o.links !== 'string' || !/^[012]*$/.test(o.links)) return null;
-    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
-    if (typeof o.solved !== 'boolean') return null;
-    return { v: 1, date: o.date, links: o.links, elapsedMs: o.elapsedMs, solved: o.solved };
-  } catch {
-    return null;
-  }
-}
-
-export function saveBridgesDaily(save: Omit<BridgesDailySave, 'v'>): void {
-  try {
-    localStorage.setItem(BRIDGES_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
-  } catch {
-    /* storage unavailable */
-  }
-}
-
-export function getBridgesPreset(): BridgesPreset | null {
-  try {
-    const v = localStorage.getItem(BRIDGES_PRESET_KEY);
-    return v !== null && BRIDGES_PRESETS.includes(v) ? (v as BridgesPreset) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function setBridgesPreset(id: BridgesPreset): void {
-  try {
-    localStorage.setItem(BRIDGES_PRESET_KEY, id);
-  } catch {
-    /* storage unavailable */
-  }
+/** The last practice preset under one localStorage key; a value not in `ids` reads as none. */
+export function presetStore<P extends string>(key: string, ids: readonly P[]) {
+  return {
+    get(): P | null {
+      try {
+        const v = localStorage.getItem(key);
+        return v !== null && (ids as readonly string[]).includes(v) ? (v as P) : null;
+      } catch {
+        return null;
+      }
+    },
+    set(id: P): void {
+      try {
+        localStorage.setItem(key, id);
+      } catch {
+        /* storage unavailable */
+      }
+    },
+  };
 }
 
 export function getFlag(name: FlagName): boolean {

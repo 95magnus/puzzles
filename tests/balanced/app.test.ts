@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { loadBalancedDaily, saveBalancedDaily, setBalancedPreset } from '../../src/core/storage';
+import { loadBalancedDaily, saveBalancedDaily, setBalancedPreset } from '../../src/balanced/storage';
 import { mountBalanced, parseBalancedRoute } from '../../src/balanced/app';
 import { DAILY_PRESET, PRESETS, generatePuzzle, balancedDailySeed } from '../../src/balanced/generate';
 import type { Puzzle } from '../../src/balanced/types';

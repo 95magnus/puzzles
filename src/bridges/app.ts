@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
-import { getBridgesPreset, getFlag, loadBridgesDaily, saveBridgesDaily, setBridgesPreset, setFlag } from '../core/storage';
+import { getBridgesPreset, loadBridgesDaily, saveBridgesDaily, setBridgesPreset } from './storage';
+import { getFlag, setFlag } from '../core/storage';
 import { createHeader } from '../ui/header';
 import { formatClock } from '../ui/hud';
 import { createBridgesBoard } from './board';

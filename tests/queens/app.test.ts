@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { loadQueensDaily, saveQueensDaily, setQueensPreset } from '../../src/core/storage';
+import { loadQueensDaily, saveQueensDaily, setQueensPreset } from '../../src/queens/storage';
 import { mountQueens, parseQueensRoute } from '../../src/queens/app';
 import { DAILY_PRESET, PRESETS, generatePuzzle, queensDailySeed } from '../../src/queens/generate';
 import type { Puzzle } from '../../src/queens/types';

@@ -8,7 +8,8 @@ import {
 import { createPlayTracker } from '../core/analytics';
 import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from './game';
 import { randomSeed, seedFromDate } from '../core/rng';
-import { getFlag, loadDaily, saveDaily } from '../core/storage';
+import { getFlag } from '../core/storage';
+import { loadDaily, saveDaily } from './storage';
 import type { Puzzle } from './types';
 import { latestOnly, requestPuzzle, STALE } from './client';
 import { createBoard } from './board';

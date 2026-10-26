@@ -1,6 +1,14 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test } from 'vitest';
-import { saveDaily, saveMinesDaily, savePatchesDaily, saveQueensDaily, saveTangleDaily, saveBalancedDaily, saveBridgesDaily, type MinesStatus, type TangleStatus } from '../../src/core/storage';
+import { saveDaily } from '../../src/flow/storage';
+import { saveMinesDaily } from '../../src/minesweeper/storage';
+import { savePatchesDaily } from '../../src/patches/storage';
+import { saveQueensDaily } from '../../src/queens/storage';
+import { saveTangleDaily } from '../../src/tangle/storage';
+import { saveBalancedDaily } from '../../src/balanced/storage';
+import { saveBridgesDaily } from '../../src/bridges/storage';
+import type { Status as MinesStatus } from '../../src/minesweeper/types';
+import type { Status as TangleStatus } from '../../src/tangle/types';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
 import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from '../../src/home/previews';
 import { countSolutions } from '../../src/queens/solver';

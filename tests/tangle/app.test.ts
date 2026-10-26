@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { loadTangleDaily, saveTangleDaily, setTanglePreset } from '../../src/core/storage';
+import { loadTangleDaily, saveTangleDaily, setTanglePreset } from '../../src/tangle/storage';
 import { mountTangle, parseTangleRoute } from '../../src/tangle/app';
 import { BUMP_COOLDOWN_MS } from '../../src/tangle/board';
 import { buildOcc, blockersOf, analyze } from '../../src/tangle/solver';

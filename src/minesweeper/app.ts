@@ -7,7 +7,8 @@ import {
 } from '../core/daily';
 import { createPlayTracker } from '../core/analytics';
 import { mulberry32, randomSeed } from '../core/rng';
-import { getFlag, getMinesPreset, loadMinesDaily, saveMinesDaily, setFlag, setMinesPreset } from '../core/storage';
+import { getFlag, setFlag } from '../core/storage';
+import { getMinesPreset, loadMinesDaily, saveMinesDaily, setMinesPreset } from './storage';
 import { createHeader } from '../ui/header';
 import { createBoard } from './board';
 import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from './game';

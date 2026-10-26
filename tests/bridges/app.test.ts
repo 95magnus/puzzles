@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { loadBridgesDaily, saveBridgesDaily, setBridgesPreset } from '../../src/core/storage';
+import { loadBridgesDaily, saveBridgesDaily, setBridgesPreset } from '../../src/bridges/storage';
 import { mountBridges, parseBridgesRoute } from '../../src/bridges/app';
 import { DAILY_PRESET, PRESETS, bridgesDailySeed, generatePuzzle } from '../../src/bridges/generate';
 import type { Puzzle } from '../../src/bridges/types';
