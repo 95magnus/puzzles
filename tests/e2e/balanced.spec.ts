@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DAILY_PRESET, PRESETS, generatePuzzle, balancedDailySeed } from '../../src/balanced/generate';
-import type { Puzzle, Sym } from '../../src/balanced/types';
+import { DAILY_PRESET, PRESETS, generatePuzzle, balancedDailySeed } from '../../src/games/balanced/generate';
+import type { Puzzle, Sym } from '../../src/games/balanced/types';
 
 const SIZE = PRESETS.small.size;
 const PRACTICE_URL = '/balanced.html#/practice?preset=small&seed=11';

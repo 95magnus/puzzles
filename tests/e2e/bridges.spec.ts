@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DAILY_PRESET, PRESETS, bridgesDailySeed, generatePuzzle } from '../../src/bridges/generate';
-import type { Puzzle } from '../../src/bridges/types';
+import { DAILY_PRESET, PRESETS, bridgesDailySeed, generatePuzzle } from '../../src/games/bridges/generate';
+import type { Puzzle } from '../../src/games/bridges/types';
 
 const SIZE = PRESETS.small.size;
 const PRACTICE_URL = '/bridges.html#/practice?preset=small&seed=11';

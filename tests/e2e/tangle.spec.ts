@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DAILY_PRESET, PRESETS, generateLevel, tangleDailySeed } from '../../src/tangle/generate';
-import { analyze, blockersOf, buildOcc } from '../../src/tangle/solver';
-import type { Level } from '../../src/tangle/types';
+import { DAILY_PRESET, PRESETS, generateLevel, tangleDailySeed } from '../../src/games/tangle/generate';
+import { analyze, blockersOf, buildOcc } from '../../src/games/tangle/solver';
+import type { Level } from '../../src/games/tangle/types';
 
 const DATE = '2026-10-21';
 

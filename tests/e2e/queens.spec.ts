@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { generatePuzzle } from '../../src/queens/generate';
+import { generatePuzzle } from '../../src/games/queens/generate';
 
 const SIZE = 7;
 const PRACTICE_URL = '/queens.html#/practice?preset=small&seed=11';

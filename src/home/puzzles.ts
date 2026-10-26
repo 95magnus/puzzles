@@ -1,10 +1,10 @@
-import { loadDaily } from '../flow/storage';
-import { loadMinesDaily } from '../mines/storage';
-import { loadPatchesDaily } from '../patches/storage';
-import { loadQueensDaily } from '../queens/storage';
-import { loadTangleDaily } from '../tangle/storage';
-import { loadBalancedDaily } from '../balanced/storage';
-import { loadBridgesDaily } from '../bridges/storage';
+import { loadDaily } from '../games/flow/storage';
+import { loadMinesDaily } from '../games/mines/storage';
+import { loadPatchesDaily } from '../games/patches/storage';
+import { loadQueensDaily } from '../games/queens/storage';
+import { loadTangleDaily } from '../games/tangle/storage';
+import { loadBalancedDaily } from '../games/balanced/storage';
+import { loadBridgesDaily } from '../games/bridges/storage';
 import { PAGES, type GameId } from '../pages';
 import { formatClock } from '../ui/hud';
 import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from './previews';

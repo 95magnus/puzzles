@@ -1,17 +1,17 @@
 // @vitest-environment jsdom
 import { beforeEach, expect, test } from 'vitest';
-import { saveDaily } from '../../src/flow/storage';
-import { saveMinesDaily } from '../../src/mines/storage';
-import { savePatchesDaily } from '../../src/patches/storage';
-import { saveQueensDaily } from '../../src/queens/storage';
-import { saveTangleDaily } from '../../src/tangle/storage';
-import { saveBalancedDaily } from '../../src/balanced/storage';
-import { saveBridgesDaily } from '../../src/bridges/storage';
-import type { Status as MinesStatus } from '../../src/mines/types';
-import type { Status as TangleStatus } from '../../src/tangle/types';
+import { saveDaily } from '../../src/games/flow/storage';
+import { saveMinesDaily } from '../../src/games/mines/storage';
+import { savePatchesDaily } from '../../src/games/patches/storage';
+import { saveQueensDaily } from '../../src/games/queens/storage';
+import { saveTangleDaily } from '../../src/games/tangle/storage';
+import { saveBalancedDaily } from '../../src/games/balanced/storage';
+import { saveBridgesDaily } from '../../src/games/bridges/storage';
+import type { Status as MinesStatus } from '../../src/games/mines/types';
+import type { Status as TangleStatus } from '../../src/games/tangle/types';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
 import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from '../../src/home/previews';
-import { countSolutions } from '../../src/queens/solver';
+import { countSolutions } from '../../src/games/queens/solver';
 import { PAGES } from '../../src/pages';
 
 const DATE = '2026-10-21';

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { DAILY_PRESET, PRESETS, generatePuzzle, patchesDailySeed } from '../../src/patches/generate';
-import type { Rect } from '../../src/patches/types';
+import { DAILY_PRESET, PRESETS, generatePuzzle, patchesDailySeed } from '../../src/games/patches/generate';
+import type { Rect } from '../../src/games/patches/types';
 
 const SIZE = PRESETS.small.size;
 const PRACTICE_URL = '/patches.html#/practice?preset=small&seed=11';

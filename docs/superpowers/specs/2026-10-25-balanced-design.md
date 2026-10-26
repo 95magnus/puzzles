@@ -1,6 +1,6 @@
 # Tango — Dot & Ring Binary Puzzle for the Puzzle Site: Design Spec
 
-> Balanced was called Tango while this was written; the shipped code is in `src/balanced/`.
+> Balanced was called Tango while this was written; the shipped code is in `src/games/balanced/`.
 
 **Date:** 2026-10-25
 **Status:** Draft for review
