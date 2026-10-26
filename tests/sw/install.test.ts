@@ -5,7 +5,7 @@ const scope = 'https://puzzles.solhaug.dev/';
 
 function fakeCache() {
   const stored = new Map<string, Response>();
-  return { stored, cache: { put: async (url: RequestInfo | URL, res: Response) => void stored.set(String(url), res) } };
+  return { stored, cache: { put: async (url: RequestInfo | URL, res: Response) => void stored.set(url instanceof Request ? url.url : url.toString(), res) } };
 }
 
 test('fetches with a version query that skips the HTTP cache, and stores under the clean URL', async () => {

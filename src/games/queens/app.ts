@@ -35,10 +35,10 @@ const queens: PuzzleGame<PresetId, Puzzle, GameState, QueensDailySave> = {
 
   mountBoard(host, ctx) {
     const board = createQueensBoard(host, {
-      onAction: async (a) => {
+      onAction: (a) => {
         const g = ctx.game();
         if (!g) return;
-        await changed(g, a.kind === 'tap' ? cycle(g, a.cell) : paint(g, a.cells, a.to, a.gesture));
+        void changed(g, a.kind === 'tap' ? cycle(g, a.cell) : paint(g, a.cells, a.to, a.gesture));
       },
     });
     async function changed(g: GameState, cells: number[]): Promise<void> {

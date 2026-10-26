@@ -262,7 +262,7 @@ test('celebrate resolves immediately under reduced motion', async () => {
   board.setState(withPaths(P5x5_solution));
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
   let done = false;
-  board.celebrate().then(() => (done = true));
+  void board.celebrate().then(() => (done = true));
   await Promise.resolve();
   await Promise.resolve();
   expect(done).toBe(true);

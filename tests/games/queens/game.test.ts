@@ -33,7 +33,7 @@ describe('queens game', () => {
     paint(s, [1], 1, 5);
     paint(s, [2, 3], 1, 5);
     expect(s.history).toHaveLength(1);
-    expect(undo(s).sort()).toEqual([1, 2, 3]);
+    expect(undo(s).sort((a, b) => a - b)).toEqual([1, 2, 3]);
     expect([1, 2, 3].map((i) => s.cells[i])).toEqual([0, 0, 0]);
   });
 
@@ -58,7 +58,7 @@ describe('queens game', () => {
   it('paint can erase marks', () => {
     const s = fresh();
     paint(s, [1, 2], 1, 1);
-    expect(paint(s, [1, 2], 0, 2).sort()).toEqual([1, 2]);
+    expect(paint(s, [1, 2], 0, 2).sort((a, b) => a - b)).toEqual([1, 2]);
     expect(s.cells[1]).toBe(0);
   });
 
@@ -87,19 +87,19 @@ describe('queens game', () => {
     queen(s, 0);
     expect(conflicts(s).size).toBe(0);
     queen(s, 2);
-    expect([...conflicts(s)].sort()).toEqual([0, 2]); // row
+    expect([...conflicts(s)].sort((a, b) => a - b)).toEqual([0, 2]); // row
     s = fresh();
     queen(s, 0);
     queen(s, 8);
-    expect([...conflicts(s)].sort()).toEqual([0, 8]); // column (also region 1)
+    expect([...conflicts(s)].sort((a, b) => a - b)).toEqual([0, 8]); // column (also region 1)
     s = fresh();
     queen(s, 3);
     queen(s, 5);
-    expect([...conflicts(s)].sort()).toEqual([3, 5]); // region 2, not touching
+    expect([...conflicts(s)].sort((a, b) => a - b)).toEqual([3, 5]); // region 2, not touching
     s = fresh();
     queen(s, 0);
     queen(s, 5);
-    expect([...conflicts(s)].sort()).toEqual([0, 5]); // diagonal
+    expect([...conflicts(s)].sort((a, b) => a - b)).toEqual([0, 5]); // diagonal
   });
 
   it('conflicts clear when the clashing queen goes', () => {

@@ -52,13 +52,13 @@ const tangle: PuzzleGame<PresetId, Level, GameState, TangleDailySave> = {
 
   mountBoard(host, ctx) {
     const board = createTangleBoard(host, {
-      onTap: async (cell) => {
+      onTap: (cell) => {
         const g = ctx.game();
         if (!g) return;
         const result = tap(g, cell);
         if (result.kind === 'ignored') return;
         // Other arrows stay tappable while this one animates; the board ignores taps on moving arrows.
-        await ctx.changed(g, () => board.play(result));
+        void ctx.changed(g, () => board.play(result));
       },
     });
     return {

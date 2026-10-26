@@ -36,15 +36,15 @@ const balanced: PuzzleGame<PresetId, Puzzle, GameState, BalancedDailySave> = {
 
   mountBoard(host, ctx) {
     const board = createBalancedBoard(host, {
-      onTap: async (cell) => {
+      onTap: (cell) => {
         const g = ctx.game();
         if (!g) return;
-        await changed(g, cycle(g, cell));
+        void changed(g, cycle(g, cell));
       },
-      onRing: async (cell) => {
+      onRing: (cell) => {
         const g = ctx.game();
         if (!g) return;
-        await changed(g, toggle(g, cell, 2));
+        void changed(g, toggle(g, cell, 2));
       },
     });
     async function changed(g: GameState, didChange: boolean): Promise<void> {

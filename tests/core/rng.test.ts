@@ -17,5 +17,5 @@ test('seedFromDate is stable and date-sensitive', () => {
 test('randInt range and shuffle permutation', () => {
   const r = mulberry32(7);
   for (let i = 0; i < 200; i++) expect(randInt(r, 5)).toBeLessThan(5);
-  expect(shuffle(mulberry32(3), [1,2,3,4,5]).sort()).toEqual([1,2,3,4,5]);
+  expect(shuffle(mulberry32(3), [1,2,3,4,5]).sort((a, b) => a - b)).toEqual([1,2,3,4,5]);
 });

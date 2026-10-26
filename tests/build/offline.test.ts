@@ -57,6 +57,8 @@ test('version changes when only the service worker code changes', async () => {
 function runRegister(navigator: object) {
   const listeners: Record<string, () => void> = {};
   const window = { addEventListener: (type: string, fn: () => void) => void (listeners[type] = fn) };
+  // The script is a string injected into every page; running it is the point of the test.
+  // oxlint-disable-next-line typescript/no-implied-eval
   new Function('window', 'navigator', REGISTER_SCRIPT)(window, navigator);
   return listeners;
 }

@@ -76,7 +76,7 @@ describe('bridges game', () => {
     expect(violations(s).split.size).toBe(0);
     set(s, 0, 1);
     expect(satisfied(s)).toBe(4);
-    expect([...violations(s).split].sort()).toEqual([2, 3]);
+    expect([...violations(s).split].sort((a, b) => a - b)).toEqual([2, 3]);
     expect(s.status).toBe('playing');
   });
 

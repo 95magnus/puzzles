@@ -36,10 +36,10 @@ const patches: PuzzleGame<PresetId, Puzzle, GameState, PatchesDailySave> = {
 
   mountBoard(host, ctx) {
     const board = createPatchesBoard(host, {
-      onAction: async (a) => {
+      onAction: (a) => {
         const g = ctx.game();
         if (!g) return;
-        await changed(g, a.kind === 'tap' ? tap(g, a.cell) : place(g, a.rect));
+        void changed(g, a.kind === 'tap' ? tap(g, a.cell) : place(g, a.rect));
       },
     });
     async function changed(g: GameState, didChange: boolean): Promise<void> {

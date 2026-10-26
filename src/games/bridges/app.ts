@@ -36,17 +36,17 @@ const bridges: PuzzleGame<PresetId, Puzzle, GameState, BridgesDailySave> = {
 
   mountBoard(host, ctx) {
     const board = createBridgesBoard(host, {
-      onCycle: async (link) => {
+      onCycle: (link) => {
         const g = ctx.game();
         if (!g) return;
         const r = cycle(g, link);
         if (r.blockedBy.length > 0) board.flashBlocked(r.blockedBy);
-        await changed(g, r.changed);
+        void changed(g, r.changed);
       },
-      onRemove: async (link) => {
+      onRemove: (link) => {
         const g = ctx.game();
         if (!g) return;
-        await changed(g, remove(g, link));
+        void changed(g, remove(g, link));
       },
     });
     async function changed(g: GameState, didChange: boolean): Promise<void> {
