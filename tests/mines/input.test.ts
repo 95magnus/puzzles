@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { initialInput, step, type InputAction, type InputEvent, type Preview } from '../../src/minesweeper/input';
+import { initialInput, step, type InputAction, type InputEvent, type Preview } from '../../src/mines/input';
 
 const down = (buttons: number, cell: number): InputEvent => ({ type: 'down', pointer: 'mouse', buttons, cell });
 const move = (buttons: number, cell: number): InputEvent => ({ type: 'move', pointer: 'mouse', buttons, cell });

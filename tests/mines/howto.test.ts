@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test } from 'vitest';
 import { getFlag, setFlag } from '../../src/core/storage';
-import { mountMines } from '../../src/minesweeper/app';
-import { openMinesHowto } from '../../src/minesweeper/howto';
+import { mountMines } from '../../src/mines/app';
+import { openMinesHowto } from '../../src/mines/howto';
 
 let root: HTMLElement;
 let unmount: (() => void) | undefined;

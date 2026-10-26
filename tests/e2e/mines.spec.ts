@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mulberry32 } from '../../src/core/rng';
-import { chord, newGame, reveal, toggleFlag } from '../../src/minesweeper/game';
-import { PRESETS, generateBoard, minesDailySeed, neighbours } from '../../src/minesweeper/generate';
+import { chord, newGame, reveal, toggleFlag } from '../../src/mines/game';
+import { PRESETS, generateBoard, minesDailySeed, neighbours } from '../../src/mines/generate';
 
 async function center(page: Page, i: number) {
   const box = (await page.locator(`[data-i="${i}"]`).boundingBox())!;

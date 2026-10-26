@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { getFlag, setFlag } from '../../src/core/storage';
-import { loadMinesDaily, saveMinesDaily, getMinesPreset, setMinesPreset } from '../../src/minesweeper/storage';
+import { loadMinesDaily, saveMinesDaily, getMinesPreset, setMinesPreset } from '../../src/mines/storage';
 import { loadDaily } from '../../src/flow/storage';
 
 beforeEach(() => localStorage.clear());

@@ -1,5 +1,5 @@
-import { neighbours } from '../../src/minesweeper/generate';
-import type { Board } from '../../src/minesweeper/types';
+import { neighbours } from '../../src/mines/generate';
+import type { Board } from '../../src/mines/types';
 
 /** Build a board from ASCII rows: `*` = mine, `.` = safe. */
 export function boardFrom(rows: string[], start: [number, number]): Board {

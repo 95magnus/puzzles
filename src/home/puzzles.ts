@@ -1,5 +1,5 @@
 import { loadDaily } from '../flow/storage';
-import { loadMinesDaily } from '../minesweeper/storage';
+import { loadMinesDaily } from '../mines/storage';
 import { loadPatchesDaily } from '../patches/storage';
 import { loadQueensDaily } from '../queens/storage';
 import { loadTangleDaily } from '../tangle/storage';

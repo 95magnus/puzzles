@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { mulberry32, seedFromString } from '../../src/core/rng';
-import { PRESETS, DAILY_PRESET, generateBoard, minesDailySeed, neighbours } from '../../src/minesweeper/generate';
+import { PRESETS, DAILY_PRESET, generateBoard, minesDailySeed, neighbours } from '../../src/mines/generate';
 
 const spec = PRESETS.expert;
 const count = (a: Uint8Array) => a.reduce((s, m) => s + m, 0);

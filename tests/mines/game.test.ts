@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
-import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from '../../src/minesweeper/game';
-import { neighbours } from '../../src/minesweeper/generate';
+import { chord, encodeCells, newGame, restoreGame, reveal, toggleFlag } from '../../src/mines/game';
+import { neighbours } from '../../src/mines/generate';
 import { boardFrom } from './helpers';
 
 const idx = (r: number, c: number) => r * 5 + c;

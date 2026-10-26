@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
-import { createBoard, type BoardHandle } from '../../src/minesweeper/board';
-import { newGame, restoreGame, reveal, toggleFlag } from '../../src/minesweeper/game';
-import type { InputAction } from '../../src/minesweeper/input';
-import type { GameState } from '../../src/minesweeper/types';
+import { createBoard, type BoardHandle } from '../../src/mines/board';
+import { newGame, restoreGame, reveal, toggleFlag } from '../../src/mines/game';
+import type { InputAction } from '../../src/mines/input';
+import type { GameState } from '../../src/mines/types';
 import { boardFrom } from './helpers';
 
 // (1,1) has adj 2; mines at (0,1) and (2,0).
