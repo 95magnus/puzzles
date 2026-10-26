@@ -11,6 +11,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 180_000,
   },
-  use: { baseURL: 'http://localhost:4173' },
+  // Only offline.spec.ts lets the service worker install; every other spec runs uncached.
+  use: { baseURL: 'http://localhost:4173', serviceWorkers: 'block' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
 });
