@@ -1,7 +1,7 @@
 import type { Cell } from './types';
 
 export type DailySave = { v: 1; date: string; paths: Cell[][]; elapsedMs: number; solved: boolean };
-type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen';
+type FlagName = 'howto-seen' | 'colorblind' | 'mines-howto-seen' | 'tangle-howto-seen' | 'queens-howto-seen' | 'patches-howto-seen' | 'balanced-howto-seen' | 'bridges-howto-seen';
 
 const DAILY_KEY = 'flow:daily';
 
@@ -303,6 +303,56 @@ export function getBalancedPreset(): BalancedPreset | null {
 export function setBalancedPreset(id: BalancedPreset): void {
   try {
     localStorage.setItem(BALANCED_PRESET_KEY, id);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export type BridgesPreset = 'small' | 'medium' | 'large';
+/** `links` is one char per candidate link: 0 none, 1 single, 2 double. The puzzle itself is regenerated from the date. */
+export type BridgesDailySave = { v: 1; date: string; links: string; elapsedMs: number; solved: boolean };
+
+const BRIDGES_DAILY_KEY = 'bridges:daily';
+const BRIDGES_PRESET_KEY = 'bridges:preset';
+const BRIDGES_PRESETS: readonly string[] = ['small', 'medium', 'large'];
+
+/** Shape check only; whether `links` fits today's puzzle is `restore`'s job. */
+export function loadBridgesDaily(date: string): BridgesDailySave | null {
+  try {
+    const raw = localStorage.getItem(BRIDGES_DAILY_KEY);
+    if (raw === null) return null;
+    const o = JSON.parse(raw) as BridgesDailySave | null;
+    if (typeof o !== 'object' || o === null) return null;
+    if (o.v !== 1 || typeof o.date !== 'string' || o.date !== date) return null;
+    if (typeof o.links !== 'string' || !/^[012]*$/.test(o.links)) return null;
+    if (typeof o.elapsedMs !== 'number' || !(o.elapsedMs >= 0)) return null;
+    if (typeof o.solved !== 'boolean') return null;
+    return { v: 1, date: o.date, links: o.links, elapsedMs: o.elapsedMs, solved: o.solved };
+  } catch {
+    return null;
+  }
+}
+
+export function saveBridgesDaily(save: Omit<BridgesDailySave, 'v'>): void {
+  try {
+    localStorage.setItem(BRIDGES_DAILY_KEY, JSON.stringify({ v: 1, ...save }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function getBridgesPreset(): BridgesPreset | null {
+  try {
+    const v = localStorage.getItem(BRIDGES_PRESET_KEY);
+    return v !== null && BRIDGES_PRESETS.includes(v) ? (v as BridgesPreset) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setBridgesPreset(id: BridgesPreset): void {
+  try {
+    localStorage.setItem(BRIDGES_PRESET_KEY, id);
   } catch {
     /* storage unavailable */
   }

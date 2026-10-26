@@ -1,6 +1,6 @@
-import { loadDaily, loadMinesDaily, loadPatchesDaily, loadQueensDaily, loadTangleDaily, loadBalancedDaily } from '../core/storage';
+import { loadDaily, loadMinesDaily, loadPatchesDaily, loadQueensDaily, loadTangleDaily, loadBalancedDaily, loadBridgesDaily } from '../core/storage';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview } from './previews';
+import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -10,7 +10,7 @@ export type DailyStatus =
   | { kind: 'lost'; elapsedMs: number; attempt: number };
 
 export type PuzzleEntry = {
-  id: 'flow' | 'mines' | 'tangle' | 'queens' | 'patches' | 'balanced';
+  id: 'flow' | 'mines' | 'tangle' | 'queens' | 'patches' | 'balanced' | 'bridges';
   name: string;
   tagline: string;
   href: string;
@@ -105,6 +105,19 @@ export const PUZZLES: readonly PuzzleEntry[] = [
     preview: balancedPreview,
     dailyStatus(date) {
       const save = loadBalancedDaily(date);
+      if (!save) return { kind: 'new' };
+      return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
+    },
+  },
+  {
+    id: 'bridges',
+    name: 'Bridges',
+    tagline: 'Connect every island. Match every number.',
+    href: './bridges.html',
+    doneWord: 'Solved',
+    preview: bridgesPreview,
+    dailyStatus(date) {
+      const save = loadBridgesDaily(date);
       if (!save) return { kind: 'new' };
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },

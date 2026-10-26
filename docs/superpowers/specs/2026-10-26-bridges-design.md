@@ -97,9 +97,9 @@ type Violations = {
 
 | Preset | Grid | Islands | Extra-link chance |
 |---|---|---|---|
-| `small` | 7×7 | 10–13 | 0.25 |
-| `medium` (default, daily) | 9×9 | 17–22 | 0.25 |
-| `large` | 11×11 | 26–32 | 0.25 |
+| `small` | 7×7 | 10–13 | 0.4 |
+| `medium` (default, daily) | 9×9 | 17–22 | 0.4 |
+| `large` | 11×11 | 26–32 | 0.4 |
 
 Daily seed: `seedFromString('bridges-daily:' + isoDate)`, preset `medium`.
 
@@ -139,7 +139,7 @@ A range with `min > max` is a contradiction → return `null`. Returns the bridg
 ## 7. Input (`input`) and board (`board`)
 
 **Gestures** (pointer events, one active pointer):
-- **Tap** (pointer up within 8 px of pointer down, not on an island): the link whose inner segment is nearest the point, within 0.5 cell of the segment's centre line → `cycle`.
+- **Tap** (pointer up before it has moved 0.4 cell, not started on an island): the link whose inner segment is nearest the point, within 0.5 cell of the segment's centre line → `cycle`.
 - **Drag from an island:** once the pointer moves ≥ 0.4 cell, snap to the dominant axis direction; if the island has a link that way, show a dashed preview to the neighbour. Releasing with the preview shown → `cycle` that link. Releasing back on the island or where there is no link → nothing.
 - **Tap on an island:** nothing.
 - **Right-click** (`contextmenu`, default prevented) on a gap → `remove`.
@@ -147,7 +147,7 @@ A range with `min > max` is a contradiction → return `null`. Returns the bridg
 **Visuals**
 - Board surface: shared `glass` panel; faint dots at cell centres for alignment.
 - Islands: circles ~70 % of a cell, number centred. Satisfied (total = `n`): filled accent (`#4fd6c3`) with dark number. Over (`over`): red (`#ff5c7a`) ring and number. `split` islands pulse red once each time `split` becomes non-empty.
-- Bridges: 2 px lines island edge to island edge; a double bridge is two parallel lines 6 px apart.
+- Bridges: 2 px lines island edge to island edge; a double bridge is two parallel lines about 0.2 cell apart.
 - Refused crossing: the blocking bridges flash red for 300 ms.
 - Win: bridges pulse once in breadth-first order from island 0 (40 ms per step), then the win card slides up. Disabled under `prefers-reduced-motion`.
 - Sizing: cell size `clamp(28px, fit-to-panel, 56px)`; 11×11 at 28 px fits 375 px wide with the 16 px page gutter.
