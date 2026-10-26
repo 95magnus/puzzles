@@ -4,6 +4,7 @@
  * placeholders below. Import nothing from outside src/sw/: sw.js must stay one self-contained script.
  */
 import { fillCache } from './install';
+import { cachedOrNetwork } from './respond';
 import { cacheKey } from './routes';
 
 declare const __PRECACHE__: string[];
@@ -36,10 +37,5 @@ sw.addEventListener('fetch', (event) => {
   const scope = new URL(sw.registration.scope);
   const key = cacheKey(new URL(request.url), scope, PRECACHE);
   if (!key) return;
-  event.respondWith(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.match(new URL(key, scope).href))
-      .then((hit) => hit ?? fetch(request)),
-  );
+  event.respondWith(cachedOrNetwork(() => caches.open(CACHE), new URL(key, scope).href, request, (req) => fetch(req)));
 });
