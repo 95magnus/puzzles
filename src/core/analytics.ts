@@ -12,31 +12,45 @@ export function track(event: string, data?: Props): void {
   }
 }
 
+/** Controls counted on `puzzle_end`: they change the board in place (Restart and New board start a new one). */
+export const COUNTED_ACTIONS = ['undo', 'clear'] as const;
+
 export type PlayTracker = {
-  /** A board (fresh or restored) is on screen; `props` describe it, e.g. mode and size. */
+  /** A board (fresh or restored) is on screen; `props` describe it, e.g. mode and size. Resets the counts. */
   begin(props: Props): void;
-  /** The player changed the board. The first change after begin() reports `puzzle_start`. */
+  /** The player changed the board. The first change after begin() reports `puzzle_start`; every one counts a move. */
   move(): void;
-  /** The board was won or lost; reports `puzzle_end` once per begin(). */
+  /** A control ran; counted when it is one of the tracker's `counted` names. */
+  action(name: string): void;
+  /** The board was won or lost; reports `puzzle_end` with the counts, once per begin(). */
   end(result: 'won' | 'lost', elapsedMs: number): void;
 };
 
-export function createPlayTracker(game: string): PlayTracker {
+export function createPlayTracker(game: string, counted: readonly string[] = []): PlayTracker {
   let props: Props | null = null;
   let started = false;
+  let moves = 0;
+  let counts: Record<string, number> = {};
   return {
     begin(p) {
       props = { game, ...p };
       started = false;
+      moves = 0;
+      counts = Object.fromEntries(counted.map((a) => [a, 0]));
     },
     move() {
-      if (!props || started) return;
+      if (!props) return;
+      moves++;
+      if (started) return;
       started = true;
       track('puzzle_start', props);
     },
+    action(name) {
+      if (props && name in counts) counts[name]++;
+    },
     end(result, elapsedMs) {
       if (!props) return;
-      track('puzzle_end', { ...props, result, seconds: Math.round(elapsedMs / 1000) });
+      track('puzzle_end', { ...props, result, seconds: Math.round(elapsedMs / 1000), moves, ...counts });
       props = null;
     },
   };
