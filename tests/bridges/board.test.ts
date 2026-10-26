@@ -107,6 +107,15 @@ test('right-click removes the link near the point and suppresses the menu', () =
   expect(onRemove).toHaveBeenCalledWith(0);
 });
 
+test('a long-press that opens the context menu removes without also cycling', () => {
+  mount();
+  at('pointerdown', ...px(0, 1));
+  svg().dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: 75, clientY: 25 }));
+  at('pointerup', ...px(0, 1));
+  expect(onRemove).toHaveBeenCalledTimes(1);
+  expect(onCycle).not.toHaveBeenCalled();
+});
+
 test('setInteractive(false) blocks taps and right-clicks', () => {
   mount();
   board.setInteractive(false);

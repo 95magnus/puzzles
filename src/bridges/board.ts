@@ -208,10 +208,14 @@ export function createBridgesBoard(
     if (e.pointerId === activePointer) onCancel();
   }
 
-  /** Right-click removes a bridge from the link under the point; the browser menu never opens over the board. */
+  /**
+   * Right-click removes a bridge from the link under the point; the browser menu never opens over the board.
+   * A touch long-press also lands here, so it drops the gesture first or its pointerup would tap the link.
+   */
   function onContextMenu(e: MouseEvent): void {
     e.preventDefault();
     if (!interactive || !game) return;
+    if (activePointer !== null) onCancel();
     const at = point(e);
     if (!at) return;
     const link = linkNear(game.puzzle, at.x, at.y);
