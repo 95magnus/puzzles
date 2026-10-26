@@ -108,9 +108,10 @@
   justify-self: end;
 }
 
-/* Keep the header on one row down to 320px: the game name gives way, the home link stays readable. */
+/* Keep the header on one row down to 320px, with the home link and the game name both readable. */
 @media (max-width: 400px) {
   .shell-header {
+    grid-template-columns: minmax(0, 1fr) auto auto; /* the brand gets the space the "?" doesn't need */
     gap: 4px;
     padding-left: var(--space);
     padding-right: var(--space);
@@ -125,13 +126,25 @@
     font-size: 22px;
   }
 
-  .shell-sep,
-  .shell-game {
+  .shell-sep {
     display: none;
   }
 
+  /* In a game, stack the home link over the game name so both fit beside the tabs. */
+  .shell-brand:has(.shell-game) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
   .shell-brand:has(.shell-game) .wordmark {
-    color: var(--text);
+    font-size: 16px;
+  }
+
+  .shell-game {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .shell-tabs > .seg__item {
