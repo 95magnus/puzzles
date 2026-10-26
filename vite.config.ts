@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config';
-import { PAGES } from './src/pages';
+import { PAGES } from './src/pages.ts';
 
 export default defineConfig({
   base: './',
