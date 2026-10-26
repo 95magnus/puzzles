@@ -1,5 +1,5 @@
 /* Balanced page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
-   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+   header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
 :root {
   --balanced-bg: #1d1b28; /* effective board background (BOARD_BG_EFFECTIVE) */
   --balanced-given: #2a2738;
@@ -13,51 +13,6 @@
 }
 
 /* ---------- Page ---------- */
-/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
-.balanced-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--space) * 0.75);
-  padding: 0 16px var(--space);
-}
-
-.balanced-sub {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.balanced-stage {
-  position: relative;
-  width: 100%;
-}
-
-.balanced-hud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  width: 100%; /* narrowed to the board panel's width by the app */
-  padding: 0 4px;
-}
-
-.balanced-stats {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2.5);
-  font-variant-numeric: tabular-nums;
-}
-
-.balanced-controls {
-  display: flex;
-  gap: var(--space);
-}
-
 /* ---------- Board ---------- */
 .balanced-board {
   display: flex;

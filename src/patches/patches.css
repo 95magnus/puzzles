@@ -1,5 +1,5 @@
 /* Patches page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
-   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+   header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
 :root {
   --patches-bg: #1d1b28; /* effective board background (BOARD_BG_EFFECTIVE) */
   --patches-line: rgba(255, 255, 255, 0.09);
@@ -9,51 +9,6 @@
 }
 
 /* ---------- Page ---------- */
-/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
-.patches-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--space) * 0.75);
-  padding: 0 16px var(--space);
-}
-
-.patches-sub {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.patches-stage {
-  position: relative;
-  width: 100%;
-}
-
-.patches-hud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  width: 100%; /* narrowed to the board panel's width by the app */
-  padding: 0 4px;
-}
-
-.patches-stats {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2.5);
-  font-variant-numeric: tabular-nums;
-}
-
-.patches-controls {
-  display: flex;
-  gap: var(--space);
-}
-
 /* ---------- Board ---------- */
 .patches-board {
   display: flex;

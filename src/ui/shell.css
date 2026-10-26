@@ -144,6 +144,52 @@
   }
 }
 
+/* ---------- Puzzle page layout (ui/puzzleApp.ts) ---------- */
+/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in the boards. */
+.puzzle-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
+}
+
+.puzzle-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.puzzle-stage {
+  position: relative;
+  width: 100%;
+}
+
+.puzzle-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%; /* narrowed to the board panel's width by puzzleApp.ts */
+  padding: 0 4px;
+}
+
+.puzzle-stats {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.puzzle-controls {
+  display: flex;
+  gap: var(--space);
+}
+
 /* ---------- HUD typography ---------- */
 .hud-value {
   color: var(--text);

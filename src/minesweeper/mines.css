@@ -21,27 +21,13 @@
 }
 
 /* ---------- Page ---------- */
-/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
 .mines-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   gap: var(--space);
   padding: 0 16px calc(var(--space) * 2);
 }
 
 .mines-sub {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   min-height: 40px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.mines-stage {
-  position: relative;
-  width: 100%;
 }
 
 .mines-stage .mines-board {
@@ -51,22 +37,6 @@
 .mines-stage.is-dimmed .mines-board {
   opacity: 0.45;
   filter: saturate(0.6);
-}
-
-.mines-hud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  width: 100%; /* narrowed to the board panel's width by app.ts */
-  padding: 0 4px;
-}
-
-.mines-stats {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2.5);
 }
 
 .mines-left::before,
@@ -86,11 +56,6 @@
 
 .mines-time::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.2' fill='none' stroke='%23eef0f7' stroke-opacity='.65' stroke-width='1.4'/%3E%3Cpath d='M8 4.6V8l2.4 1.6' fill='none' stroke='%23eef0f7' stroke-opacity='.65' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
-}
-
-.mines-controls {
-  display: flex;
-  gap: var(--space);
 }
 
 /* ---------- How-to ---------- */

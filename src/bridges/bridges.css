@@ -1,5 +1,5 @@
 /* Bridges page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
-   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+   header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
 :root {
   --bridges-bg: #1d1b28; /* board surface */
   --bridges-dot: rgba(255, 255, 255, 0.14);
@@ -12,51 +12,6 @@
 }
 
 /* ---------- Page ---------- */
-/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
-.bridges-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--space) * 0.75);
-  padding: 0 16px var(--space);
-}
-
-.bridges-sub {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.bridges-stage {
-  position: relative;
-  width: 100%;
-}
-
-.bridges-hud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  width: 100%; /* narrowed to the board panel's width by the app */
-  padding: 0 4px;
-}
-
-.bridges-stats {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2.5);
-  font-variant-numeric: tabular-nums;
-}
-
-.bridges-controls {
-  display: flex;
-  gap: var(--space);
-}
-
 /* ---------- Board ---------- */
 .bridges-board {
   display: flex;

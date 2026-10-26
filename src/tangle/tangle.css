@@ -1,5 +1,5 @@
 /* Tangle page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
-   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+   header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
 :root {
   --tangle-bump: #ff5c7a;
   --tangle-life: #ff5c7a;
@@ -8,28 +8,6 @@
 
 /* ---------- Page ---------- */
 /* board.ts measures this chrome and sizes the board to fit what is left of the viewport; keep it tight. */
-.tangle-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: calc(var(--space) * 0.75);
-  padding: 0 16px var(--space);
-}
-
-.tangle-sub {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  color: var(--text-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.tangle-stage {
-  position: relative;
-  width: 100%;
-}
-
 .tangle-stage .tangle-board {
   transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
 }
@@ -37,27 +15,6 @@
 .tangle-stage.is-dimmed .tangle-board {
   opacity: 0.45;
   filter: saturate(0.6);
-}
-
-.tangle-hud {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space);
-  width: 100%; /* narrowed to the board panel's width by the app */
-  padding: 0 4px;
-}
-
-.tangle-stats {
-  display: flex;
-  align-items: baseline;
-  gap: calc(var(--space) * 2.5);
-}
-
-.tangle-controls {
-  display: flex;
-  gap: var(--space);
 }
 
 /* Lives: one heart per life; lost lives are greyed out. */

@@ -144,11 +144,11 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
   const practiceTab = shellHeader.tabPractice!;
   const helpBtn = shellHeader.helpBtn!;
 
-  const sub = el('div', `${id}-sub`);
-  const stage = el('div', `${id}-stage`);
+  const sub = el('div', `${id}-sub puzzle-sub`);
+  const stage = el('div', `${id}-stage puzzle-stage`);
   const boardEl = el('div', `${id}-board`);
   stage.appendChild(boardEl);
-  const hud = el('div', `${id}-hud`);
+  const hud = el('div', `${id}-hud puzzle-hud`);
   const statEls = def.stats.map((s) => {
     const e = el('span', s.cls);
     e.setAttribute('aria-label', s.label);
@@ -158,12 +158,12 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
   const time = el('span', `${id}-time hud-value num`);
   time.setAttribute('aria-label', 'Time');
   const attemptLabel = def.attempts ? el('span', `${id}-attempt hud-label`) : null;
-  const stats = el('div', `${id}-stats`);
+  const stats = el('div', `${id}-stats puzzle-stats`);
   stats.append(...statEls, time);
   if (attemptLabel) stats.append(attemptLabel);
-  const controls = el('div', `${id}-controls`);
+  const controls = el('div', `${id}-controls puzzle-controls`);
   hud.append(stats, controls);
-  const main = el('main', `${id}-main`);
+  const main = el('main', `${id}-main puzzle-main`);
   main.append(sub, stage, hud);
   root.append(header, main);
 
