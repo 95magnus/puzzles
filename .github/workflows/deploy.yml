@@ -31,8 +31,17 @@ jobs:
       - run: npm test
       - run: npm run build
 
+      # Browsers are cached per lockfile; the OS packages they need are not, so a hit still installs those.
+      - id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
       # The e2e web server rebuilds into dist/, so the artifact below is still a fresh build.
-      - run: npx playwright install --with-deps chromium
       - run: npm run e2e
 
       - uses: actions/configure-pages@v5
