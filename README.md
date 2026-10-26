@@ -34,6 +34,7 @@ npm run dev
 | --- | --- |
 | `npm run dev` | Start the Vite dev server |
 | `npm run build` | Type-check and build every page into `dist/` |
+| `npm run lint` | Lint with Oxlint, including type-aware promise checks |
 | `npm test` | Unit tests (Vitest) |
 | `npm run e2e` | End-to-end tests (Playwright) |
 | `npm run test:slow` | The slower Flow generator tests |

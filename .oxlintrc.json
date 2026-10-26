@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": { "correctness": "error" },
+  "rules": {
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
+    "no-unused-vars": ["error", { "ignoreRestSiblings": true }],
+
+    "typescript/unbound-method": "off",
+    "typescript/no-misused-spread": "off",
+    "unicorn/no-new-array": "off",
+    "unicorn/no-useless-spread": "off"
+  },
+  "ignorePatterns": ["dist", "docs", "public", "node_modules"]
+}

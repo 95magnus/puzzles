@@ -21,6 +21,7 @@ The page's `description`/`og:description` repeats the tagline from `puzzles.ts`.
 
 - Reuse the shared helpers in `src/ui/` (`reducedMotion`, `modal`, `fit`, `grid`, `palette`, `puzzleApp`) instead of writing per-game copies.
 - After changing `public/favicon.svg`, run `npm run icons` and commit the regenerated PNGs.
+- Lint is Oxlint (`.oxlintrc.json`), not ESLint: typescript-eslint doesn't support TypeScript 7, and Oxlint's type-aware mode does. Handlers a board calls and doesn't await return `void`; start the async work with `void changed(...)`.
 
 ## Offline
 
