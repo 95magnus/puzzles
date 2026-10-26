@@ -8,12 +8,16 @@ const EXCLUDED = new Set(['sw.js', 'og.png']);
 
 /**
  * The paths sw.js precaches, sorted, and a version that changes whenever any of them changes
- * (name or content), so every deploy that changes the site installs a new service worker.
+ * (name or content) or the service worker's own code does, so every deploy that changes the site
+ * installs a new service worker with a fresh cache.
  */
-export async function precacheManifest(files: BuildFile[]): Promise<{ paths: string[]; version: string }> {
+export async function precacheManifest(files: BuildFile[], workerCode = ''): Promise<{ paths: string[]; version: string }> {
   const kept = files.filter((f) => !EXCLUDED.has(f.name)).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const encoder = new TextEncoder();
-  const parts = kept.flatMap((f) => [encoder.encode(f.name + '\0'), typeof f.content === 'string' ? encoder.encode(f.content) : f.content, encoder.encode('\0')]);
+  const parts = [
+    encoder.encode(workerCode + '\0'),
+    ...kept.flatMap((f) => [encoder.encode(f.name + '\0'), typeof f.content === 'string' ? encoder.encode(f.content) : f.content, encoder.encode('\0')]),
+  ];
   const all = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let offset = 0;
   for (const p of parts) {
@@ -25,7 +29,12 @@ export async function precacheManifest(files: BuildFile[]): Promise<{ paths: str
   return { paths: kept.map((f) => f.name), version };
 }
 
-const REGISTER = "if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});";
+/**
+ * Injected into every page. Waits for `load` so precaching doesn't compete with the first page's
+ * own downloads, and ignores browsers where service workers are missing, blocked or throw on access.
+ */
+export const REGISTER_SCRIPT =
+  "window.addEventListener('load', () => { try { navigator.serviceWorker?.register('./sw.js').catch(() => {}); } catch {} });";
 
 /**
  * Builds src/sw/sw.ts into dist/sw.js with the build's precache list and version, and registers
@@ -59,14 +68,14 @@ export function offline(): Plugin {
         }
       };
       if (publicDir) await walk(publicDir, '');
-      const { paths, version } = await precacheManifest(files);
+      const { paths, version } = await precacheManifest(files, chunk.code);
       if (!chunk.code.includes('__PRECACHE__') || !chunk.code.includes('__VERSION__')) {
         this.error('sw.js lost its __PRECACHE__/__VERSION__ placeholders');
       }
       chunk.code = chunk.code.replaceAll('__PRECACHE__', JSON.stringify(paths)).replaceAll('__VERSION__', JSON.stringify(version));
     },
     transformIndexHtml() {
-      return [{ tag: 'script', injectTo: 'head', children: REGISTER }];
+      return [{ tag: 'script', injectTo: 'head', children: REGISTER_SCRIPT }];
     },
   };
 }

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { precacheManifest, type BuildFile } from '../../build/offline';
+import { precacheManifest, REGISTER_SCRIPT, type BuildFile } from '../../build/offline';
 
 const files = (): BuildFile[] => [
   { name: 'flow.html', content: '<html>flow</html>' },
@@ -44,4 +44,46 @@ test('ignores excluded files in the version', async () => {
   const changed = files();
   changed[3] = { name: 'og.png', content: new Uint8Array([9, 9, 9]) };
   expect(await version(changed)).toBe(await version(files()));
+});
+
+test('version changes when only the service worker code changes', async () => {
+  const a = await precacheManifest(files(), 'worker v1');
+  const b = await precacheManifest(files(), 'worker v2');
+  expect(a.paths).toEqual(b.paths);
+  expect(a.version).not.toBe(b.version);
+});
+
+/** Runs the injected registration script against a fake window and navigator. */
+function runRegister(navigator: object) {
+  const listeners: Record<string, () => void> = {};
+  const window = { addEventListener: (type: string, fn: () => void) => void (listeners[type] = fn) };
+  new Function('window', 'navigator', REGISTER_SCRIPT)(window, navigator);
+  return listeners;
+}
+
+test('registers sw.js only once the page has loaded', () => {
+  const registered: string[] = [];
+  const listeners = runRegister({ serviceWorker: { register: (url: string) => (registered.push(url), Promise.resolve()) } });
+  expect(registered).toEqual([]);
+  listeners.load();
+  expect(registered).toEqual(['./sw.js']);
+});
+
+test('registration ignores browsers without service workers', () => {
+  expect(() => runRegister({}).load()).not.toThrow();
+});
+
+test('registration ignores a navigator.serviceWorker that throws', () => {
+  const navigator = Object.defineProperty({}, 'serviceWorker', {
+    get() {
+      throw new Error('SecurityError');
+    },
+  });
+  expect(() => runRegister(navigator).load()).not.toThrow();
+});
+
+test('registration swallows a rejected register()', async () => {
+  const listeners = runRegister({ serviceWorker: { register: () => Promise.reject(new Error('blocked')) } });
+  listeners.load();
+  await new Promise((r) => setTimeout(r, 0));
 });
