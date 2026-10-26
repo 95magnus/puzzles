@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const GAMES = ['flow', 'mines', 'tangle', 'queens', 'patches', 'balanced', 'bridges'];
 
@@ -31,6 +31,41 @@ test.describe('mode tabs', () => {
       return { color: s.color, background: s.backgroundColor };
     });
     expect(color).not.toBe(background);
+  });
+});
+
+test.describe('best-on-a-computer note', () => {
+  const note = (page: Page) => page.getByRole('note').filter({ hasText: 'best played on a computer' });
+
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    for (const game of ['mines', 'tangle']) {
+      test(`${game} shows it until dismissed`, async ({ page }) => {
+        await page.goto(`/${game}.html#/`);
+        await expect(note(page)).toBeVisible();
+        await note(page).getByRole('button', { name: 'Dismiss' }).click();
+        await expect(note(page)).toHaveCount(0);
+        await page.reload();
+        await expect(page.locator('.shell-game')).toBeVisible();
+        await expect(note(page)).toHaveCount(0);
+      });
+    }
+
+    for (const game of ['queens', 'patches', 'balanced', 'bridges']) {
+      test(`${game} fits, so it has none`, async ({ page }) => {
+        await page.goto(`/${game}.html#/`);
+        await expect(page.locator('.shell-game')).toBeVisible();
+        await expect(note(page)).toHaveCount(0);
+      });
+    }
+  });
+
+  test('desktops never see it', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/mines.html#/');
+    await expect(page.locator('.shell-game')).toBeVisible();
+    await expect(note(page)).toBeHidden();
   });
 });
 

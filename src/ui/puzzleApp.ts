@@ -101,6 +101,8 @@ export type PuzzleGame<P extends string, Spec, G extends { status: Status }, Sav
   attempts?: boolean;
   /** A game whose clock waits for the first move (no play is tracked until then). */
   startsPaused?(g: G): boolean;
+  /** A board too big for a phone: phones get a dismissible "best on a computer" note. */
+  bestOnComputer?: boolean;
 };
 
 const TICK_MS = 1000;
@@ -167,6 +169,22 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
   const main = el('main', `${id}-main puzzle-main`);
   main.append(sub, stage, hud);
   root.append(header, main);
+
+  const phoneFlag = `${id}-phone-note-dismissed` as const;
+  if (def.bestOnComputer && !getFlag(phoneFlag)) {
+    // Shown only on narrow screens (shell.css), where the board scrolls.
+    const note = el('p', 'puzzle-phone-note glass', `${def.title} is best played on a computer. On a phone the board scrolls.`);
+    note.setAttribute('role', 'note');
+    const close = el('button', 'puzzle-phone-note__close', '✕');
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Dismiss');
+    close.addEventListener('click', () => {
+      setFlag(phoneFlag, true);
+      note.remove();
+    });
+    note.append(close);
+    main.prepend(note);
+  }
 
   // ---------- State ----------
   let route: PresetRoute<P> = { mode: 'daily' };

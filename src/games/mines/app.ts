@@ -40,6 +40,7 @@ const mines: PuzzleGame<PresetId, Spec, GameState, MinesDailySave> = {
   id: 'mines',
   title: 'Mines',
   howtoFlag: 'mines-howto-seen',
+  bestOnComputer: true,
   howto: openMinesHowto,
 
   presets: PRESETS,

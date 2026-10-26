@@ -1,5 +1,5 @@
-/** Flow's own flags keep their original names; every other game uses `<id>-howto-seen`. */
-type FlagName = 'howto-seen' | 'colorblind' | `${string}-howto-seen`;
+/** Flow's own flags keep their original names; every other game uses `<id>-howto-seen` and `<id>-phone-note-dismissed`. */
+type FlagName = 'howto-seen' | 'colorblind' | `${string}-howto-seen` | `${string}-phone-note-dismissed`;
 
 /**
  * Today's daily save under one localStorage key, stored as `{ v: 1, ...save }`. `parse` gets a

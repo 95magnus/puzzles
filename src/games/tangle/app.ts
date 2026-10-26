@@ -27,6 +27,7 @@ const tangle: PuzzleGame<PresetId, Level, GameState, TangleDailySave> = {
   id: 'tangle',
   title: 'Tangle',
   howtoFlag: 'tangle-howto-seen',
+  bestOnComputer: true,
   howto: openTangleHowto,
 
   presets: PRESETS,

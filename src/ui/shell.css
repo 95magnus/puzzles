@@ -167,6 +167,48 @@
   padding: 0 16px var(--space);
 }
 
+/* "Best on a computer": phones only, where these boards scroll. */
+.puzzle-phone-note {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .puzzle-phone-note {
+    display: flex;
+    align-items: center;
+    gap: var(--space);
+    width: 100%;
+    max-width: 480px;
+    margin: 0;
+    padding: var(--space) var(--space) var(--space) calc(var(--space) * 2);
+    color: var(--text-2);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+}
+
+.puzzle-phone-note__close {
+  appearance: none;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  cursor: pointer;
+}
+
+.puzzle-phone-note__close:hover {
+  color: var(--text);
+  background: var(--btn-bg-hover);
+}
+
 .puzzle-sub {
   display: flex;
   align-items: center;
