@@ -317,13 +317,16 @@ test('solving practice shows Next puzzle which loads a fresh board', async () =>
   expect(hudText()).toContain('Fill 0%');
 });
 
-test('Reset confirms only after more than 3 moves; Ctrl+Z undoes', async () => {
+const resetDialog = () => document.querySelector<HTMLElement>('.modal');
+const dialogBtn = (action: string) => document.querySelector<HTMLButtonElement>(`.modal [data-action="${action}"]`)!;
+
+test('Reset asks in a dialog only after more than 3 moves; Ctrl+Z undoes', async () => {
   setFlag('howto-seen', true);
   mount('2026-10-21T10:00:00Z');
   await settle();
   prepBoard(7);
   const sol = solutionFor('2026-10-21');
-  const confirmSpy = vi.fn(() => false);
+  const confirmSpy = vi.fn(() => true);
   vi.stubGlobal('confirm', confirmSpy);
   draw(sol[0]);
   expect(hudText()).toContain(`Flows 1/${sol.length}`);
@@ -331,19 +334,29 @@ test('Reset confirms only after more than 3 moves; Ctrl+Z undoes', async () => {
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   draw(sol[0]);
   $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  expect(confirmSpy).not.toHaveBeenCalled();
+  expect(resetDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   expect(loadDaily('2026-10-21')?.paths.every(p => p.length === 0)).toBe(true);
 
   sol.slice(0, 4).forEach(draw);
   $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  expect(confirmSpy).toHaveBeenCalledTimes(1);
+  expect(resetDialog()?.textContent).toContain('Reset this puzzle?');
+  expect(hudText()).toContain(`Flows 4/${sol.length}`); // nothing cleared until confirmed
+  dialogBtn('cancel').click();
+  expect(resetDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 4/${sol.length}`); // declined
-  confirmSpy.mockReturnValue(true);
+  $<HTMLButtonElement>('[data-action="reset"]')!.click();
+  dialogBtn('confirm-reset').click();
+  expect(resetDialog()).toBeNull();
+  expect(hudText()).toContain(`Flows 0/${sol.length}`);
+  $<HTMLButtonElement>('[data-action="undo"]')!.click();
+  expect(hudText()).toContain(`Flows 4/${sol.length}`);
   $<HTMLButtonElement>('[data-action="undo"]')!.click();
   expect(hudText()).toContain(`Flows 3/${sol.length}`);
   $<HTMLButtonElement>('[data-action="reset"]')!.click();
+  dialogBtn('confirm-reset').click();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
+  expect(confirmSpy).not.toHaveBeenCalled(); // never the native confirm
 });
 
 test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths back', async () => {
@@ -355,10 +368,8 @@ test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths
   mount(today + 'T10:00:00Z');
   await settle();
   expect(hudText()).toContain(`Flows 4/${sol.length}`);
-  const confirmSpy = vi.fn(() => true);
-  vi.stubGlobal('confirm', confirmSpy);
   $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  expect(confirmSpy).toHaveBeenCalledTimes(1);
+  dialogBtn('confirm-reset').click();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   const undoBtn = $<HTMLButtonElement>('[data-action="undo"]')!;
   expect(undoBtn.disabled).toBe(false);

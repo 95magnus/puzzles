@@ -4,7 +4,11 @@ export type ModalOptions = {
   /** Element to refocus on close. */
   returnFocus: HTMLElement | null;
   onClose?: () => void;
+  /** Buttons in place of the single "Got it"; each closes the modal, then runs. The first gets focus. */
+  actions?: ModalAction[];
 };
+
+export type ModalAction = { label: string; action?: string; primary?: boolean; run?: () => void };
 
 export type ModalHandle = { close(): void };
 
@@ -19,8 +23,8 @@ export function isModalOpen(): boolean {
 }
 
 /**
- * Shared dialog shell: title + ✕, the caller's body, a full-width "Got it".
- * Esc, ✕, "Got it" or the backdrop close it; focus is trapped inside and returns to `returnFocus`.
+ * Shared dialog shell: title + ✕, the caller's body, a full-width "Got it" (or the caller's `actions`).
+ * Esc, ✕, any button or the backdrop close it; focus is trapped inside and returns to `returnFocus`.
  * Only one is open at a time: opening another closes the current one.
  */
 export function openModal(opts: ModalOptions): ModalHandle {
@@ -42,17 +46,34 @@ export function openModal(opts: ModalOptions): ModalHandle {
   head.className = 'modal__head';
   head.append(title, closeBtn);
 
-  const done = document.createElement('button');
-  done.type = 'button';
-  done.className = 'btn btn--primary modal__done';
-  done.textContent = 'Got it';
+  const buttons = (opts.actions ?? [{ label: 'Got it', primary: true }]).map(a => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = a.primary ? 'btn btn--primary' : 'btn';
+    b.textContent = a.label;
+    if (a.action) b.dataset.action = a.action;
+    b.addEventListener('click', () => {
+      close();
+      a.run?.();
+    });
+    return b;
+  });
+  let foot: HTMLElement;
+  if (opts.actions) {
+    foot = document.createElement('div');
+    foot.className = 'modal__actions';
+    foot.append(...buttons);
+  } else {
+    foot = buttons[0];
+    foot.classList.add('modal__done');
+  }
 
   const dialog = document.createElement('div');
   dialog.className = 'modal__panel glass';
   dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
   dialog.setAttribute('aria-labelledby', titleId);
-  dialog.append(head, ...opts.body, done);
+  dialog.append(head, ...opts.body, foot);
 
   const backdrop = document.createElement('div');
   backdrop.className = 'modal';
@@ -96,10 +117,9 @@ export function openModal(opts: ModalOptions): ModalHandle {
   }
   document.addEventListener('keydown', onKey, true);
   closeBtn.addEventListener('click', close);
-  done.addEventListener('click', close);
   backdrop.addEventListener('click', e => {
     if (e.target === backdrop) close();
   });
-  done.focus({ preventScroll: true });
+  buttons[0].focus({ preventScroll: true });
   return handle;
 }

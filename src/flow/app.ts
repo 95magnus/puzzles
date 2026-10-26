@@ -16,7 +16,7 @@ import { createBoard } from './board';
 import { createHeader } from '../ui/header';
 import { createHud } from '../ui/hud';
 import { openHowto } from './howto';
-import { isModalOpen } from '../ui/modal';
+import { isModalOpen, openModal } from '../ui/modal';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
@@ -312,10 +312,27 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     apply(undo(game));
   }
 
+  function canReset(): boolean {
+    return !!game && !loading && !solved && game.active === null;
+  }
+
   function doReset() {
-    if (!game || loading || solved || game.active !== null) return;
-    if (game.moves > RESET_CONFIRM_MOVES && !confirm('Reset this puzzle? Your paths will be cleared.')) return;
-    apply(reset(game));
+    if (!canReset()) return;
+    if (game!.moves <= RESET_CONFIRM_MOVES) {
+      apply(reset(game!));
+      return;
+    }
+    const g = game;
+    openModal({
+      title: 'Reset this puzzle?',
+      body: [h('p', { class: 'text-2', text: 'Your paths will be cleared. Undo brings them back.' })],
+      returnFocus: resetBtn,
+      actions: [
+        { label: 'Cancel', action: 'cancel' },
+        // The puzzle may have changed under the dialog (new daily, route change): only reset the one it asked about.
+        { label: 'Reset', action: 'confirm-reset', primary: true, run: () => { if (game === g && canReset()) apply(reset(g!)); } },
+      ],
+    });
   }
 
   function newPractice(size: number) {

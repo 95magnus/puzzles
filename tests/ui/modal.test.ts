@@ -84,3 +84,23 @@ test('returnFocus null closes without throwing', () => {
   expect(() => key('Escape')).not.toThrow();
   expect(isModalOpen()).toBe(false);
 });
+
+test('actions replace Got it: first is focused, each closes then runs', () => {
+  const cancel = vi.fn();
+  const ok = vi.fn(() => expect(isModalOpen()).toBe(false));
+  openModal({
+    title: 'Sure?',
+    body: [],
+    returnFocus: opener,
+    actions: [{ label: 'Cancel', action: 'cancel', run: cancel }, { label: 'Do it', action: 'ok', primary: true, run: ok }],
+  });
+  expect(document.querySelector('.modal__done')).toBeNull();
+  const btns = [...document.querySelectorAll<HTMLButtonElement>('.modal__actions > button')];
+  expect(btns.map(b => b.textContent)).toEqual(['Cancel', 'Do it']);
+  expect(btns[1].className).toBe('btn btn--primary');
+  expect(document.activeElement).toBe(btns[0]);
+  btns[1].click();
+  expect(ok).toHaveBeenCalledTimes(1);
+  expect(cancel).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(opener);
+});
