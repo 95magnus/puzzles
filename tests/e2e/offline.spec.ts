@@ -51,6 +51,13 @@ test('works offline after one visit', async ({ page, context }) => {
     await expect(rendered[id](page), file).toBeVisible();
   }
 
+  // Flow quietly generates on the main thread when its worker fails to load, so a board alone
+  // doesn't prove the worker came from the cache.
+  const worker = page.waitForResponse((res) => res.url().includes('generate.worker'));
+  await page.goto('/flow.html#/practice');
+  expect((await worker).fromServiceWorker()).toBe(true);
+  await expect(rendered.flow(page)).toBeVisible();
+
   await page.goto('/?source=pwa');
   await expect(rendered.home(page)).toBeVisible();
   await page.goto('/queens.html#/practice');

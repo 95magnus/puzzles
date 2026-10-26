@@ -40,12 +40,12 @@ precacheManifest(files: { name: string; content: string | Uint8Array }[]): { pat
 ```
 
 1. **`buildStart`**: `this.emitFile({ type: 'chunk', id: 'src/sw/sw.ts', fileName: 'sw.js' })`. The name has no hash: the service worker's URL must stay the same across deploys.
-2. **`generateBundle`** (after Vite has emitted the HTML pages): pass every bundle file (HTML, JS, CSS, the Flow `generate.worker` chunk, the Inter `.woff2` subsets) plus every file in `public/` to `precacheManifest`. It drops `sw.js` and `og.png`, sorts the rest by name and returns the paths (relative, e.g. `flow.html`, `assets/flow-BgdQv8NK.js`) and `version`, the first 12 hex chars of a SHA-256 over every name and content in order. Any change to any file therefore gives a new version. The plugin replaces the `__PRECACHE__` and `__VERSION__` placeholders in the `sw.js` code with the JSON-encoded values.
+2. **`generateBundle`** (after Vite has emitted the HTML pages): pass every bundle file (HTML, JS, CSS, the Flow `generate.worker` chunk, the Inter `.woff2` subsets) plus every file in `public/` to `precacheManifest`. It drops `sw.js` and `og.png`, sorts the rest by name and returns the paths (relative, e.g. `flow.html`, `assets/flow-BgdQv8NK.js`) and `version`, the first 12 hex chars of a SHA-256 over the `sw.js` code (before the placeholders are replaced) and every name and content in order. Any change to any file, or to the service worker itself, therefore gives a new version and a fresh cache. The plugin replaces the `__PRECACHE__` and `__VERSION__` placeholders in the `sw.js` code with the JSON-encoded values.
 3. **`transformIndexHtml`**: inject into every page's `<head>`:
    ```html
-   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});</script>
+   <script>window.addEventListener('load', () => { try { navigator.serviceWorker?.register('./sw.js').catch(() => {}); } catch {} });</script>
    ```
-   Registration failures (private mode, blocked storage) are ignored, like analytics. New puzzles get this automatically, so the "Adding a puzzle" checklist doesn't change.
+   It waits for `load` so precaching doesn't compete with the first page's own downloads. Registration failures (private mode, blocked storage, a `navigator.serviceWorker` getter that throws in Firefox with cookies blocked) are ignored, like analytics. New puzzles get this automatically, so the "Adding a puzzle" checklist doesn't change.
 
 The plugin applies to builds only, so `npm run dev` and Vitest never see a service worker.
 
@@ -69,11 +69,11 @@ cacheKey(url: URL, scope: URL, precache: readonly string[]): string | null
 - Query and hash are ignored.
 - The result if it is in `precache`, else `null`.
 
-A key → `caches.match` in the current cache, falling back to `fetch(request)` on a miss. `null` → `fetch(request)`, i.e. normal network behaviour.
+A key → `cachedOrNetwork` (`src/sw/respond.ts`): the match in the current cache, falling back to `fetch(request)` on a miss or when opening or reading the cache fails. `null` → `fetch(request)`, i.e. normal network behaviour.
 
 **Updates.** The browser checks `sw.js` on each navigation, bypassing the HTTP cache. After a deploy the first load is served by the old worker from its cache while the new worker installs in the background, skips waiting and activates; the next load gets the new version. A hard refresh bypasses the service worker and always loads from the network. Pages already open keep running the code they loaded. localStorage saves are never touched.
 
-**Known edge case.** A page left open across a deploy that later requests a file it never loaded (e.g. an unused font subset) gets a cache miss, because the old cache is gone. Online, the network serves it; offline, that request fails. Accepted rather than keeping old caches.
+**Known edge case.** A page left open across a deploy that later requests a file it never loaded (e.g. an unused font subset) gets a cache miss, because the old cache is gone, and the network can't serve it either: a Pages deploy replaces all of `dist/`, so the old hashed file is a 404 online and a failure offline. Today the only lazy load is Flow's generator worker, and `client.ts` falls back to generating on the main thread, so the impact is small. Accepted rather than keeping old caches.
 
 ## 5. Testing
 
