@@ -1,4 +1,5 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
+import { RESTART_CONFIRM } from '../ui/confirm';
 import { getTanglePreset, loadTangleDaily, saveTangleDaily, setTanglePreset, type TangleDailySave } from './storage';
 import { createTangleBoard } from './board';
 import { MAX_LIVES, encode, newGame, restore, tap } from './game';
@@ -63,7 +64,7 @@ const tangle: PuzzleGame<PresetId, Level, GameState, TangleDailySave> = {
       setGame: (g) => board.setGame(g),
       setInteractive: (on) => board.setInteractive(on),
       destroy: () => board.destroy(),
-      controls: [{ action: 'restart', label: 'Restart', practiceOnly: true, run: (_g, c) => c.replace(newGame(c.spec())) }],
+      controls: [{ action: 'restart', label: 'Restart', confirm: RESTART_CONFIRM, practiceOnly: true, run: (_g, c) => c.replace(newGame(c.spec())) }],
     };
   },
   stats: [

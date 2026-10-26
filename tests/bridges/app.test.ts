@@ -194,6 +194,7 @@ test('practice seed route is deterministic; Clear empties; New board changes the
   await gesture(p, 0);
   expect(clr.disabled).toBe(false);
   clr.click();
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   await vi.advanceTimersByTimeAsync(0);
   expect(counts()).toBe('0'.repeat(p.links.length));
   root.querySelector<HTMLButtonElement>('[data-action="undo"]')!.click();

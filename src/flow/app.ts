@@ -16,7 +16,8 @@ import { createBoard } from './board';
 import { createHeader } from '../ui/header';
 import { createHud } from '../ui/hud';
 import { openHowto } from './howto';
-import { isModalOpen, openModal } from '../ui/modal';
+import { isModalOpen } from '../ui/modal';
+import { CLEAR_CONFIRM, confirmDialog } from '../ui/confirm';
 import { createWinCard } from './winCard';
 
 export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?: number };
@@ -24,7 +25,6 @@ export type Route = { mode: 'daily' } | { mode: 'practice'; size: number; seed?:
 const MIN_SIZE = 5;
 const MAX_SIZE = 9;
 const DEFAULT_PRACTICE_SIZE = 7;
-const RESET_CONFIRM_MOVES = 3;
 
 export function parseRoute(hash: string): Route {
   const raw = hash.replace(/^#/, '').replace(/^\//, '');
@@ -97,9 +97,9 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
   const hudEl = h('div', { class: 'hud-host' });
 
   const undoBtn = h('button', { class: 'btn', type: 'button', 'data-action': 'undo', text: 'Undo' });
-  const resetBtn = h('button', { class: 'btn', type: 'button', 'data-action': 'reset', text: 'Reset' });
+  const clearBtn = h('button', { class: 'btn', type: 'button', 'data-action': 'clear', text: 'Clear' });
   const newBtn = h('button', { class: 'btn btn--primary', type: 'button', 'data-action': 'new', text: 'New puzzle' });
-  const actions = h('div', { class: 'actions' }, undoBtn, resetBtn);
+  const actions = h('div', { class: 'actions' }, undoBtn, clearBtn);
 
   const main = h('main', { class: 'app-main' }, sub, stage, hudEl, actions);
   const app = h('div', { class: 'app' }, header, main);
@@ -150,7 +150,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     else hud.update({ flowsDone: 0, flowsTotal: 0, fillPct: 0 }, 0, false);
     const idle = !game || loading || solved;
     undoBtn.disabled = idle || game!.undo.length === 0;
-    resetBtn.disabled = idle || game!.paths.every(p => p.length === 0);
+    clearBtn.disabled = idle || game!.paths.every(p => p.length === 0);
     newBtn.disabled = loading;
   }
 
@@ -312,26 +312,19 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     apply(undo(game));
   }
 
-  function canReset(): boolean {
+  function canClear(): boolean {
     return !!game && !loading && !solved && game.active === null;
   }
 
-  function doReset() {
-    if (!canReset()) return;
-    if (game!.moves <= RESET_CONFIRM_MOVES) {
-      apply(reset(game!));
-      return;
-    }
+  function doClear() {
+    if (!canClear()) return;
     const g = game;
-    openModal({
-      title: 'Reset this puzzle?',
-      body: [h('p', { class: 'text-2', text: 'Your paths will be cleared. Undo brings them back.' })],
-      returnFocus: resetBtn,
-      actions: [
-        { label: 'Cancel', action: 'cancel' },
-        // The puzzle may have changed under the dialog (new daily, route change): only reset the one it asked about.
-        { label: 'Reset', action: 'confirm-reset', primary: true, run: () => { if (game === g && canReset()) apply(reset(g!)); } },
-      ],
+    confirmDialog({
+      ...CLEAR_CONFIRM,
+      confirmLabel: 'Clear',
+      returnFocus: clearBtn,
+      // The puzzle may have changed under the dialog (new daily, route change): only clear the one it asked about.
+      onConfirm: () => { if (game === g && canClear()) apply(reset(g!)); },
     });
   }
 
@@ -398,7 +391,7 @@ export function mountApp(root: HTMLElement, deps: { now?: () => Date } = {}): ()
     void load(route);
   });
   undoBtn.addEventListener('click', doUndo);
-  resetBtn.addEventListener('click', doReset);
+  clearBtn.addEventListener('click', doClear);
   newBtn.addEventListener('click', () => newPractice(practiceSize));
   window.addEventListener('hashchange', onHashChange);
   document.addEventListener('keydown', onKeyDown);

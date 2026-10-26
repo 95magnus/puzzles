@@ -54,6 +54,8 @@ test('Undo and Clear', async ({ page }) => {
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator('.balanced-filled')).toHaveText(`${givens + 1}/${total}`);
   await page.getByRole('button', { name: 'Clear' }).click();
+  await expect(page.getByRole('dialog', { name: 'Clear the board?' })).toBeVisible();
+  await page.locator('.modal [data-action="confirm"]').click();
   await expect(page.locator('.balanced-filled')).toHaveText(`${givens}/${total}`);
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator('.balanced-filled')).toHaveText(`${givens + 1}/${total}`);

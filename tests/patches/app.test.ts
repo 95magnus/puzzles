@@ -221,12 +221,14 @@ test('practice seed route is deterministic; Clear empties the board; New board c
   expect(text('.patches-cover')).toBe(`${x.w * x.h}/36`);
   expect(clr.disabled).toBe(false);
   clr.click();
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   expect(text('.patches-cover')).toBe('0/36');
   expect(clr.disabled).toBe(true);
   root.querySelector<HTMLButtonElement>('[data-action="undo"]')!.click(); // undo the Clear: enabled again
   expect(text('.patches-cover')).toBe(`${x.w * x.h}/36`);
   expect(clr.disabled).toBe(false);
   clr.click();
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   expect(loadPatchesDaily(DATE)).toBeNull();
   root.querySelector<HTMLButtonElement>('[data-action="new"]')!.click();
   expect(clueSig()).not.toBe(first);

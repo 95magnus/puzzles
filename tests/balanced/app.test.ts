@@ -186,6 +186,7 @@ test('practice seed route is deterministic; Clear empties non-givens; New board 
   await tap(firstOpen(p));
   expect(clr.disabled).toBe(false);
   clr.click();
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   await vi.advanceTimersByTimeAsync(0);
   expect(text('.balanced-filled')).toBe(`${givenCount(p)}/36`);
   root.querySelector<HTMLButtonElement>('[data-action="undo"]')!.click();

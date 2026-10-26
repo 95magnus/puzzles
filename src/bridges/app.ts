@@ -1,4 +1,5 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
+import { CLEAR_CONFIRM } from '../ui/confirm';
 import { getBridgesPreset, loadBridgesDaily, saveBridgesDaily, setBridgesPreset, type BridgesDailySave } from './storage';
 import { createBridgesBoard } from './board';
 import { clear, cycle, encode, newGame, remove, restore, satisfied, undo } from './game';
@@ -61,7 +62,7 @@ const bridges: PuzzleGame<PresetId, Puzzle, GameState, BridgesDailySave> = {
         { action: 'undo', label: 'Undo', run: (g) => void changed(g, undo(g)), disabled: (g) => g.history.length === 0 || g.status === 'won' },
         {
           action: 'clear',
-          label: 'Clear',
+          label: 'Clear', confirm: CLEAR_CONFIRM,
           run: (g) => void changed(g, clear(g)),
           disabled: (g) => !g.bridges.some((v) => v !== 0) || g.status === 'won',
         },

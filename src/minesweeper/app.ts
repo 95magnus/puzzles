@@ -1,4 +1,5 @@
 import { mulberry32 } from '../core/rng';
+import { RESTART_CONFIRM } from '../ui/confirm';
 import { mountPuzzleApp, parsePresetRoute, type BoardCtx, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
 import { getMinesPreset, loadMinesDaily, saveMinesDaily, setMinesPreset, type MinesDailySave } from './storage';
 import { createBoard } from './board';
@@ -95,12 +96,13 @@ const mines: PuzzleGame<PresetId, Spec, GameState, MinesDailySave> = {
         {
           // Restart replays the generated board from its opening; before the first click there is nothing to replay.
           action: 'restart',
-          label: 'Restart',
+          label: 'Restart', confirm: RESTART_CONFIRM,
           practiceOnly: true,
           run: (_g, c) => {
             const b = c.spec().board;
             if (b) c.replace(newGame(b));
           },
+          disabled: (g) => g.board.start === -1,
         },
       ],
     };

@@ -229,6 +229,8 @@ test('practice seed route is deterministic and Restart restores all arrows', asy
   expect(text('.tangle-left')).toBe(String(l.arrows.length - 1));
   expect(text('.tangle-lives')).toBe('♥♥♡');
   root.querySelector<HTMLButtonElement>('[data-action="restart"]')!.click();
+  expect(document.querySelector('.modal')?.textContent).toContain('Restart this board?');
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   expect(root.querySelectorAll('.tangle-arrow')).toHaveLength(l.arrows.length);
   expect(text('.tangle-left')).toBe(String(l.arrows.length));
   expect(text('.tangle-lives')).toBe('♥♥♥');

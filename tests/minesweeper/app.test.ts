@@ -224,6 +224,7 @@ test('tap on a revealed number chords, on a hidden cell reveals', () => {
 
 test('Restart replays the same board from its opening; New board starts blank', () => {
   mount('#/practice?preset=classic&seed=5');
+  expect(root.querySelector<HTMLButtonElement>('[data-action="restart"]')!.disabled).toBe(true); // nothing to replay yet
   const shown = () => [...root.querySelectorAll('.mines-cell')].map((c) => (c.classList.contains('is-revealed') ? 'r' : 'h')).join('');
   leftClick(100);
   const b = generateBoard(PRESETS.classic, mulberry32(5), 100);
@@ -232,6 +233,8 @@ test('Restart replays the same board from its opening; New board starts blank', 
   leftClick(targets(b).safe);
   expect(shown()).not.toBe(opening);
   root.querySelector<HTMLButtonElement>('[data-action="restart"]')!.click();
+  expect(document.querySelector('.modal')?.textContent).toContain('Restart this board?');
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   expect(shown()).toBe(opening);
   root.querySelector<HTMLButtonElement>('[data-action="new"]')!.click();
   expect(root.querySelectorAll('.is-revealed')).toHaveLength(0);

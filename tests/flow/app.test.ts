@@ -317,10 +317,10 @@ test('solving practice shows Next puzzle which loads a fresh board', async () =>
   expect(hudText()).toContain('Fill 0%');
 });
 
-const resetDialog = () => document.querySelector<HTMLElement>('.modal');
+const clearDialog = () => document.querySelector<HTMLElement>('.modal');
 const dialogBtn = (action: string) => document.querySelector<HTMLButtonElement>(`.modal [data-action="${action}"]`)!;
 
-test('Reset asks in a dialog only after more than 3 moves; Ctrl+Z undoes', async () => {
+test('Clear always asks in a dialog; Ctrl+Z undoes', async () => {
   setFlag('howto-seen', true);
   mount('2026-10-21T10:00:00Z');
   await settle();
@@ -333,33 +333,35 @@ test('Reset asks in a dialog only after more than 3 moves; Ctrl+Z undoes', async
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   draw(sol[0]);
-  $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  expect(resetDialog()).toBeNull();
+  $<HTMLButtonElement>('[data-action="clear"]')!.click(); // even a single move asks
+  expect(clearDialog()?.textContent).toContain('Clear the board?');
+  dialogBtn('confirm').click();
+  expect(clearDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   expect(loadDaily('2026-10-21')?.paths.every(p => p.length === 0)).toBe(true);
 
   sol.slice(0, 4).forEach(draw);
-  $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  expect(resetDialog()?.textContent).toContain('Reset this puzzle?');
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  expect(clearDialog()?.textContent).toContain('Clear the board?');
   expect(hudText()).toContain(`Flows 4/${sol.length}`); // nothing cleared until confirmed
   dialogBtn('cancel').click();
-  expect(resetDialog()).toBeNull();
+  expect(clearDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 4/${sol.length}`); // declined
-  $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  dialogBtn('confirm-reset').click();
-  expect(resetDialog()).toBeNull();
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  dialogBtn('confirm').click();
+  expect(clearDialog()).toBeNull();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   $<HTMLButtonElement>('[data-action="undo"]')!.click();
   expect(hudText()).toContain(`Flows 4/${sol.length}`);
   $<HTMLButtonElement>('[data-action="undo"]')!.click();
   expect(hudText()).toContain(`Flows 3/${sol.length}`);
-  $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  dialogBtn('confirm-reset').click();
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  dialogBtn('confirm').click();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   expect(confirmSpy).not.toHaveBeenCalled(); // never the native confirm
 });
 
-test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths back', async () => {
+test('restored daily: Clear confirms, and Undo brings the paths back', async () => {
   const today = '2026-10-21';
   const sol = solutionFor(today);
   expect(sol.length).toBeGreaterThan(4);
@@ -368,8 +370,8 @@ test('restored daily with ≥ 4 paths: Reset confirms, and Undo brings the paths
   mount(today + 'T10:00:00Z');
   await settle();
   expect(hudText()).toContain(`Flows 4/${sol.length}`);
-  $<HTMLButtonElement>('[data-action="reset"]')!.click();
-  dialogBtn('confirm-reset').click();
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  dialogBtn('confirm').click();
   expect(hudText()).toContain(`Flows 0/${sol.length}`);
   const undoBtn = $<HTMLButtonElement>('[data-action="undo"]')!;
   expect(undoBtn.disabled).toBe(false);

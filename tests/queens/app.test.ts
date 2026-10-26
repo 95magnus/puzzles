@@ -187,8 +187,16 @@ test('practice seed route is deterministic; Clear empties; New board changes the
   const first = regionsOf();
   await queenAt(p, solutionCells(p)[0]);
   expect(text('.queens-count')).toBe('1/7 ♛');
-  root.querySelector<HTMLButtonElement>('[data-action="clear"]')!.click();
+  const clr = root.querySelector<HTMLButtonElement>('[data-action="clear"]')!;
+  clr.click();
+  expect(document.querySelector('.modal')?.textContent).toContain('Clear the board?');
+  document.querySelector<HTMLButtonElement>('.modal [data-action="cancel"]')!.click();
+  expect(document.querySelector('.modal')).toBeNull();
+  expect(text('.queens-count')).toBe('1/7 ♛'); // Cancel keeps the board
+  clr.click();
+  document.querySelector<HTMLButtonElement>('.modal [data-action="confirm"]')!.click();
   expect(text('.queens-count')).toBe('0/7 ♛');
+  expect(clr.disabled).toBe(true); // nothing left to clear
   expect(loadQueensDaily(DATE)).toBeNull();
   root.querySelector<HTMLButtonElement>('[data-action="new"]')!.click();
   expect(regionsOf()).not.toBe(first);

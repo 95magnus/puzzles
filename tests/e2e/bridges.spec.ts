@@ -103,6 +103,7 @@ test('Undo and Clear', async ({ page }) => {
   await page.locator('[data-action="undo"]').click();
   await expect.poll(nonZero).toBe(1);
   await page.locator('[data-action="clear"]').click();
+  await page.locator('.modal [data-action="confirm"]').click();
   await expect.poll(nonZero).toBe(0);
   await page.locator('[data-action="undo"]').click();
   await expect.poll(nonZero).toBe(1);

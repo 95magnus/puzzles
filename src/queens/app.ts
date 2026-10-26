@@ -1,4 +1,5 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
+import { CLEAR_CONFIRM } from '../ui/confirm';
 import { getQueensPreset, loadQueensDaily, saveQueensDaily, setQueensPreset, type QueensDailySave } from './storage';
 import { createQueensBoard } from './board';
 import { clear, cycle, encode, newGame, paint, queenCount, restore, undo } from './game';
@@ -51,7 +52,7 @@ const queens: PuzzleGame<PresetId, Puzzle, GameState, QueensDailySave> = {
       destroy: () => board.destroy(),
       controls: [
         { action: 'undo', label: 'Undo', run: (g) => void changed(g, undo(g)), disabled: (g) => g.history.length === 0 || g.status === 'won' },
-        { action: 'clear', label: 'Clear', run: (g) => void changed(g, clear(g)), disabled: (g) => g.status === 'won' },
+        { action: 'clear', label: 'Clear', confirm: CLEAR_CONFIRM, run: (g) => void changed(g, clear(g)), disabled: (g) => g.cells.every((c) => c === 0) || g.status === 'won' },
       ],
     };
   },

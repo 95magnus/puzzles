@@ -9,6 +9,7 @@ import { createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, setFlag } from '../core/storage';
 import { createHeader } from './header';
+import { confirmDialog, type ConfirmText } from './confirm';
 import { formatClock } from './hud';
 
 export type Status = 'playing' | 'won' | 'lost';
@@ -37,6 +38,8 @@ export type Control<G, Spec> = {
   disabled?(g: G): boolean;
   /** Only shown in practice; the shell adds "New board" after these there. */
   practiceOnly?: boolean;
+  /** Ask first (Clear, Restart); the dialog's confirm button reuses `label`. */
+  confirm?: ConfirmText;
 };
 
 export type BoardAdapter<G, Spec> = {
@@ -343,7 +346,21 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
     controls.textContent = '';
     for (const c of board.controls ?? []) {
       if (c.practiceOnly && mode !== 'practice') continue;
-      const b = button(c.label, false, () => { if (game) c.run(game, ctx); });
+      const b = button(c.label, false, () => {
+        const g = game;
+        if (!g) return;
+        if (!c.confirm) {
+          c.run(g, ctx);
+          return;
+        }
+        confirmDialog({
+          ...c.confirm,
+          confirmLabel: c.label,
+          returnFocus: b,
+          // The game may have changed under the dialog (new day, route change): only act on the one it asked about.
+          onConfirm: () => { if (game === g && !c.disabled?.(g)) c.run(g, ctx); },
+        });
+      });
       b.dataset.action = c.action;
       controls.append(b);
     }

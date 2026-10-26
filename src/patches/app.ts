@@ -1,4 +1,5 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
+import { CLEAR_CONFIRM } from '../ui/confirm';
 import { getPatchesPreset, loadPatchesDaily, savePatchesDaily, setPatchesPreset, type PatchesDailySave } from './storage';
 import { createPatchesBoard } from './board';
 import { clear, coverage, encode, newGame, place, restore, tap, undo } from './game';
@@ -52,7 +53,7 @@ const patches: PuzzleGame<PresetId, Puzzle, GameState, PatchesDailySave> = {
       destroy: () => board.destroy(),
       controls: [
         { action: 'undo', label: 'Undo', run: (g) => void changed(g, undo(g)), disabled: (g) => g.history.length === 0 || g.status === 'won' },
-        { action: 'clear', label: 'Clear', run: (g) => void changed(g, clear(g)), disabled: (g) => g.rects.length === 0 || g.status === 'won' },
+        { action: 'clear', label: 'Clear', confirm: CLEAR_CONFIRM, run: (g) => void changed(g, clear(g)), disabled: (g) => g.rects.length === 0 || g.status === 'won' },
       ],
     };
   },

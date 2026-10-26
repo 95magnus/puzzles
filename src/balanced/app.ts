@@ -1,4 +1,5 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../ui/puzzleApp';
+import { CLEAR_CONFIRM } from '../ui/confirm';
 import { getBalancedPreset, loadBalancedDaily, saveBalancedDaily, setBalancedPreset, type BalancedDailySave } from './storage';
 import { createBalancedBoard } from './board';
 import { clear, cycle, encode, filled, isGiven, newGame, restore, toggle, undo } from './game';
@@ -59,7 +60,7 @@ const balanced: PuzzleGame<PresetId, Puzzle, GameState, BalancedDailySave> = {
         { action: 'undo', label: 'Undo', run: (g) => void changed(g, undo(g)), disabled: (g) => g.history.length === 0 || g.status === 'won' },
         {
           action: 'clear',
-          label: 'Clear',
+          label: 'Clear', confirm: CLEAR_CONFIRM,
           run: (g) => void changed(g, clear(g)),
           disabled: (g) => !g.cells.some((v, i) => v !== 0 && !isGiven(g, i)) || g.status === 'won',
         },
