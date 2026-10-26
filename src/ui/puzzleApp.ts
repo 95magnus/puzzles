@@ -5,7 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../core/daily';
-import { createPlayTracker } from '../core/analytics';
+import { COUNTED_ACTIONS, createPlayTracker } from '../core/analytics';
 import { randomSeed } from '../core/rng';
 import { getFlag, setFlag } from '../core/storage';
 import type { GameId } from '../pages';
@@ -214,7 +214,7 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
     : null;
   hudSizer?.observe(panel);
 
-  const play = createPlayTracker(id);
+  const play = createPlayTracker(id, COUNTED_ACTIONS.filter((a) => board.controls?.some((c) => c.action === a)));
   const elapsed = () => baseElapsed + (runningSince === null ? 0 : now().getTime() - runningSince);
 
   function startTimer(fromMs: number): void {
@@ -318,7 +318,8 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
     primary.focus({ preventScroll: true });
   }
 
-  function setGame(g: G, fromMs: number): void {
+  /** `restored`: the daily came back from its save with moves on it. */
+  function setGame(g: G, fromMs: number, restored = false): void {
     game = g;
     dirty = false;
     hideCard();
@@ -330,7 +331,11 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
         runningSince = null;
       } else {
         startTimer(fromMs);
-        play.begin(route.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', preset: route.preset });
+        play.begin(
+          route.mode === 'daily'
+            ? { mode: 'daily', day: dailyDate, restored: restored ? 1 : 0 }
+            : { mode: 'practice', preset: route.preset, restored: 0 },
+        );
       }
     } else {
       board.setInteractive(false);
@@ -369,6 +374,7 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
         const g = game;
         if (!g) return;
         if (!c.confirm) {
+          play.action(c.action);
           c.run(g, ctx);
           return;
         }
@@ -377,7 +383,11 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
           confirmLabel: c.label,
           returnFocus: b,
           // The game may have changed under the dialog (new day, route change): only act on the one it asked about.
-          onConfirm: () => { if (game === g && !c.disabled?.(g)) c.run(g, ctx); },
+          onConfirm: () => {
+            if (game !== g || c.disabled?.(g)) return;
+            play.action(c.action);
+            c.run(g, ctx);
+          },
         });
       });
       b.dataset.action = c.action;
@@ -402,7 +412,7 @@ export function mountPuzzleApp<P extends string, Spec, G extends { status: Statu
     const save = def.daily.load(dailyDate);
     const restored = save ? def.fromSave(spec, save) : null;
     attempt = restored ? restored.attempt : 1;
-    setGame(restored ? restored.game : def.newGame(spec), restored ? save!.elapsedMs : 0);
+    setGame(restored ? restored.game : def.newGame(spec), restored ? save!.elapsedMs : 0, restored !== null);
   }
 
   function retryDaily(): void {

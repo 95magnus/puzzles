@@ -213,7 +213,7 @@ test('reports puzzle_start once and puzzle_end on win', async () => {
   await gesture(p, 0);
   await gesture(p, 0);
   expect(track.mock.calls.filter(([e]) => e === 'puzzle_start')).toEqual([
-    ['puzzle_start', { game: 'bridges', mode: 'practice', preset: 'small' }],
+    ['puzzle_start', { game: 'bridges', mode: 'practice', preset: 'small', restored: 0 }],
   ]);
   await gesture(p, 0); // back to none
   await solve(p);

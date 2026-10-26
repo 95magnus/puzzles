@@ -206,7 +206,7 @@ test('reports puzzle_start once and puzzle_end on win', async () => {
   await tap(open[0]);
   await tap(open[1]);
   expect(track.mock.calls.filter(([e]) => e === 'puzzle_start')).toEqual([
-    ['puzzle_start', { game: 'balanced', mode: 'practice', preset: 'small' }],
+    ['puzzle_start', { game: 'balanced', mode: 'practice', preset: 'small', restored: 0 }],
   ]);
   await tap(open[0], 2);
   await tap(open[1], 2); // back to empty

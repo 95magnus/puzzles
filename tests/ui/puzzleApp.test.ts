@@ -59,10 +59,12 @@ function makeGame(): PuzzleGame<P, Spec, G, Save> {
         destroy: () => panel.remove(),
         controls: [
           { action: 'move', label: 'Move', run: act((g) => g.moves++) },
+          { action: 'undo', label: 'Undo', run: act((g) => g.moves--) },
           { action: 'clear', label: 'Clear', confirm: CLEAR_CONFIRM, disabled: (g) => g.moves === 0, run: act((g) => (g.moves = 0)) },
           { action: 'win', label: 'Win', run: act((g) => (g.status = 'won')) },
           { action: 'lose', label: 'Lose', run: act((g) => (g.status = 'lost')) },
           { action: 'peek', label: 'Peek', practiceOnly: true, run: () => {} },
+          { action: 'replace', label: 'Replace', run: (_g, ctx) => ctx.replace({ status: 'playing', moves: 0, rev: 0, key: ctx.spec().key }) },
         ],
       };
     },
@@ -95,7 +97,15 @@ afterEach(() => {
   unmount = undefined;
   document.body.textContent = '';
   vi.useRealTimers();
+  delete (window as { umami?: unknown }).umami;
 });
+
+/** Collects Umami events from here on. */
+function trackEvents() {
+  const track = vi.fn<(event: string, data?: Record<string, unknown>) => void>();
+  (window as { umami?: unknown }).umami = { track };
+  return (event: string) => track.mock.calls.filter(([e]) => e === event).map(([, d]) => d);
+}
 
 test('parsePresetRoute: anything but #/practice is the daily', () => {
   const game = { presets: { small: 1, large: 1 }, defaultPreset: 'small' as P, preset: { get: () => null } };
@@ -229,4 +239,63 @@ test('opens the how-to on the first visit only', () => {
   root.textContent = '';
   mount();
   expect(howto).toHaveBeenCalledTimes(1);
+});
+
+test('the daily reports its day and whether it was restored', () => {
+  const events = trackEvents();
+  mount();
+  click('move');
+  expect(events('puzzle_start')).toEqual([{ game: 'queens', mode: 'daily', day: DATE, restored: 0 }]);
+  unmount!();
+  mount();
+  click('move');
+  expect(events('puzzle_start')[1]).toEqual({ game: 'queens', mode: 'daily', day: DATE, restored: 1 });
+});
+
+test('puzzle_end counts moves, undos and confirmed clears', () => {
+  const events = trackEvents();
+  mount();
+  click('move');
+  click('move');
+  click('undo');
+  click('clear');
+  modalButton('confirm').click();
+  click('win');
+  expect(events('puzzle_end')).toEqual([
+    expect.objectContaining({ mode: 'daily', result: 'won', moves: 5, undo: 1, clear: 1 }),
+  ]);
+});
+
+test('a cancelled clear is not counted', () => {
+  const events = trackEvents();
+  mount();
+  click('move');
+  click('clear');
+  modalButton('cancel').click();
+  click('win');
+  expect(events('puzzle_end')[0]).toMatchObject({ moves: 2, undo: 0, clear: 0 });
+});
+
+test('a restored finished daily reports nothing', () => {
+  saves.set(DATE, { v: 1, date: DATE, elapsedMs: 65_000, moves: 3, rev: 3, status: 'won', attempt: 1 });
+  const events = trackEvents();
+  mount();
+  expect(events('puzzle_start')).toEqual([]);
+  expect(events('puzzle_end')).toEqual([]);
+});
+
+test('a board from ctx.replace reports restored: 0', () => {
+  saves.set(DATE, { v: 1, date: DATE, elapsedMs: 65_000, moves: 3, rev: 3, status: 'playing', attempt: 1 });
+  const events = trackEvents();
+  mount();
+  click('replace');
+  click('move');
+  expect(events('puzzle_start')).toEqual([{ game: 'queens', mode: 'daily', day: DATE, restored: 0 }]);
+});
+
+test('practice reports restored: 0 and no day', () => {
+  const events = trackEvents();
+  mount('#/practice?seed=7');
+  click('move');
+  expect(events('puzzle_start')).toEqual([{ game: 'queens', mode: 'practice', preset: 'small', restored: 0 }]);
 });
