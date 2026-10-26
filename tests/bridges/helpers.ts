@@ -1,11 +1,13 @@
 import { layout } from '../../src/bridges/geometry';
+import { deduce } from '../../src/bridges/solver';
 import type { Puzzle } from '../../src/bridges/types';
 
-/** Rows of digits (islands) and `.` (water) → puzzle. `solution` stays empty until Task 2 wires `deduce(p) ?? []` here. */
+/** Rows of digits (islands) and `.` (water) → puzzle; `solution` is what `deduce` finds (empty when it stalls). */
 export function hz(rows: string[]): Puzzle {
   const size = rows.length;
   const islands = [...rows.join('')].flatMap((ch, cell) => (ch === '.' ? [] : [{ cell, n: Number(ch) }]));
-  return { ...layout(size, islands), solution: [] };
+  const p = layout(size, islands);
+  return { ...p, solution: deduce(p) ?? [] };
 }
 
 export const CORNER = hz(['4.2', '...', '2..']); // links 0-1, 0-2; unique 2,2 (capacity only)
