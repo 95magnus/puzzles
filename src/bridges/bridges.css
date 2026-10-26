@@ -1,0 +1,213 @@
+/* Bridges page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
+   header, HUD typography, modal and .end-card come from ../ui/shell.css. */
+:root {
+  --bridges-bg: #1d1b28; /* board surface */
+  --bridges-dot: rgba(255, 255, 255, 0.14);
+  --bridges-ring: rgba(255, 255, 255, 0.35);
+  --bridges-ink: rgba(244, 245, 251, 0.92);
+  --bridges-bridge: rgba(244, 245, 251, 0.85);
+  --bridges-done: #4fd6c3;
+  --bridges-done-ink: #10202a;
+  --bridges-invalid: #ff5c7a;
+}
+
+/* ---------- Page ---------- */
+/* Header + subtitle + HUD + gaps must stay within PAGE_CHROME (200px) in board.ts. */
+.bridges-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--space) * 0.75);
+  padding: 0 16px var(--space);
+}
+
+.bridges-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.bridges-stage {
+  position: relative;
+  width: 100%;
+}
+
+.bridges-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%; /* narrowed to the board panel's width by the app */
+  padding: 0 4px;
+}
+
+.bridges-stats {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.bridges-controls {
+  display: flex;
+  gap: var(--space);
+}
+
+/* ---------- Board ---------- */
+.bridges-board {
+  display: flex;
+  justify-content: center;
+}
+
+.bridges-panel {
+  --cell: 40px;
+  padding: 12px; /* matches PANEL_PAD in board.ts */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.bridges-svg {
+  display: block;
+  width: calc(var(--n) * var(--cell));
+  height: calc(var(--n) * var(--cell));
+  background: var(--bridges-bg);
+  border-radius: 6px;
+  touch-action: none; /* drags draw bridges instead of scrolling */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.bridges-board--locked .bridges-svg {
+  cursor: default;
+}
+
+.bridges-dots circle {
+  fill: var(--bridges-dot);
+}
+
+/* Bridges: 2 px whatever the cell size. */
+.bridges-link line,
+.bridges-howto__demo line {
+  stroke: var(--bridges-bridge);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.bridges-link.is-blocked line {
+  stroke: var(--bridges-invalid);
+}
+
+.bridges-link.is-glow line {
+  animation: bridges-glow 360ms ease-out;
+}
+
+@keyframes bridges-glow {
+  0% { stroke: var(--bridges-bridge); filter: none; }
+  45% { stroke: #fff; filter: drop-shadow(0 0 0.12px #fff); stroke-width: 4; }
+  100% { stroke: var(--bridges-bridge); filter: none; }
+}
+
+.bridges-preview {
+  stroke: var(--bridges-ink);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+/* ---------- Islands ---------- */
+.bridges-island circle,
+.bridges-island-icon circle {
+  fill: var(--bridges-bg);
+  stroke: var(--bridges-ring);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.bridges-island text,
+.bridges-island-icon text {
+  fill: var(--bridges-ink);
+  font-size: 0.42px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.bridges-island.is-done circle {
+  fill: var(--bridges-done);
+  stroke: var(--bridges-done);
+}
+
+.bridges-island.is-done text {
+  fill: var(--bridges-done-ink);
+}
+
+.bridges-island.is-over circle {
+  stroke: var(--bridges-invalid);
+  stroke-width: 2;
+}
+
+.bridges-island.is-over text {
+  fill: var(--bridges-invalid);
+}
+
+/* One red pulse each time the network splits. */
+.bridges-island.is-split circle {
+  animation: bridges-split 700ms ease-out;
+}
+
+@keyframes bridges-split {
+  0%, 100% { stroke: var(--bridges-ring); stroke-width: 1; }
+  40% { stroke: var(--bridges-invalid); stroke-width: 4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bridges-link.is-glow line,
+  .bridges-island.is-split circle {
+    animation: none;
+  }
+}
+
+/* ---------- How-to ---------- */
+.bridges-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.bridges-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+/* The demo is a small, inert solved board at a fixed size; every island is satisfied. */
+.bridges-howto__demo {
+  flex: none;
+  width: 120px;
+  height: 120px;
+  background: var(--bridges-bg);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.bridges-howto__demo .bridges-island-icon circle {
+  fill: var(--bridges-done);
+  stroke: var(--bridges-done);
+}
+
+.bridges-howto__demo .bridges-island-icon text {
+  fill: var(--bridges-done-ink);
+}
