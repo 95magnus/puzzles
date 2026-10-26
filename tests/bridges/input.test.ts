@@ -69,4 +69,16 @@ describe('step', () => {
     const r = run([down(2.5, 0.5), move(2.6, 1.1), move(2.6, 1.3)]);
     expect(r.actions[2]).toEqual([]);
   });
+
+  it('a second down clears a live preview', () => {
+    const r = run([down(2.5, 0.5), move(2.6, 1.1), down(0.5, 0.5)]);
+    expect(r.actions[2]).toEqual([{ kind: 'preview', link: -1 }]);
+    expect(r.state.mode).toBe('pressed');
+  });
+
+  it('cancel while pressed or idle, and a water drag then up, do nothing', () => {
+    expect(flat(run([cancel]).actions)).toEqual([]);
+    expect(flat(run([down(1.5, 0.5), cancel]).actions)).toEqual([]);
+    expect(flat(run([down(1.5, 1.5), move(1.5, 2.2), up]).actions)).toEqual([]);
+  });
 });

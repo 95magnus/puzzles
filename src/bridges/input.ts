@@ -70,7 +70,7 @@ export function step(p: Layout, s: InputState, e: InputEvent): { state: InputSta
   const clear: InputAction[] = s.mode === 'drag' && s.link >= 0 ? [{ kind: 'preview', link: -1 }] : [];
   switch (e.type) {
     case 'down':
-      return { state: { mode: 'pressed', island: islandAt(p, e.x, e.y), x0: e.x, y0: e.y, link: -1 }, actions: [] };
+      return { state: { mode: 'pressed', island: islandAt(p, e.x, e.y), x0: e.x, y0: e.y, link: -1 }, actions: clear };
     case 'move': {
       if (s.mode === 'idle') return { state: s, actions: [] };
       if (s.mode === 'pressed' && Math.hypot(e.x - s.x0, e.y - s.y0) < SLOP) return { state: s, actions: [] };
