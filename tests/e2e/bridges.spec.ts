@@ -27,6 +27,14 @@ async function gapPoint(page: Page, p: Puzzle, l: number) {
   return cellPoint(page, p.size, inner[Math.floor(inner.length / 2)]);
 }
 
+/** Two links that cannot block each other, so tapping both always lands. */
+function independentLinks(p: Puzzle): [number, number] {
+  for (let a = 0; a < p.links.length; a++) {
+    for (let b = a + 1; b < p.links.length; b++) if (!p.links[a].crosses.includes(b)) return [a, b];
+  }
+  throw new Error('no two independent links');
+}
+
 const islandPoint = (page: Page, p: Puzzle, i: number) => cellPoint(page, p.size, p.islands[i].cell);
 
 async function tapLink(page: Page, p: Puzzle, l: number) {
@@ -87,8 +95,9 @@ test('Undo and Clear', async ({ page }) => {
   await page.goto(PRACTICE_URL);
   const p = practice();
   const n = p.links.length;
-  await tapLink(page, p, 0);
-  await tapLink(page, p, 1);
+  const [a, b] = independentLinks(p);
+  await tapLink(page, p, a);
+  await tapLink(page, p, b);
   const nonZero = async () => (await counts(page, n)).filter((c) => c !== '0').length;
   await expect.poll(nonZero).toBe(2);
   await page.locator('[data-action="undo"]').click();
@@ -104,12 +113,23 @@ test('reload mid-daily restores progress', async ({ page }) => {
   const date = await page.evaluate(() => new Date().toISOString().slice(0, 10));
   const p = generatePuzzle(PRESETS[DAILY_PRESET].size, bridgesDailySeed(date));
   await expect(page.locator('g.bridges-island')).toHaveCount(p.islands.length);
-  await tapLink(page, p, 0);
-  await tapLink(page, p, 1);
-  await tapLink(page, p, 1);
+  const [a, b] = independentLinks(p);
+  await tapLink(page, p, a);
+  await tapLink(page, p, b);
+  await tapLink(page, p, b);
   const before = await counts(page, p.links.length);
   expect(before.filter((c) => c !== '0').length).toBe(2);
   await page.reload();
   await expect(page.locator('g.bridges-island')).toHaveCount(p.islands.length);
   expect(await counts(page, p.links.length)).toEqual(before);
+});
+
+test('the large board fits a 375 px viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/bridges.html#/practice?preset=large&seed=1');
+  const svg = page.locator('svg.bridges-svg');
+  await expect(svg).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  const box = (await svg.boundingBox())!;
+  expect(box.x + box.width).toBeLessThanOrEqual(375);
 });
