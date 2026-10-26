@@ -133,3 +133,20 @@ test('headers match across games', async ({ page }) => {
     expect(Math.abs(other.height - flow.height)).toBeLessThanOrEqual(1);
   }
 });
+
+test('phones see which puzzles are best on a computer', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto('/');
+  for (const id of ['mines', 'tangle']) {
+    await expect(page.locator(`.puzzle-card[data-id="${id}"]`).getByText('Best played on a computer')).toBeVisible();
+  }
+  for (const id of ['flow', 'queens', 'patches', 'balanced', 'bridges']) {
+    await expect(page.locator(`.puzzle-card[data-id="${id}"]`).getByText('Best played on a computer')).toHaveCount(0);
+  }
+});
+
+test('desktops do not see the best-on-a-computer note', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await expect(page.locator('.puzzle-card[data-id="mines"]').getByText('Best played on a computer')).toBeHidden();
+});

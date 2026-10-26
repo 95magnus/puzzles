@@ -25,6 +25,8 @@ export type PuzzleEntry = {
   doneWord: 'Solved' | 'Cleared';
   /** Word for a lost daily; defaults to "Boom". */
   lostWord?: string;
+  /** The board scrolls on a phone: phones see "Best played on a computer" (matches the game's own note). */
+  bestOnComputer?: boolean;
   preview: () => SVGSVGElement;
   dailyStatus: (date: string) => DailyStatus;
 };
@@ -48,6 +50,7 @@ export const PUZZLES: readonly PuzzleEntry[] = ([
     name: 'Mines',
     tagline: 'Clear the board without hitting a mine.',
     doneWord: 'Cleared',
+    bestOnComputer: true,
     preview: minesPreview,
     dailyStatus(date) {
       const save = loadMinesDaily(date);
@@ -64,6 +67,7 @@ export const PUZZLES: readonly PuzzleEntry[] = ([
     tagline: "Tap arrows out of the knot. Don't crash.",
     doneWord: 'Cleared',
     lostWord: 'Out of lives',
+    bestOnComputer: true,
     preview: tanglePreview,
     dailyStatus(date) {
       const save = loadTangleDaily(date);

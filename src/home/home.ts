@@ -27,7 +27,9 @@ function createCard(entry: PuzzleEntry): Card {
   }
   const body = el('div', 'puzzle-card__body');
   const pill = el('span', 'status-pill num');
-  body.append(el('h2', 'puzzle-card__name', entry.name), el('p', 'puzzle-card__tagline text-2', entry.tagline), pill);
+  body.append(el('h2', 'puzzle-card__name', entry.name), el('p', 'puzzle-card__tagline text-2', entry.tagline));
+  if (entry.bestOnComputer) body.append(el('p', 'puzzle-card__phone-note', 'Best played on a computer'));
+  body.append(pill);
   const actions = el('div', 'puzzle-card__actions');
   actions.append(link('btn btn--primary', `${entry.href}#/`, 'Play daily'), link('btn', `${entry.href}#/practice`, 'Practice'));
   li.append(body, actions);

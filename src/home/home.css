@@ -72,6 +72,21 @@
   font-size: 14px;
 }
 
+/* Phones only, like the game's own note (.puzzle-phone-note in shell.css). */
+.puzzle-card__phone-note {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .puzzle-card__phone-note {
+    display: block;
+    margin: -2px 0 4px;
+    color: #ffc46b;
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
 .puzzle-card__actions {
   grid-column: 1 / -1;
   display: flex;
