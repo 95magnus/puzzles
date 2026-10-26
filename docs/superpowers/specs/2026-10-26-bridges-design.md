@@ -147,7 +147,7 @@ A range with `min > max` is a contradiction → return `null`. Returns the bridg
 **Visuals**
 - Board surface: shared `glass` panel; faint dots at cell centres for alignment.
 - Islands: circles ~70 % of a cell, number centred. Satisfied (total = `n`): filled accent (`#4fd6c3`) with dark number. Over (`over`): red (`#ff5c7a`) ring and number. `split` islands pulse red once each time `split` becomes non-empty.
-- Bridges: 2 px lines island edge to island edge; a double bridge is two parallel lines 6 px apart.
+- Bridges: 2 px lines island edge to island edge; a double bridge is two parallel lines about 0.2 cell apart.
 - Refused crossing: the blocking bridges flash red for 300 ms.
 - Win: bridges pulse once in breadth-first order from island 0 (40 ms per step), then the win card slides up. Disabled under `prefers-reduced-motion`.
 - Sizing: cell size `clamp(28px, fit-to-panel, 56px)`; 11×11 at 28 px fits 375 px wide with the 16 px page gutter.

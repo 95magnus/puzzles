@@ -22,7 +22,7 @@ const PAGE_CHROME = 200;
 const MIN_CELL = 28;
 const MAX_CELL = 56;
 const ISLAND_R = 0.35;
-/** Half the gap between the two lines of a double bridge, in cell units (≈ 6 px apart at 56 px). */
+/** Half the gap between the two lines of a double bridge, in cell units: 0.22 cell apart (≈ 12 px at 56 px, ≈ 6 px at 28 px). */
 const DOUBLE_OFFSET = 0.11;
 const BLOCKED_MS = 300;
 const WAVE_STEP_MS = 40;
