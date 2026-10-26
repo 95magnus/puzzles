@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "e2e": "playwright test",
+    "icons": "node scripts/icons.mjs",
     "test:slow": "cross-env SLOW=1 vitest run tests/games/flow/generate.test.ts"
   },
   "license": "MIT",

@@ -37,12 +37,15 @@ npm run dev
 | `npm test` | Unit tests (Vitest) |
 | `npm run e2e` | End-to-end tests (Playwright) |
 | `npm run test:slow` | The slower Flow generator tests |
+| `npm run icons` | Re-render the PNG icons and link-preview image in `public/` from `favicon.svg` |
 
 ## Project layout
 
 ```
 index.html, <game>.html   one page per puzzle plus the dashboard
 src/pages.ts              list of pages Vite builds and the dashboard links to
+public/                   favicon, app icons, web manifest and link-preview image
+scripts/icons.mjs         renders the PNGs in public/
 src/core/                 daily seed, RNG, storage, analytics
 src/ui/                   shared shell: header, modals, grid fitting, theme
 src/home/                 the dashboard
@@ -55,7 +58,7 @@ Puzzles are generated in the client from a seed derived from the date, so there 
 
 ## Deployment
 
-Pushes to `main` run the tests, build, and deploy `dist/` to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). Page views and play events go to Umami on the deployed domain only.
+Pushes to `main` run the unit and end-to-end tests, build, and deploy `dist/` to GitHub Pages ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). Page views and play events go to Umami on the deployed domain only.
 
 ## License
 
