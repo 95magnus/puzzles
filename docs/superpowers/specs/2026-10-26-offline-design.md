@@ -53,7 +53,7 @@ The plugin applies to builds only, so `npm run dev` and Vitest never see a servi
 
 `sw.ts` declares `__PRECACHE__: string[]` and `__VERSION__: string`. The cache is named `puzzles-<version>`. Paths resolve against `self.registration.scope`.
 
-**Install.** Open the cache and add every precache path, each fetched as `new Request(url, { cache: 'reload' })` so the HTTP cache (GitHub Pages sends `max-age=600`) can't put an old `flow.html` next to new bundles. If any fetch fails, the install fails as a whole; the browser discards the new worker, keeps the old one and retries on the next navigation, so a cache is never half-updated. Then `self.skipWaiting()`.
+**Install.** `fillCache` (`src/sw/install.ts`) fetches every precache path as `<path>?v=<version>` with `cache: 'reload'`, so neither the HTTP cache (GitHub Pages sends `max-age=600`) nor a CDN edge still serving the previous deploy can put an old `flow.html` next to new bundles, and stores each under its clean URL. A non-OK or redirected response (which can't answer a navigation) fails the install, and nothing is stored until every file has arrived. If any fetch fails, the install fails as a whole; the browser discards the new worker, keeps the old one and retries on the next navigation, so a cache is never half-updated. Then `self.skipWaiting()`.
 
 **Activate.** Delete every cache whose name starts with `puzzles-` and isn't the current one. No `clients.claim()`: the precache already holds everything a first-visit page needs.
 

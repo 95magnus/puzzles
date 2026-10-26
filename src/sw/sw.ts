@@ -3,6 +3,7 @@
  * works offline after one visit. build/offline.ts builds this into dist/sw.js and replaces the two
  * placeholders below. Import nothing from outside src/sw/: sw.js must stay one self-contained script.
  */
+import { fillCache } from './install';
 import { cacheKey } from './routes';
 
 declare const __PRECACHE__: string[];
@@ -14,13 +15,11 @@ const CACHE = 'puzzles-' + __VERSION__;
 const PREFIX = 'puzzles-';
 
 sw.addEventListener('install', (event) => {
-  // `reload` skips the HTTP cache, so an old page can't end up next to new bundles. One failed
-  // file fails the whole install and the previous worker keeps serving its complete cache.
-  const scope = sw.registration.scope;
+  // One failed file fails the whole install and the previous worker keeps serving its complete cache.
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE.map((p) => new Request(new URL(p, scope), { cache: 'reload' }))))
+      .then((cache) => fillCache(cache, PRECACHE, sw.registration.scope, __VERSION__, (req) => fetch(req)))
       .then(() => sw.skipWaiting()),
   );
 });
