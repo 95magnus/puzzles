@@ -5,7 +5,7 @@ import {
   msUntilNextUtcMidnight,
   utcDateString,
 } from '../../core/daily';
-import { createPlayTracker } from '../../core/analytics';
+import { COUNTED_ACTIONS, createPlayTracker } from '../../core/analytics';
 import { isSolved, needsFillHint, newGame, reset, restore, stats, undo, type GameState } from './game';
 import { randomSeed, seedFromDate } from '../../core/rng';
 import { getFlag } from '../../core/storage';
@@ -135,7 +135,7 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
   let startedAt: number | null = null;
 
   const nowMs = () => now().getTime();
-  const play = createPlayTracker('flow');
+  const play = createPlayTracker('flow', COUNTED_ACTIONS);
   const elapsed = () => baseMs + (startedAt === null ? 0 : Math.max(0, nowMs() - startedAt));
   const startClock = () => {
     if (startedAt === null) startedAt = nowMs();
@@ -232,12 +232,14 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
     }
 
     let s = newGame(puzzle);
+    let fromSave = false;
     if (date !== null) {
       const save = loadFlowDaily(date);
       const restored = save ? restore(puzzle, save.paths) : null;
       if (save && restored) {
         s = restored;
         baseMs = Math.max(0, save.elapsedMs);
+        fromSave = true;
       }
       session = { mode: 'daily', date };
     } else {
@@ -253,7 +255,11 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
       void win(false);
     } else {
       board.setInteractive(true);
-      play.begin(session.mode === 'daily' ? { mode: 'daily' } : { mode: 'practice', size: session.size });
+      play.begin(
+        session.mode === 'daily'
+          ? { mode: 'daily', day: session.date, restored: fromSave ? 1 : 0 }
+          : { mode: 'practice', size: session.size, restored: 0 },
+      );
       refresh();
     }
   }
@@ -288,7 +294,7 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
     game = s;
     if (!loading) {
       startClock();
-      play.move();
+      if (kind === 'gesture-end') play.move(); // a whole drag is one move
     }
     if (kind === 'gesture-end' && !loading && isSolved(s)) {
       void win(true);
@@ -309,7 +315,9 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
 
   function doUndo() {
     if (!game || loading || solved) return;
-    apply(undo(game));
+    const next = undo(game);
+    if (next !== game) play.action('undo');
+    apply(next);
   }
 
   function canClear(): boolean {
@@ -324,7 +332,11 @@ export function mountFlow(root: HTMLElement, deps: { now?: () => Date } = {}): (
       confirmLabel: 'Clear',
       returnFocus: clearBtn,
       // The puzzle may have changed under the dialog (new daily, route change): only clear the one it asked about.
-      onConfirm: () => { if (game === g && canClear()) apply(reset(g!)); },
+      onConfirm: () => {
+        if (game !== g || !canClear()) return;
+        play.action('clear');
+        apply(reset(g!));
+      },
     });
   }
 

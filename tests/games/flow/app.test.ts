@@ -83,7 +83,15 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+  delete (window as { umami?: unknown }).umami;
 });
+
+/** Collects Umami events from here on. */
+function trackEvents() {
+  const track = vi.fn<(event: string, data?: Record<string, unknown>) => void>();
+  (window as { umami?: unknown }).umami = { track };
+  return (event: string) => track.mock.calls.filter(([e]) => e === event).map(([, d]) => d);
+}
 
 test('parseFlowRoute', () => {
   expect(parseFlowRoute('')).toEqual({ mode: 'daily' });
@@ -523,4 +531,54 @@ test('HUD values and labels use the shared HUD typography classes', () => {
   createHud(root).update({ flowsDone: 1, flowsTotal: 6, fillPct: 10 }, 0, false);
   expect(root.querySelectorAll('.hud__value.hud-value')).toHaveLength(3);
   expect(root.querySelectorAll('.hud__label.hud-label')).toHaveLength(2);
+});
+
+test('analytics: a drag is one move and starts the play once', async () => {
+  setFlag('howto-seen', true);
+  const today = '2026-10-21';
+  const events = trackEvents();
+  mount(today + 'T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor(today);
+  expect(sol[0].length).toBeGreaterThan(2);
+  sol.forEach(draw);
+  await settle();
+  expect(events('puzzle_start')).toEqual([{ game: 'flow', mode: 'daily', day: today, restored: 0 }]);
+  expect(events('puzzle_end')).toEqual([
+    expect.objectContaining({ result: 'won', moves: sol.length, undo: 0, clear: 0 }),
+  ]);
+});
+
+test('analytics: a restored daily reports restored: 1', async () => {
+  setFlag('howto-seen', true);
+  const today = '2026-10-21';
+  const sol = solutionFor(today);
+  saveFlowDaily({ date: today, paths: sol.map((p, i) => (i === 0 ? p : [])), elapsedMs: 5000, solved: false });
+  const events = trackEvents();
+  mount(today + 'T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  draw(sol[1]);
+  expect(events('puzzle_start')).toEqual([{ game: 'flow', mode: 'daily', day: today, restored: 1 }]);
+});
+
+test('analytics: undo and confirmed clear are counted, a cancelled clear is not', async () => {
+  setFlag('howto-seen', true);
+  const today = '2026-10-21';
+  const events = trackEvents();
+  mount(today + 'T10:00:00Z');
+  await settle();
+  prepBoard(7);
+  const sol = solutionFor(today);
+  draw(sol[0]);
+  $<HTMLButtonElement>('[data-action="undo"]')!.click();
+  draw(sol[0]);
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  dialogBtn('cancel').click();
+  $<HTMLButtonElement>('[data-action="clear"]')!.click();
+  dialogBtn('confirm').click();
+  sol.forEach(draw);
+  await settle();
+  expect(events('puzzle_end')).toEqual([expect.objectContaining({ result: 'won', undo: 1, clear: 1 })]);
 });
