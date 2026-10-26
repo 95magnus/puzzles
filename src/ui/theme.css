@@ -172,8 +172,8 @@ body {
     color var(--dur) var(--ease);
 }
 
-.seg > button:hover,
-.seg > .seg__item:hover {
+/* :where() keeps this at the active rule's specificity, so a hovered active item keeps its colour. */
+.seg > :where(button, .seg__item):hover {
   color: var(--text);
 }
 
