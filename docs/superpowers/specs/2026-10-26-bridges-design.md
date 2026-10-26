@@ -97,9 +97,9 @@ type Violations = {
 
 | Preset | Grid | Islands | Extra-link chance |
 |---|---|---|---|
-| `small` | 7×7 | 10–13 | 0.25 |
-| `medium` (default, daily) | 9×9 | 17–22 | 0.25 |
-| `large` | 11×11 | 26–32 | 0.25 |
+| `small` | 7×7 | 10–13 | 0.4 |
+| `medium` (default, daily) | 9×9 | 17–22 | 0.4 |
+| `large` | 11×11 | 26–32 | 0.4 |
 
 Daily seed: `seedFromString('bridges-daily:' + isoDate)`, preset `medium`.
 
