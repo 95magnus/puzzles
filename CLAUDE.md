@@ -26,7 +26,7 @@ The page's `description`/`og:description` repeats the tagline from `puzzles.ts`.
 
 - `npm run e2e` rebuilds into `dist/` and serves it on port 4173.
 - The slow Flow generator timing tests only run with `SLOW=1` (`npm run test:slow`).
-- Local Node is 22, CI uses 24. Plain Node scripts are `.mjs`, since Node 22 can't run `.ts` directly.
+- Node 24, locally and in CI (`engines` in `package.json`).
 
 ## Git
 
