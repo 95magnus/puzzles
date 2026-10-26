@@ -163,3 +163,23 @@ export function balancedPreview(): SVGSVGElement {
   }
   return svg;
 }
+
+/** Bridges: four numbered islands joined by one single and one double bridge. */
+export function bridgesPreview(): SVGSVGElement {
+  const svg = frame();
+  // [x, y, number]: a square of islands; numbers match the bridges.
+  const islands: [number, number, number][] = [[16, 16, 3], [48, 16, 1], [16, 48, 3], [48, 48, 1]];
+  const line = (x1: number, y1: number, x2: number, y2: number) =>
+    svg.append(s('line', { x1, y1, x2, y2, stroke: 'rgba(238,240,247,.85)', 'stroke-width': 1.8, 'stroke-linecap': 'round' }));
+  line(16, 16, 48, 16); // single, top
+  line(14, 16, 14, 48); // double, left
+  line(18, 16, 18, 48);
+  line(16, 48, 48, 48); // single, bottom
+  for (const [cx, cy, n] of islands) {
+    svg.append(s('circle', { cx, cy, r: 8, fill: '#2a2740', stroke: '#4fd6c3', 'stroke-width': 1.6 }));
+    const t = s('text', { x: cx, y: cy + 3.5, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: '#eef0f7' });
+    t.textContent = String(n);
+    svg.append(t);
+  }
+  return svg;
+}
