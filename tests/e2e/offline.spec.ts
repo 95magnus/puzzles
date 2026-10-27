@@ -12,6 +12,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('flow:flag:patches-howto-seen', '1');
     localStorage.setItem('flow:flag:balanced-howto-seen', '1');
     localStorage.setItem('flow:flag:bridges-howto-seen', '1');
+    localStorage.setItem('flow:flag:loop-howto-seen', '1');
   });
 });
 
@@ -25,6 +26,7 @@ const rendered: Record<keyof typeof PAGES, (page: Page) => Locator> = {
   patches: (page) => page.locator('.patches-cell').first(),
   balanced: (page) => page.locator('.balanced-cell').first(),
   bridges: (page) => page.locator('svg.bridges-svg'),
+  loop: (page) => page.locator('svg.loop-svg'),
 };
 
 test('works offline after one visit', async ({ page, context }) => {
