@@ -1,0 +1,114 @@
+/* Loop page. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css;
+   header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
+:root {
+  --loop-bg: #1d1b28; /* board surface */
+  --loop-dot: rgba(255, 255, 255, 0.28);
+  --loop-ink: rgba(244, 245, 251, 0.92);
+  --loop-done-ink: rgba(244, 245, 251, 0.35);
+  --loop-line: #4fd6c3;
+  --loop-cross: rgba(244, 245, 251, 0.45);
+  --loop-invalid: #ff5c7a;
+}
+
+.loop-board {
+  display: flex;
+  justify-content: center;
+}
+
+.loop-panel {
+  --cell: 40px;
+  padding: 12px; /* matches PANEL_PAD in ui/fit.ts */
+  width: fit-content;
+  max-width: 100%;
+}
+
+.loop-svg {
+  display: block;
+  width: calc(var(--n) * var(--cell));
+  height: calc(var(--n) * var(--cell));
+  background: var(--loop-bg);
+  border-radius: 6px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.loop-board--locked .loop-svg {
+  cursor: default;
+}
+
+.loop-dot {
+  fill: var(--loop-dot);
+  pointer-events: none;
+}
+
+/* A branching dot gets a red ring. */
+.loop-dot.is-bad {
+  fill: none;
+  stroke: var(--loop-invalid);
+  stroke-width: 2;
+  r: 0.16px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Lines: 4 px whatever the cell size; unknown edges stay invisible. */
+.loop-edge line,
+.loop-mini .loop-lines line {
+  stroke: var(--loop-line);
+  stroke-width: 4;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.loop-edge line.loop-x {
+  stroke: var(--loop-cross);
+  stroke-width: 2;
+}
+
+.loop-edge[data-state='empty'] line,
+.loop-edge[data-state='cross'] line:not(.loop-x),
+.loop-edge[data-state='line'] line.loop-x {
+  display: none;
+}
+
+.loop-edge.is-glow line:not(.loop-x) {
+  animation: loop-glow 200ms ease-out;
+}
+
+@keyframes loop-glow {
+  0% { stroke: var(--loop-line); filter: none; }
+  50% { stroke: #fff; filter: drop-shadow(0 0 0.1px #fff); stroke-width: 6; }
+  100% { stroke: var(--loop-line); filter: none; }
+}
+
+.loop-clue {
+  fill: var(--loop-ink);
+  font-size: 0.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.loop-clue.is-done {
+  fill: var(--loop-done-ink);
+}
+
+.loop-clue.is-bad {
+  fill: var(--loop-invalid);
+}
+
+/* Static mini board for the how-to and the dashboard card. */
+.loop-mini {
+  background: var(--loop-bg);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loop-edge.is-glow line {
+    animation: none;
+  }
+}
