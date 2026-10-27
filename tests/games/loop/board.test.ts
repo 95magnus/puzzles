@@ -23,8 +23,8 @@ function at(type: string, x: number, y: number, button = 0, pointerId = 1): Mous
   return ev;
 }
 
-/** Client pixels of dot (r, c): the 3x3 board spans 4 units of 100 px, with a half-unit margin. */
-const dot = (r: number, c: number): [number, number] => [c * 100 + 50, r * 100 + 50];
+/** Client pixels of dot (r, c): the 3x3 board spans 3.8 units of 100 px, with a 0.4 margin. */
+const dot = (r: number, c: number): [number, number] => [c * 100 + 40, r * 100 + 40];
 
 beforeEach(() => {
   host = document.createElement('div');
@@ -46,13 +46,13 @@ function mount() {
   const s = newGame(fixture());
   board.setGame(s);
   svg().getBoundingClientRect = () =>
-    ({ left: 0, top: 0, width: 400, height: 400, right: 400, bottom: 400, x: 0, y: 0, toJSON() {} }) as DOMRect;
+    ({ left: 0, top: 0, width: 380, height: 380, right: 380, bottom: 380, x: 0, y: 0, toJSON() {} }) as DOMRect;
   return s;
 }
 
 test('setGame renders every edge, the shown clues and the dots', () => {
   mount();
-  expect(svg().getAttribute('viewBox')).toBe('-0.5 -0.5 4 4');
+  expect(svg().getAttribute('viewBox')).toBe('-0.4 -0.4 3.8 3.8');
   expect(host.querySelectorAll('.loop-edge')).toHaveLength(2 * 3 * 4);
   expect(host.querySelectorAll('.loop-edge[data-state="empty"]')).toHaveLength(24);
   expect(host.querySelectorAll('text.loop-clue')).toHaveLength(4);
@@ -212,4 +212,34 @@ test('loopSvg draws a static board', () => {
   expect(el.querySelectorAll('text.loop-clue')).toHaveLength(4);
   expect(el.querySelectorAll('circle.loop-dot')).toHaveLength(16);
   expect(el.getAttribute('aria-hidden')).toBe('true');
+});
+
+test('a right-click during a drag commits the painted edges once and adds no cross', () => {
+  mount();
+  at('pointerdown', ...dot(0, 0));
+  at('pointermove', ...dot(0, 1));
+  at('pointermove', ...dot(0, 2));
+  svg().dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: 240, clientY: 40 }));
+  at('pointerup', ...dot(0, 2));
+  expect(onPaint).toHaveBeenCalledTimes(1);
+  expect(onPaint).toHaveBeenCalledWith([hEdge(3, 0, 0), hEdge(3, 0, 1)], 'draw');
+  expect(onCross).not.toHaveBeenCalled();
+  expect(onCycle).not.toHaveBeenCalled();
+});
+
+test('a tap 0.3 cell outside the border still picks the border edge', () => {
+  mount();
+  at('pointerdown', 100 - 30 + 40 + 10, 40 - 30); // (0.5, -0.3) in dot units
+  at('pointerup', 100 - 30 + 40 + 10, 40 - 30);
+  expect(onCycle).toHaveBeenCalledWith(hEdge(3, 0, 0));
+});
+
+test('a 10x10 board fits a 343 px host', () => {
+  Object.defineProperty(host, 'clientWidth', { value: 343, configurable: true });
+  board.setGame(newGame({ size: 10, clues: new Array(100).fill(null), solution: new Array(220).fill(0) }));
+  const panel = host.querySelector<HTMLElement>('.loop-panel')!;
+  const cell = parseFloat(panel.style.getPropertyValue('--cell'));
+  const n = parseFloat(panel.style.getPropertyValue('--n'));
+  expect(cell).toBeGreaterThanOrEqual(28);
+  expect(n * cell + 24).toBeLessThanOrEqual(343);
 });

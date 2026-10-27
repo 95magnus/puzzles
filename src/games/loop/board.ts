@@ -21,7 +21,9 @@ export type LoopBoardCallbacks = {
   onPaint(edges: number[], mode: PaintMode): void;
 };
 
-const MIN_CELL = 30;
+const MIN_CELL = 28;
+/** Margin around the dots, in cells, so border edges stay hittable. */
+const MARGIN = 0.4;
 const MAX_CELL = 60;
 const CELEBRATE_MS = 600;
 const GLOW_MS = 200;
@@ -143,17 +145,17 @@ export function createLoopBoard(host: HTMLElement, cb: LoopBoardCallbacks): Loop
     if (!game) return;
     const w = host.clientWidth;
     if (w <= 0) return;
-    const units = game.puzzle.size + 1; // the half-cell margin counts
+    const units = game.puzzle.size + 2 * MARGIN; // the margin counts
     const size = fitCell(units, units, w - 2 * PANEL_PAD, window.innerHeight - PAGE_CHROME, { min: MIN_CELL, max: MAX_CELL });
     panel.style.setProperty('--cell', size + 'px');
   }
 
   /** The pointer in dot units; off-board points pass through unclamped. */
   function point(e: MouseEvent): { x: number; y: number } | null {
-    const units = game!.puzzle.size + 1;
+    const units = game!.puzzle.size + 2 * MARGIN;
     const b = svg.getBoundingClientRect();
     if (b.width <= 0 || b.height <= 0) return null;
-    return { x: ((e.clientX - b.left) / b.width) * units - 0.5, y: ((e.clientY - b.top) / b.height) * units - 0.5 };
+    return { x: ((e.clientX - b.left) / b.width) * units - MARGIN, y: ((e.clientY - b.top) / b.height) * units - MARGIN };
   }
 
   function send(ev: InputEvent): void {
@@ -220,9 +222,10 @@ export function createLoopBoard(host: HTMLElement, cb: LoopBoardCallbacks): Loop
     e.preventDefault();
     if (!interactive || !game) return;
     if (activePointer !== null) {
-      // Drop the gesture uncommitted so its pointerup does not also tap.
-      endGesture();
-      setPreview(null);
+      // An interrupted drag commits what it painted so far; its pointerup must not also tap.
+      const dragged = input.mode === 'drag';
+      onCancel();
+      if (dragged) return; // the drag was the gesture: no ✕ as well
     }
     const at = point(e);
     if (!at) return;
@@ -275,8 +278,9 @@ export function createLoopBoard(host: HTMLElement, cb: LoopBoardCallbacks): Loop
       preview = null;
       const n = s.puzzle.size;
       const g = geometry(n);
-      svg.setAttribute('viewBox', `-0.5 -0.5 ${n + 1} ${n + 1}`);
-      panel.style.setProperty('--n', String(n + 1));
+      const span = n + 2 * MARGIN;
+      svg.setAttribute('viewBox', `${-MARGIN} ${-MARGIN} ${span} ${span}`);
+      panel.style.setProperty('--n', String(span));
       edgeEls = g.mid.map((m, e) => {
         const el = svgEl('g', { class: 'loop-edge' });
         el.dataset.edge = String(e);
