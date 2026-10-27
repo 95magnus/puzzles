@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const GAMES = ['flow', 'mines', 'tangle', 'queens', 'patches', 'balanced', 'bridges'];
+const GAMES = ['flow', 'mines', 'tangle', 'queens', 'patches', 'balanced', 'bridges', 'loop'];
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -11,6 +11,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('flow:flag:patches-howto-seen', '1');
     localStorage.setItem('flow:flag:balanced-howto-seen', '1');
     localStorage.setItem('flow:flag:bridges-howto-seen', '1');
+    localStorage.setItem('flow:flag:loop-howto-seen', '1');
   });
 });
 
@@ -52,7 +53,7 @@ test.describe('best-on-a-computer note', () => {
       });
     }
 
-    for (const game of ['queens', 'patches', 'balanced', 'bridges']) {
+    for (const game of ['queens', 'patches', 'balanced', 'bridges', 'loop']) {
       test(`${game} fits, so it has none`, async ({ page }) => {
         await page.goto(`/${game}.html#/`);
         await expect(page.locator('.shell-game')).toBeVisible();

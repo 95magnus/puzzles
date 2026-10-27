@@ -5,9 +5,10 @@ import { loadQueensDaily } from '../games/queens/storage';
 import { loadTangleDaily } from '../games/tangle/storage';
 import { loadBalancedDaily } from '../games/balanced/storage';
 import { loadBridgesDaily } from '../games/bridges/storage';
+import { loadLoopDaily } from '../games/loop/storage';
 import { PAGES, type GameId } from '../pages';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview } from './previews';
+import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -122,6 +123,18 @@ export const PUZZLES: readonly PuzzleEntry[] = ([
     preview: bridgesPreview,
     dailyStatus(date) {
       const save = loadBridgesDaily(date);
+      if (!save) return { kind: 'new' };
+      return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
+    },
+  },
+  {
+    id: 'loop',
+    name: 'Loop',
+    tagline: 'Draw one loop. Every number counts its sides.',
+    doneWord: 'Solved',
+    preview: loopPreview,
+    dailyStatus(date) {
+      const save = loadLoopDaily(date);
       if (!save) return { kind: 'new' };
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
     },

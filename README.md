@@ -15,6 +15,7 @@ Play at **[puzzles.solhaug.dev](https://puzzles.solhaug.dev)**.
 | **Patches** | Split the grid into rectangles, each holding one clue for its shape and size. |
 | **Balanced** | Fill the grid with ● and ○: equal counts per line, no three in a row, and `=` / `×` hints between cells. |
 | **Bridges** | Connect the islands with straight, non-crossing bridges so each matches its number and all join up. |
+| **Loop** | Draw one closed loop along the dotted lines; each number counts how many of its cell's sides the loop uses. |
 
 Each game has a **?** button with the full rules and an animated demo. Progress and stats are saved in the browser's `localStorage`. After the first visit the site also works offline.
 
@@ -37,7 +38,7 @@ npm run dev
 | `npm run lint` | Lint with Oxlint, including type-aware promise checks |
 | `npm test` | Unit tests (Vitest) |
 | `npm run e2e` | End-to-end tests (Playwright) |
-| `npm run test:slow` | The slower Flow generator tests |
+| `npm run test:slow` | The slower Flow generator tests and Loop's brute-force uniqueness checks |
 | `npm run icons` | Re-render the PNG icons and link-preview image in `public/` from `favicon.svg` |
 
 ## Project layout

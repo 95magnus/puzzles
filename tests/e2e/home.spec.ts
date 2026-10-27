@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem('flow:flag:patches-howto-seen', '1');
     localStorage.setItem('flow:flag:balanced-howto-seen', '1');
     localStorage.setItem('flow:flag:bridges-howto-seen', '1');
+    localStorage.setItem('flow:flag:loop-howto-seen', '1');
   });
 });
 
@@ -50,6 +51,11 @@ test('lists puzzles and opens each daily', async ({ page }) => {
   await page.locator('.puzzle-card[data-id="bridges"]').getByRole('link', { name: 'Play daily' }).click();
   await expect(page).toHaveURL(/\/bridges\.html#\/$/);
   await expect(page.locator('svg.bridges-svg')).toBeVisible();
+
+  await page.getByRole('link', { name: 'puzzles — all games' }).click();
+  await page.locator('.puzzle-card[data-id="loop"]').getByRole('link', { name: 'Play daily' }).click();
+  await expect(page).toHaveURL(/\/loop\.html#\/$/);
+  await expect(page.locator('svg.loop-svg')).toBeVisible();
 });
 
 test('shows saved daily status', async ({ page }) => {
@@ -80,6 +86,10 @@ test('shows saved daily status', async ({ page }) => {
       'bridges:daily',
       JSON.stringify({ v: 1, date, links: '', elapsedMs: 83_000, solved: true }),
     );
+    localStorage.setItem(
+      'loop:daily',
+      JSON.stringify({ v: 1, date, edges: '', elapsedMs: 83_000, solved: true }),
+    );
   });
   await page.goto('/');
   await expect(page.locator('.puzzle-card[data-id="flow"] .status-pill')).toHaveText('Solved · 01:23');
@@ -89,9 +99,10 @@ test('shows saved daily status', async ({ page }) => {
   await expect(page.locator('.puzzle-card[data-id="patches"] .status-pill')).toHaveText('Solved · 01:23');
   await expect(page.locator('.puzzle-card[data-id="balanced"] .status-pill')).toHaveText('Solved · 01:23');
   await expect(page.locator('.puzzle-card[data-id="bridges"] .status-pill')).toHaveText('Solved · 01:23');
+  await expect(page.locator('.puzzle-card[data-id="loop"] .status-pill')).toHaveText('Solved · 01:23');
 });
 
-for (const path of ['/', '/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
+for (const path of ['/', '/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/loop.html']) {
   test(`no horizontal scroll at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -106,7 +117,7 @@ for (const path of ['/', '/flow.html', '/mines.html', '/tangle.html', '/queens.h
   });
 }
 
-for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html']) {
+for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/loop.html']) {
   test(`home link stays a readable text link at 320px on ${path}`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 640 });
     await page.goto(path);
@@ -122,12 +133,12 @@ for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html',
 test('headers match across games', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   const boxes = [];
-  for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/']) {
+  for (const path of ['/flow.html', '/mines.html', '/tangle.html', '/queens.html', '/patches.html', '/balanced.html', '/bridges.html', '/loop.html', '/']) {
     await page.goto(path);
     boxes.push((await page.locator('.shell-header').boundingBox())!);
   }
-  const [flow, mines, tangle, queens, patches, balanced, bridges, home] = boxes;
-  for (const other of [mines, tangle, queens, patches, balanced, bridges, home]) {
+  const [flow, mines, tangle, queens, patches, balanced, bridges, loop, home] = boxes;
+  for (const other of [mines, tangle, queens, patches, balanced, bridges, loop, home]) {
     expect(Math.abs(other.x - flow.x)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.width - flow.width)).toBeLessThanOrEqual(1);
     expect(Math.abs(other.height - flow.height)).toBeLessThanOrEqual(1);
@@ -140,7 +151,7 @@ test('phones see which puzzles are best on a computer', async ({ page }) => {
   for (const id of ['mines', 'tangle']) {
     await expect(page.locator(`.puzzle-card[data-id="${id}"]`).getByText('Best played on a computer')).toBeVisible();
   }
-  for (const id of ['flow', 'queens', 'patches', 'balanced', 'bridges']) {
+  for (const id of ['flow', 'queens', 'patches', 'balanced', 'bridges', 'loop']) {
     await expect(page.locator(`.puzzle-card[data-id="${id}"]`).getByText('Best played on a computer')).toHaveCount(0);
   }
 });

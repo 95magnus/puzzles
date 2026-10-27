@@ -1,3 +1,5 @@
+import { loopSvg } from '../games/loop/board';
+import { hEdge, vEdge } from '../games/loop/geometry';
 import { PALETTE } from '../ui/palette';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -181,5 +183,25 @@ export function bridgesPreview(): SVGSVGElement {
     t.textContent = String(n);
     svg.append(t);
   }
+  return svg;
+}
+
+/** Loop: a 4×4 board with a few clues and the finished loop round its middle four cells. */
+export function loopPreview(): SVGSVGElement {
+  const svg = frame();
+  const size = 4;
+  const clues: (number | null)[] = Array(size * size).fill(null);
+  clues[0] = 0;
+  clues[1] = 1;
+  clues[1 * size + 1] = 2;
+  clues[2 * size + 2] = 2;
+  clues[3 * size + 2] = 1;
+  const lines = [
+    hEdge(size, 1, 1), hEdge(size, 1, 2), hEdge(size, 3, 1), hEdge(size, 3, 2),
+    vEdge(size, 1, 1), vEdge(size, 2, 1), vEdge(size, 1, 3), vEdge(size, 2, 3),
+  ];
+  const board = loopSvg(size, clues, lines);
+  for (const [k, v] of Object.entries({ x: 6, y: 6, width: 52, height: 52 })) board.setAttribute(k, String(v));
+  svg.append(board);
   return svg;
 }
