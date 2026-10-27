@@ -198,6 +198,18 @@ test('previews are decorative SVGs', () => {
   expect(loop.preview).toBe(loopPreview);
 });
 
+test('the Loop preview is styled inline, not by a stylesheet', () => {
+  const svg = loopPreview();
+  const lines = [...svg.querySelectorAll('line')];
+  expect(lines.length).toBe(8);
+  for (const l of lines) expect(l.getAttribute('stroke')).toBeTruthy();
+  const texts = [...svg.querySelectorAll('text')];
+  expect(texts.length).toBe(5);
+  for (const t of texts) expect(t.getAttribute('fill')).toBeTruthy();
+  for (const d of svg.querySelectorAll('circle')) expect(d.getAttribute('fill')).toBeTruthy();
+  expect(svg.querySelector('.loop-mini')).toBeNull();
+});
+
 test('the Queens preview layout has exactly one solution', () => {
   const rows = QUEENS_PREVIEW_REGIONS;
   const regions = new Uint8Array(rows.flat());

@@ -1,5 +1,3 @@
-import { loopSvg } from '../games/loop/board';
-import { hEdge, vEdge } from '../games/loop/geometry';
 import { PALETTE } from '../ui/palette';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -189,19 +187,25 @@ export function bridgesPreview(): SVGSVGElement {
 /** Loop: a 4×4 board with a few clues and the finished loop round its middle four cells. */
 export function loopPreview(): SVGSVGElement {
   const svg = frame();
-  const size = 4;
-  const clues: (number | null)[] = Array(size * size).fill(null);
-  clues[0] = 0;
-  clues[1] = 1;
-  clues[1 * size + 1] = 2;
-  clues[2 * size + 2] = 2;
-  clues[3 * size + 2] = 1;
-  const lines = [
-    hEdge(size, 1, 1), hEdge(size, 1, 2), hEdge(size, 3, 1), hEdge(size, 3, 2),
-    vEdge(size, 1, 1), vEdge(size, 2, 1), vEdge(size, 1, 3), vEdge(size, 2, 3),
+  const o = 8, step = 12; // 5×5 dots, centred in the 64 frame
+  const d = (n: number) => o + n * step;
+  for (let r = 0; r <= 4; r++) {
+    for (let c = 0; c <= 4; c++) svg.append(s('circle', { cx: d(c), cy: d(r), r: 1.1, fill: 'rgba(238,240,247,.5)' }));
+  }
+  // Dot-to-dot edges of the loop: [r1, c1, r2, c2].
+  const edges: [number, number, number, number][] = [
+    [1, 1, 1, 2], [1, 2, 1, 3], [3, 1, 3, 2], [3, 2, 3, 3],
+    [1, 1, 2, 1], [2, 1, 3, 1], [1, 3, 2, 3], [2, 3, 3, 3],
   ];
-  const board = loopSvg(size, clues, lines);
-  for (const [k, v] of Object.entries({ x: 6, y: 6, width: 52, height: 52 })) board.setAttribute(k, String(v));
-  svg.append(board);
+  for (const [r1, c1, r2, c2] of edges) {
+    svg.append(s('line', { x1: d(c1), y1: d(r1), x2: d(c2), y2: d(r2), stroke: '#4fd6c3', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
+  }
+  // [row, col, number]
+  const clues: [number, number, number][] = [[0, 0, 0], [0, 1, 1], [1, 1, 2], [2, 2, 2], [3, 2, 1]];
+  for (const [r, c, n] of clues) {
+    const t = s('text', { x: d(c) + step / 2, y: d(r) + step / 2 + 3.2, 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 700, fill: '#fff' });
+    t.textContent = String(n);
+    svg.append(t);
+  }
   return svg;
 }
