@@ -12,7 +12,7 @@ Tagline: *Cut the grid into patches. One clue each.*
 **In scope (v1)**
 - **Daily mode:** one 8×8 board per UTC day, identical for every player. No lives; a daily is either in progress or solved.
 - **Practice mode:** unlimited random boards; presets **Small** 6×6, **Medium** 8×8 (default, same as daily), **Large** 10×10.
-- Drag from one corner to the opposite corner to draw a rectangle; a live preview shows its `w×h`. Drawing over existing rectangles replaces every rectangle it overlaps. Tap a placed rectangle to remove it. **Undo** and **Clear** buttons.
+- Drag from one corner to the opposite corner to draw a rectangle; a live preview shows its `w×h`. A drag that overlaps an existing rectangle is shown as invalid and places nothing; remove the old rectangle first. Tap a placed rectangle to remove it. **Undo** and **Clear** buttons.
 - Rule breaks are shown live: an invalid rectangle (no clue, two or more clues, wrong shape or wrong area) is drawn red. It is placed, not rejected.
 - Separate page `patches.html`, sharing core modules, the site header, theme and dashboard with Flow, Mines, Tangle and Queens. Static site, no backend.
 
@@ -120,7 +120,7 @@ Daily seed: `seedFromString('patches-daily:' + isoDate)`, preset `medium`.
 ## 6. Game rules (`game`)
 
 - `newGame(puzzle)`: no rectangles, `status 'playing'`, empty history.
-- `place(s, rect)`: removes every placed rectangle overlapping `rect`, adds `rect`, pushes one `Move`; then checks for a win. If `rect` equals an already placed rectangle, nothing happens. Returns whether anything changed.
+- `place(s, rect)`: adds `rect`, pushes one `Move`; then checks for a win. If `rect` overlaps a placed rectangle (`blocked`), nothing happens. Returns whether anything changed.
 - `removeAt(s, cell)`: removes the rectangle covering `cell` as one `Move`; ignored if none.
 - `undo(s)`: revert the last `Move`; ignored when history is empty or the game is won.
 - `clear(s)`: remove every rectangle as one `Move` (undoable); ignored when empty.

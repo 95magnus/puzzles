@@ -58,14 +58,12 @@ test('a rect over two clues is invalid', async ({ page }) => {
   await expect(page.locator('.patches-tile.is-invalid')).toHaveCount(1);
 });
 
-test('drawing over a rect replaces it; Undo restores it', async ({ page }) => {
+test('drawing over a rect leaves it in place', async ({ page }) => {
   await page.goto(PRACTICE_URL);
   await expect(page.locator('.patches-cell')).toHaveCount(SIZE * SIZE);
   const first = practice().solution[0];
   await drawRect(page, SIZE, first);
   await expect(page.locator('.patches-tile')).toHaveCount(1);
-  const area = () => page.locator('.patches-tile').evaluate((e) => { const b = e.getBoundingClientRect(); return Math.round(b.width) * Math.round(b.height); });
-  const originalArea = await area();
   const originalBox = await page.locator('.patches-tile').boundingBox();
 
   // A strictly larger rect that overlaps the first one.
@@ -78,12 +76,8 @@ test('drawing over a rect replaces it; Undo restores it', async ({ page }) => {
   expect(larger.h * larger.w).toBeGreaterThan(first.h * first.w);
   await drawRect(page, SIZE, larger);
   await expect(page.locator('.patches-tile')).toHaveCount(1);
-  await expect.poll(area).toBeGreaterThan(originalArea);
-
-  await page.locator('[data-action="undo"]').click();
-  await expect.poll(area).toBe(originalArea);
-  await expect(page.locator('.patches-tile')).toHaveCount(1);
   expect(await page.locator('.patches-tile').boundingBox()).toEqual(originalBox);
+  await expect(page.locator('.patches-preview')).toBeHidden();
 });
 
 test('reload mid-daily restores progress', async ({ page }) => {

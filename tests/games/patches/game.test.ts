@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { candidates } from '../../../src/games/patches/solver';
-import { checkRect, clear, coverage, encode, invalid, isWin, newGame, place, removeAt, restore, tap, undo } from '../../../src/games/patches/game';
+import { blocked, checkRect, clear, coverage, encode, invalid, isWin, newGame, place, removeAt, restore, tap, undo } from '../../../src/games/patches/game';
 import type { Rect } from '../../../src/games/patches/types';
 import { pz, UNIQUE4 } from './helpers';
 
@@ -22,26 +22,21 @@ describe('patches game', () => {
     expect(checkRect(p, R(1, 0, 1, 1))).toEqual({ clue: null, ok: false });
   });
 
-  it('place replaces every overlapped rect in one move', () => {
+  it('place ignores a rect overlapping a placed one', () => {
     const s = fresh();
     place(s, R(0, 0, 1, 2));
-    place(s, R(0, 1, 1, 2));
-    expect(place(s, R(0, 0, 2, 2))).toBe(true);
-    expect(s.rects).toEqual([R(0, 0, 2, 2)]);
-    expect(s.history).toHaveLength(3);
+    expect(place(s, R(0, 0, 2, 2))).toBe(false);
+    expect(blocked(s, R(0, 0, 2, 2))).toBe(true);
+    expect(s.rects).toEqual([R(0, 0, 1, 2)]);
+    expect(s.history).toHaveLength(1);
   });
 
-  it('undo after a replacing draw restores every replaced rectangle', () => {
+  it('a rect touching a placed one only along an edge is not blocked', () => {
     const s = fresh();
     place(s, R(0, 0, 1, 2));
-    place(s, R(0, 1, 1, 2));
-    place(s, R(0, 0, 2, 2));
-    expect(undo(s)).toBe(true);
-    expect([...s.rects].sort(byPos)).toEqual([R(0, 0, 1, 2), R(0, 1, 1, 2)]);
-    expect(undo(s)).toBe(true);
-    expect(undo(s)).toBe(true);
-    expect(s.rects).toEqual([]);
-    expect(undo(s)).toBe(false);
+    expect(blocked(s, R(0, 1, 1, 2))).toBe(false);
+    expect(place(s, R(0, 1, 1, 2))).toBe(true);
+    expect(s.rects).toHaveLength(2);
   });
 
   it('placing an identical rect is a no-op', () => {

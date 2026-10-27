@@ -1,5 +1,5 @@
 import { PALETTE } from '../../ui/palette';
-import { checkRect, invalid } from './game';
+import { blocked, checkRect, invalid } from './game';
 import { initialInput, step, type InputEvent, type InputState } from './input';
 import type { Clue, GameState, Rect, Shape } from './types';
 import { PAGE_CHROME, PANEL_PAD, fitCell, reducedMotion, watchSize } from '../../ui/fit';
@@ -130,7 +130,7 @@ export function createPatchesBoard(
     }
     position(previewEl, x);
     label.textContent = `${x.w}×${x.h}`;
-    previewEl.classList.toggle('is-invalid', !checkRect(game.puzzle, x).ok);
+    previewEl.classList.toggle('is-invalid', blocked(game, x) || !checkRect(game.puzzle, x).ok);
     previewEl.classList.toggle('is-below', x.r === 0);
     previewEl.hidden = false;
   }

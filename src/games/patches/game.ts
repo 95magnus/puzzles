@@ -1,4 +1,4 @@
-import { MIN_AREA, contains, fits, inBounds, overlaps, sameRect } from './rect';
+import { MIN_AREA, contains, fits, inBounds, overlaps } from './rect';
 import type { GameState, Move, Puzzle, Rect } from './types';
 
 // Pure game state. Mutating actions return true iff something changed;
@@ -47,13 +47,16 @@ function commit(s: GameState, move: Move): boolean {
   return true;
 }
 
-/** Ignored for a single cell (never a patch) and for a rectangle already placed. */
+/** Whether `x` overlaps a placed rectangle; a drag never draws over one. */
+export function blocked(s: GameState, x: Rect): boolean {
+  return s.rects.some((o) => overlaps(o, x));
+}
+
+/** Ignored for a single cell (never a patch) and for a rectangle overlapping a placed one. */
 export function place(s: GameState, x: Rect): boolean {
-  if (s.status === 'won' || x.w * x.h < MIN_AREA || s.rects.some((o) => sameRect(o, x))) return false;
-  const removed = s.rects.filter((o) => overlaps(o, x));
-  s.rects = s.rects.filter((o) => !removed.includes(o));
+  if (s.status === 'won' || x.w * x.h < MIN_AREA || blocked(s, x)) return false;
   s.rects.push(x);
-  return commit(s, { added: [x], removed });
+  return commit(s, { added: [x], removed: [] });
 }
 
 export function removeAt(s: GameState, cell: number): boolean {

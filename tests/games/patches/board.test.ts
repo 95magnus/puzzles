@@ -131,6 +131,15 @@ test('drag shows a preview with label and draws on release', () => {
   expect(preview().hidden).toBe(true);
 });
 
+test('a preview overlapping a placed rect is flagged invalid', () => {
+  const s = newGame(puzzle());
+  place(s, { r: 0, c: 0, w: 1, h: 2 });
+  board.setGame(s);
+  at('pointerdown', ...px(0));
+  at('pointermove', ...px(5));
+  expect(preview().classList.contains('is-invalid')).toBe(true);
+});
+
 test('the preview label sits below the rectangle on row 0 and above it elsewhere', () => {
   board.setGame(newGame(puzzle()));
   at('pointerdown', ...px(0));
