@@ -11,7 +11,7 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "icons": "node scripts/icons.mjs",
-    "test:slow": "cross-env SLOW=1 vitest run tests/games/flow/generate.test.ts"
+    "test:slow": "cross-env SLOW=1 vitest run tests/games/flow/generate.test.ts tests/games/loop/generate.test.ts"
   },
   "license": "MIT",
   "engines": {

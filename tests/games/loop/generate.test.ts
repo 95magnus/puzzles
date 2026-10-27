@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { DAILY_PRESET, PRESETS, generatePuzzle, loopDailySeed } from '../../../src/games/loop/generate';
 import { countSolutions, deduce } from '../../../src/games/loop/solver';
 import { geometry } from '../../../src/games/loop/geometry';
@@ -63,11 +63,6 @@ test('deducible', () => {
   for (const { id, seed, p } of BOARDS) expect(deduce(p.size, p.clues), `${id} ${seed}`).toEqual(p.solution);
 });
 
-// countSolutions backtracks slowly on sparse boards (2 to 60 s each), so only the two quickest seeds are cross-checked.
-test('unique (small)', () => {
-  for (const seed of [1, 2]) expect(countSolutions(5, BOARDS.find((b) => b.id === 'small' && b.seed === seed)!.p.clues, 2), `small ${seed}`).toBe(1);
-}, 30_000);
-
 test('daily is stable', () => {
   expect(text(generatePuzzle(7, loopDailySeed('2026-10-27')))).toMatchSnapshot();
 });
@@ -80,4 +75,11 @@ test('fast enough', () => {
 
 test('throws on unsupported sizes', () => {
   for (const size of [4, 11]) expect(() => generatePuzzle(size, 1)).toThrow();
+});
+
+// countSolutions backtracks slowly on the sparse boards (up to ~64 s each), so it only runs with SLOW=1 (npm run test:slow).
+describe.skipIf(!import.meta.env.SLOW)('slow: uniqueness', () => {
+  test.each(Array.from({ length: 10 }, (_, i) => i + 1))('small %i has exactly one solution', (seed) => {
+    expect(countSolutions(5, generatePuzzle(5, seed).clues, 2)).toBe(1);
+  }, 300_000);
 });
