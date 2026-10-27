@@ -113,7 +113,7 @@ Daily seed: `loopDailySeed(date) = seedFromString('loop-daily:' + isoDate)`, pre
 
 - **Cell.** For a clue `n` with `L` line sides and `U` unknown sides: if `L = n`, its unknown sides become crosses; if `L + U = n`, its unknown sides become lines. `L > n` or `L + U < n` → contradiction.
 - **Dot.** With `L` lines and `U` unknowns at a dot: `L = 2` → unknowns become crosses; `L = 1, U = 1` → that unknown becomes a line; `L = 0, U = 1` → it becomes a cross. `L > 2`, or `L = 1, U = 0` → contradiction.
-- **No early loop.** An unknown edge whose two dots are the two ends of the same line path would close a loop. Closing it is allowed only if the closed loop would then contain every line and every clue would be met; otherwise the edge becomes a cross. (Paths are tracked with a union-find over dots, rebuilt each pass.)
+- **No early loop.** An unknown edge whose two dots are the two ends of the same line path would close a loop. Closing it is allowed only if the closed loop would then contain every line and every clue would be met; otherwise the edge becomes a cross. (Paths are tracked with a union-find over dots, rebuilt each pass.) When a closing line forms a valid complete loop, every remaining unknown becomes a cross.
 
 When a pass changes nothing and unknowns remain, **one-step trial**: for each unknown edge, copy the state, set the edge to line and run the rules above to their fixpoint; on a contradiction, set the edge to cross in the real state. Then the same with cross (contradiction → line). After the first edge that changes this way, go back to the plain rules. Trials never nest. Stop when neither the rules nor a full trial sweep change anything.
 
@@ -139,8 +139,8 @@ Returns the edges as `(0 | 1)[]` when no unknowns remain and the lines satisfy �
 
 **Gestures** (pointer events, one active pointer). Positions are converted to cell units.
 - **On a dot:** the pointer is within 0.35 cell of that dot.
-- **Tap** (pointer up without having crossed an edge): the edge whose midpoint is nearest the up point, within 0.5 cell → `cycle`.
-- **Drag:** starts on the dot nearest the down point. Whenever the pointer is on a dot orthogonally next to the current one, the edge between them is crossed and that dot becomes current. A pointer that lands on a dot further away (fast move) walks there dot by dot, row first then column, crossing each edge on the way. The first crossed edge sets the mode: line → `'erase'`, otherwise `'draw'`; it applies to every edge in the drag. Edges are applied live while dragging (board shows them) and committed as one `paint` on pointer up. Crossing the same edge twice in one drag is applied once.
+- **Tap** (pointer up without having crossed an edge): the edge whose midpoint is nearest the up point, strictly within 0.5 cell → `cycle`. A point exactly 0.5 from several midpoints (a cell centre or a dot) picks no edge.
+- **Drag:** starts on the dot nearest the down point, but only once the pointer has moved more than 0.25 cell from it; until then a release is still a tap. After that, whenever the pointer is on a dot orthogonally next to the current one, the edge between them is crossed and that dot becomes current. A pointer that lands on a dot further away (fast move) walks there dot by dot, row first then column, crossing each edge on the way. The first crossed edge sets the mode: line → `'erase'`, otherwise `'draw'`; it applies to every edge in the drag. Edges are applied live while dragging (board shows them) and committed as one `paint` on pointer up. Crossing the same edge twice in one drag is applied once.
 - **Right-click** (`contextmenu`, default prevented) on an edge (same nearest-midpoint test) → `toggleCross`.
 
 **Visuals**
@@ -148,7 +148,7 @@ Returns the edges as `(0 | 1)[]` when no unknowns remain and the lines satisfy �
 - Lines: thick accent (`#4fd6c3`) strokes with round caps, dot centre to dot centre. ✕: small grey cross at the edge midpoint. Unknown edges are invisible but hit-testable.
 - A violating dot shows a red ring.
 - Win: a glow travels once around the loop (about 600 ms in total), then the win card slides up. Under `prefers-reduced-motion` the card appears at once.
-- Sizing: cell size `clamp(30px, fit-to-panel, 60px)`; 10×10 at about 34 px fits 375 px wide with the 16 px page gutter, so no `bestOnComputer`.
+- Sizing: cell size `clamp(28px, fit-to-panel, 60px)`, with a 0.4 cell margin around the dots (viewBox `-0.4 -0.4 size+0.8 size+0.8`). 10×10 fits 375 px wide at about 29 px per cell, so no `bestOnComputer`. Narrower than about 330 px, Large scrolls sideways, the same limit Bridges' 11×11 has.
 
 ## 8. Screens
 
@@ -180,7 +180,7 @@ Header (shared): `puzzles · Loop`, Daily / Practice tabs, "?".
 **Unit (Vitest)**
 - `geometry`: edge counts (`2 * size * (size + 1)`); `cellEdges`, `dotEdges`, `edgeDots`, `edgeCells` for 1×1 and 3×3 fixtures; corner dots have 2 edges, border dots 3, inner dots 4.
 - `solver`: hand-built fixtures — a 0 crosses its four sides; a corner 3 forces its two outer sides; adjacent 3-3 forces the three parallel edges; the no-early-loop rule crosses a closing edge; a board needing a trial is solved; a board with two solutions stalls (`null`); a contradictory board returns `null`. `countSolutions` counts 1 / 2 (stops at limit) / 0 on the same fixtures.
-- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution is one loop with every dot at 0 or 2 lines; shown clues equal the solution's side counts; `deduce` returns exactly `solution` for seeds 1..30 per preset, and `countSolutions(…, 2) === 1` for Small; daily for a fixed date is stable; time budget for `large`; throws for sizes 4 and 11.
+- `generate`: deterministic per `(size, seed)` (snapshot per preset); solution is one loop with every dot at 0 or 2 lines; shown clues equal the solution's side counts; `deduce` returns exactly `solution` for seeds 1..30 per preset; the brute-force `countSolutions(…, 2) === 1` check on Small boards runs only under `SLOW=1` (`npm run test:slow`), seeds 1..10; daily for a fixed date is stable; time budget for `large`; throws for sizes 4 and 11.
 - `game`: cycle order; toggleCross; paint draw and erase as one undo step, erase leaves ✕; clear and its undo; clear on an empty board pushes nothing; clue and dot violations; a closed loop that misses a clue, and a correct loop plus a stray second loop, do not win; win detection; actions ignored after win; encode/restore round trip with ✕, rejection of bad length and characters.
 - `input`: tap resolves the nearest edge; a drag's mode comes from its first edge; a jump across dots fills the edges between; an edge crossed twice is applied once.
 - `storage`: round trip, date mismatch, corrupt data, bad characters, throwing storage.

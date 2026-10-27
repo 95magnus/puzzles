@@ -16,7 +16,7 @@ export type GameState = {
   status: 'playing' | 'won';
 };
 
-/** Live rule breaks: clue cells with too many lines (or too few to ever reach their number), and dots with a dead end or a branch. */
+/** Live rule breaks: clue cells with too many lines (or too few to ever reach their number), and dots with 3 or 4 lines (a branch). */
 export type Violations = { clues: Set<number>; dots: Set<number> };
 
 /** What a drag does to the edges it crosses. */
