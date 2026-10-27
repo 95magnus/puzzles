@@ -13,37 +13,40 @@ import { geometry, hEdge, vEdge } from './geometry';
 import type { Edge, PaintMode } from './types';
 
 export const DOT_R = 0.35; // dot units: a point this close to a dot is on it
-export const EDGE_R = 0.5; // dot units: a tap this close to an edge midpoint picks that edge
+export const EDGE_R = 0.5; // dot units: a tap strictly closer than this to an edge midpoint picks that edge
+export const DRAG_SLOP = 0.25; // dot units: a pressed pointer must move further than this before a drag can start
 
 export type InputEvent =
   | { type: 'down' | 'move'; x: number; y: number }
   | { type: 'up' }
   | { type: 'cancel' };
 
-/** `dot` is the current dot; (`x`, `y`) the last point seen; `edges` those crossed so far; `paint` the mode once fixed. */
+/** `dot` is the current dot; (`ox`, `oy`) the press point; (`x`, `y`) the last point seen; `edges` those crossed so far; `paint` the mode once fixed. */
 export type InputState = {
   mode: 'idle' | 'pressed' | 'drag';
   dot: number;
+  ox: number;
+  oy: number;
   x: number;
   y: number;
   edges: number[];
   paint: PaintMode | null;
 };
 
-export const initialInput: InputState = { mode: 'idle', dot: -1, x: 0, y: 0, edges: [], paint: null };
+export const initialInput: InputState = { mode: 'idle', dot: -1, ox: 0, oy: 0, x: 0, y: 0, edges: [], paint: null };
 
 export type InputAction =
   | { kind: 'cycle'; edge: number }
   | { kind: 'preview'; edges: number[]; mode: PaintMode }
   | { kind: 'paint'; edges: number[]; mode: PaintMode };
 
-/** The edge whose midpoint is nearest the point and within `EDGE_R`; ties to the lower index; else -1. */
+/** The edge whose midpoint is nearest the point and strictly within `EDGE_R`; ties to the lower index; else -1. */
 export function edgeNear(size: number, x: number, y: number): number {
   let best = -1;
   let bestDist = EDGE_R;
   geometry(size).mid.forEach((m, e) => {
     const d = Math.hypot(x - m.x, y - m.y);
-    if (d <= bestDist && (best < 0 || d < bestDist)) {
+    if (d < bestDist) {
       best = e;
       bestDist = d;
     }
@@ -97,11 +100,14 @@ export function step(
   switch (ev.type) {
     case 'down':
       return {
-        state: { mode: 'pressed', dot: nearestDot(size, ev.x, ev.y), x: ev.x, y: ev.y, edges: [], paint: null },
+        state: { mode: 'pressed', dot: nearestDot(size, ev.x, ev.y), ox: ev.x, oy: ev.y, x: ev.x, y: ev.y, edges: [], paint: null },
         actions: [],
       };
     case 'move': {
       if (s.mode === 'idle') return { state: s, actions: [] };
+      if (s.mode === 'pressed' && Math.hypot(ev.x - s.ox, ev.y - s.oy) <= DRAG_SLOP) {
+        return { state: { ...s, x: ev.x, y: ev.y }, actions: [] };
+      }
       const to = dotAt(size, ev.x, ev.y);
       if (to < 0 || to === s.dot) return { state: { ...s, x: ev.x, y: ev.y }, actions: [] };
       const crossed = walk(size, s.dot, to);
@@ -109,7 +115,7 @@ export function step(
       const edges = [...s.edges];
       for (const e of crossed) if (!edges.includes(e)) edges.push(e);
       return {
-        state: { mode: 'drag', dot: to, x: ev.x, y: ev.y, edges, paint },
+        state: { mode: 'drag', dot: to, ox: s.ox, oy: s.oy, x: ev.x, y: ev.y, edges, paint },
         actions: [{ kind: 'preview', edges, mode: paint }],
       };
     }

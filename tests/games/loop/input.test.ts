@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hEdge, vEdge } from '../../../src/games/loop/geometry';
-import { dotAt, edgeNear, initialInput, nearestDot, step, walk } from '../../../src/games/loop/input';
+import { DRAG_SLOP, dotAt, edgeNear, initialInput, nearestDot, step, walk } from '../../../src/games/loop/input';
 import type { InputAction, InputEvent, InputState } from '../../../src/games/loop/input';
 import type { Edge } from '../../../src/games/loop/types';
 
@@ -35,6 +35,10 @@ describe('hit testing', () => {
   it('a tap above the top border edge still picks it', () => {
     expect(edgeNear(N, 0.5, -0.3)).toBe(h(0, 0));
   });
+  it('a cell centre or a dot is ambiguous and picks no edge', () => {
+    expect(edgeNear(N, 0.5, 0.5)).toBe(-1);
+    expect(edgeNear(N, 1, 1)).toBe(-1);
+  });
   it('dotAt needs the point within 0.35 of a dot', () => {
     expect(dotAt(N, 1.2, 2.1)).toBe(dot(2, 1));
     expect(dotAt(N, 1.5, 1.5)).toBe(-1);
@@ -63,6 +67,19 @@ describe('tap', () => {
 });
 
 describe('drag', () => {
+  it('a drift of 0.2 cell toward a dot is still a tap', () => {
+    // edge midpoint (0.5, 0); drift to (0.3, 0) is within 0.35 of dot (0,0) but under DRAG_SLOP
+    const { actions } = run([down(0.5, 0), move(0.3, 0), up]);
+    expect(actions.flat()).toEqual([{ kind: 'cycle', edge: h(0, 0) }]);
+    expect(actions.flat().some((a) => a.kind === 'paint')).toBe(false);
+    expect(DRAG_SLOP).toBe(0.25);
+  });
+  it('a drag across dots still paints after moving past the slop', () => {
+    const { actions } = run([down(0.5, 0), move(0.3, 0), move(0, 0), up]);
+    expect(actions.flat().filter((a) => a.kind === 'paint')).toEqual([
+      { kind: 'paint', edges: [h(0, 0)], mode: 'draw' },
+    ]);
+  });
   it('draws over unknown edges and commits on up', () => {
     const { actions } = run([down(0.05, 0), move(1, 0), move(2, 0), up]);
     expect(actions[2]).toEqual([{ kind: 'preview', edges: [h(0, 0), h(0, 1)], mode: 'draw' }]);
