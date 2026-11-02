@@ -135,6 +135,15 @@ test('right-click marks and is default-prevented', () => {
   expect(onMark).toHaveBeenCalledExactlyOnceWith(12);
 });
 
+test('a context menu during a mouse press marks and cancels the strike', () => {
+  mount();
+  ptr('pointerdown', 0);
+  contextmenu(0);
+  ptr('pointerup', 0);
+  expect(onMark).toHaveBeenCalledExactlyOnceWith(0);
+  expect(onStrike).not.toHaveBeenCalled();
+});
+
 test('touch tap strikes', () => {
   vi.useFakeTimers();
   mount();

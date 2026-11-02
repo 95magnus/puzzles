@@ -200,6 +200,7 @@ export function createSumsBoard(
   }
 
   function onContextMenu(e: MouseEvent): void {
+    clearPress();
     e.preventDefault();
     if (blocked() || Date.now() - lastTouchAt < TOUCH_MENU_GRACE_MS) return;
     const cell = cellAt(e.clientX, e.clientY);
