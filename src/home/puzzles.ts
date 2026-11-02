@@ -6,9 +6,10 @@ import { loadTangleDaily } from '../games/tangle/storage';
 import { loadBalancedDaily } from '../games/balanced/storage';
 import { loadBridgesDaily } from '../games/bridges/storage';
 import { loadLoopDaily } from '../games/loop/storage';
+import { loadSumsDaily } from '../games/sums/storage';
 import { PAGES, type GameId } from '../pages';
 import { formatClock } from '../ui/hud';
-import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview } from './previews';
+import { flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview, sumsPreview } from './previews';
 
 /** Today's daily for one puzzle, as read from that puzzle's own save. */
 export type DailyStatus =
@@ -137,6 +138,22 @@ export const PUZZLES: readonly PuzzleEntry[] = ([
       const save = loadLoopDaily(date);
       if (!save) return { kind: 'new' };
       return { kind: save.solved ? 'done' : 'playing', elapsedMs: save.elapsedMs };
+    },
+  },
+  {
+    id: 'sums',
+    name: 'Sums',
+    tagline: 'Strike out digits until every line adds up.',
+    doneWord: 'Solved',
+    lostWord: 'Out of lives',
+    preview: sumsPreview,
+    dailyStatus(date) {
+      const save = loadSumsDaily(date);
+      if (!save) return { kind: 'new' };
+      const { elapsedMs, attempt } = save;
+      if (save.status === 'won') return { kind: 'done', elapsedMs, attempt };
+      if (save.status === 'lost') return { kind: 'lost', elapsedMs, attempt };
+      return { kind: 'playing', elapsedMs, attempt };
     },
   },
 ] satisfies Omit<PuzzleEntry, 'href'>[]).map((e) => ({ ...e, href: `./${PAGES[e.id]}` }));

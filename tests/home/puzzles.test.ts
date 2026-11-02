@@ -8,10 +8,12 @@ import { saveTangleDaily } from '../../src/games/tangle/storage';
 import { saveBalancedDaily } from '../../src/games/balanced/storage';
 import { saveBridgesDaily } from '../../src/games/bridges/storage';
 import { saveLoopDaily } from '../../src/games/loop/storage';
+import { saveSumsDaily } from '../../src/games/sums/storage';
 import type { Status as MinesStatus } from '../../src/games/mines/types';
 import type { Status as TangleStatus } from '../../src/games/tangle/types';
+import type { Status as SumsStatus } from '../../src/games/sums/types';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
-import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview } from '../../src/home/previews';
+import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview, sumsPreview } from '../../src/home/previews';
 import { countSolutions } from '../../src/games/queens/solver';
 import { PAGES } from '../../src/pages';
 
@@ -24,6 +26,9 @@ const patches = PUZZLES.find(p => p.id === 'patches')!;
 const balanced = PUZZLES.find(p => p.id === 'balanced')!;
 const bridges = PUZZLES.find(p => p.id === 'bridges')!;
 const loop = PUZZLES.find(p => p.id === 'loop')!;
+const sums = PUZZLES.find(p => p.id === 'sums')!;
+const sumsSave = (status: SumsStatus, attempt: number, elapsedMs: number) =>
+  saveSumsDaily({ date: DATE, cells: '0101', lives: 2, elapsedMs, status, attempt });
 const tangleSave = (status: TangleStatus, attempt: number, elapsedMs: number) =>
   saveTangleDaily({ date: DATE, removed: '010', lives: 2, elapsedMs, status, attempt });
 const label = (p: typeof flow) => statusLabel(p, p.dailyStatus(DATE));
@@ -32,12 +37,11 @@ const minesSave = (status: MinesStatus, attempt: number, elapsedMs: number) =>
 
 beforeEach(() => localStorage.clear());
 
-// TODO(Task 7): drop the sums exclusion once its dashboard entry exists.
 test('every page in src/pages.ts but the dashboard has an entry', () => {
-  expect(PUZZLES.map(p => p.id).sort()).toEqual(Object.keys(PAGES).filter(k => k !== 'home' && k !== 'sums').sort());
+  expect(PUZZLES.map(p => p.id).sort()).toEqual(Object.keys(PAGES).filter(k => k !== 'home').sort());
 });
 
-test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced, Bridges then Loop with their pages', () => {
+test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced, Bridges, Loop then Sums with their pages', () => {
   expect(PUZZLES.map(p => [p.id, p.name, p.href])).toEqual([
     ['flow', 'Flow', './flow.html'],
     ['mines', 'Mines', './mines.html'],
@@ -47,6 +51,7 @@ test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced, Bridges the
     ['balanced', 'Balanced', './balanced.html'],
     ['bridges', 'Bridges', './bridges.html'],
     ['loop', 'Loop', './loop.html'],
+    ['sums', 'Sums', './sums.html'],
   ]);
   expect(flow.tagline).toBe('Connect matching dots. Fill every cell.');
   expect(mines.tagline).toBe('Clear the board without hitting a mine.');
@@ -56,6 +61,7 @@ test('registry lists Flow, Mines, Tangle, Queens, Patches, Balanced, Bridges the
   expect(balanced.tagline).toBe('Fill the grid with dots and rings.');
   expect(bridges.tagline).toBe('Connect every island. Match every number.');
   expect(loop.tagline).toBe('Draw one loop. Every number counts its sides.');
+  expect(sums.tagline).toBe('Strike out digits until every line adds up.');
 });
 
 test('Flow: no save is Not started', () => {
@@ -168,6 +174,21 @@ test.each([
   expect(label(loop)).toBe(text);
 });
 
+test('Sums: no save is Not started', () => {
+  expect(label(sums)).toBe('Not started');
+});
+
+test.each([
+  ['playing', 1, 42_000, 'playing', 'In progress · 00:42'],
+  ['won', 1, 83_000, 'done', 'Solved · 01:23'],
+  ['won', 2, 83_000, 'done', 'Solved · 01:23 · attempt 2'],
+  ['lost', 2, 5_000, 'lost', 'Out of lives · attempt 2'],
+] as const)('Sums: %s on attempt %i', (status, attempt, ms, kind, text) => {
+  sumsSave(status, attempt, ms);
+  expect(sums.dailyStatus(DATE).kind).toBe(kind);
+  expect(label(sums)).toBe(text);
+});
+
 test("yesterday's saves read as Not started", () => {
   saveFlowDaily({ date: '2026-10-20', paths: [], elapsedMs: 83_000, solved: true });
   saveMinesDaily({ date: '2026-10-20', cells: '', elapsedMs: 1, status: 'won', attempt: 1 });
@@ -183,7 +204,7 @@ test('junk saves read as Not started', () => {
 });
 
 test('previews are decorative SVGs', () => {
-  for (const svg of [flowPreview(), minesPreview(), tanglePreview(), queensPreview(), patchesPreview(), balancedPreview(), bridgesPreview(), loopPreview()]) {
+  for (const svg of [flowPreview(), minesPreview(), tanglePreview(), queensPreview(), patchesPreview(), balancedPreview(), bridgesPreview(), loopPreview(), sumsPreview()]) {
     expect(svg.tagName.toLowerCase()).toBe('svg');
     expect(svg.getAttribute('aria-hidden')).toBe('true');
     expect(svg.getAttribute('viewBox')).toBe('0 0 64 64');
@@ -197,6 +218,7 @@ test('previews are decorative SVGs', () => {
   expect(balanced.preview).toBe(balancedPreview);
   expect(bridges.preview).toBe(bridgesPreview);
   expect(loop.preview).toBe(loopPreview);
+  expect(sums.preview).toBe(sumsPreview);
 });
 
 test('the Loop preview is styled inline, not by a stylesheet', () => {

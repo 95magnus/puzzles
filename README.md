@@ -16,6 +16,7 @@ Play at **[puzzles.solhaug.dev](https://puzzles.solhaug.dev)**.
 | **Balanced** | Fill the grid with ● and ○: equal counts per line, no three in a row, and `=` / `×` hints between cells. |
 | **Bridges** | Connect the islands with straight, non-crossing bridges so each matches its number and all join up. |
 | **Loop** | Draw one closed loop along the dotted lines; each number counts how many of its cell's sides the loop uses. |
+| **Sums** | Strike out digits until every row and column adds up to its target; striking a digit that belongs costs one of 3 lives. |
 
 Each game has a **?** button with the full rules and an animated demo. Progress and stats are saved in the browser's `localStorage`. After the first visit the site also works offline.
 
