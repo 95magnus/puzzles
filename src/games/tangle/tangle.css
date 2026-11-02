@@ -2,8 +2,6 @@
    header, page layout (.puzzle-*), HUD typography, modal and .end-card come from ../ui/shell.css. */
 :root {
   --tangle-bump: #ff5c7a;
-  --tangle-life: #ff5c7a;
-  --tangle-life-lost: rgba(255, 255, 255, 0.16);
 }
 
 /* ---------- Page ---------- */
@@ -15,29 +13,6 @@
 .tangle-stage.is-dimmed .tangle-board {
   opacity: 0.45;
   filter: saturate(0.6);
-}
-
-/* Lives: one heart per life; lost lives are greyed out. */
-.tangle-lives {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-}
-
-.tangle-life {
-  width: 16px;
-  height: 16px;
-  background: var(--tangle-life);
-  -webkit-mask: var(--tangle-heart) center / contain no-repeat;
-  mask: var(--tangle-heart) center / contain no-repeat;
-  --tangle-heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 14.2 2.3 8.6A3.4 3.4 0 0 1 8 4.2a3.4 3.4 0 0 1 5.7 4.4z'/%3E%3C/svg%3E");
-  color: transparent; /* the ♥ / ♡ glyph is for text readers; the mask draws the heart */
-  font-size: 0;
-  transition: background-color var(--dur) var(--ease);
-}
-
-.tangle-life.is-lost {
-  background: var(--tangle-life-lost);
 }
 
 /* ---------- How-to ---------- */
@@ -177,8 +152,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tangle-stage .tangle-board,
-  .tangle-life {
+  .tangle-stage .tangle-board {
     transition: none;
   }
 

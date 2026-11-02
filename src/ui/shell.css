@@ -392,3 +392,38 @@
     animation: none;
   }
 }
+
+/* ---------- Lives ---------- */
+:root {
+  --life: #ff5c7a;
+  --life-lost: rgba(255, 255, 255, 0.16);
+}
+
+/* Lives: one heart per life; lost lives are greyed out. */
+.hud-lives {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.hud-life {
+  width: 16px;
+  height: 16px;
+  background: var(--life);
+  -webkit-mask: var(--heart) center / contain no-repeat;
+  mask: var(--heart) center / contain no-repeat;
+  --heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 14.2 2.3 8.6A3.4 3.4 0 0 1 8 4.2a3.4 3.4 0 0 1 5.7 4.4z'/%3E%3C/svg%3E");
+  color: transparent; /* the ♥ / ♡ glyph is for text readers; the mask draws the heart */
+  font-size: 0;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.hud-life.is-lost {
+  background: var(--life-lost);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-life {
+    transition: none;
+  }
+}

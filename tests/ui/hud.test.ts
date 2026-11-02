@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { expect, test } from 'vitest';
-import { createHud, formatClock } from '../../src/ui/hud';
+import { createHud, formatClock, renderLives } from '../../src/ui/hud';
 
 test('formatClock shows mm:ss, rounding down to whole seconds', () => {
   expect(formatClock(0)).toBe('00:00');
@@ -29,4 +29,25 @@ test('createHud shows flows, fill and time, and toggles the hint', () => {
   hud.update({ flowsDone: 6, flowsTotal: 6, fillPct: 97 }, 80_000, true);
   expect(values()).toEqual(['6/6', '97%', '01:20']);
   expect(hint.hidden).toBe(false);
+});
+
+test('renderLives draws one heart per life and labels the count', () => {
+  const el = document.createElement('div');
+  renderLives(el, 2, 3);
+  expect(el.textContent).toBe('♥♥♡');
+  const hearts = el.querySelectorAll('.hud-life');
+  expect(hearts).toHaveLength(3);
+  expect(hearts[2]!.classList.contains('is-lost')).toBe(true);
+  expect(hearts[1]!.classList.contains('is-lost')).toBe(false);
+  expect(el.getAttribute('aria-label')).toBe('2 of 3 lives left');
+  expect(el.title).toBe('2 of 3 lives left');
+});
+
+test('renderLives replaces the previous hearts', () => {
+  const el = document.createElement('div');
+  renderLives(el, 2, 3);
+  renderLives(el, 0, 3);
+  expect(el.querySelectorAll('.hud-life')).toHaveLength(3);
+  expect(el.textContent).toBe('♡♡♡');
+  expect(el.getAttribute('aria-label')).toBe('0 of 3 lives left');
 });

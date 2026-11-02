@@ -1,5 +1,6 @@
 import { mountPuzzleApp, parsePresetRoute, type PresetRoute, type PuzzleGame } from '../../ui/puzzleApp';
 import { RESTART_CONFIRM } from '../../ui/confirm';
+import { renderLives } from '../../ui/hud';
 import { getTanglePreset, loadTangleDaily, saveTangleDaily, setTanglePreset, type TangleDailySave } from './storage';
 import { createTangleBoard } from './board';
 import { MAX_LIVES, encode, newGame, restore, tap } from './game';
@@ -8,20 +9,6 @@ import { openTangleHowto } from './howto';
 import type { GameState, Level, PresetId } from './types';
 
 export type TangleRoute = PresetRoute<PresetId>;
-
-function renderLives(lives: HTMLElement, n: number): void {
-  lives.textContent = '';
-  for (let k = 0; k < MAX_LIVES; k++) {
-    const lost = k >= n;
-    const h = document.createElement('span');
-    h.className = lost ? 'tangle-life is-lost' : 'tangle-life';
-    h.textContent = lost ? '♡' : '♥';
-    h.setAttribute('aria-hidden', 'true');
-    lives.appendChild(h);
-  }
-  lives.title = `${n} of ${MAX_LIVES} lives left`;
-  lives.setAttribute('aria-label', `${n} of ${MAX_LIVES} lives left`);
-}
 
 const tangle: PuzzleGame<PresetId, Level, GameState, TangleDailySave> = {
   id: 'tangle',
@@ -69,7 +56,7 @@ const tangle: PuzzleGame<PresetId, Level, GameState, TangleDailySave> = {
     };
   },
   stats: [
-    { cls: 'tangle-lives', label: 'Lives', role: 'img', render: (g, el) => renderLives(el, g.lives) },
+    { cls: 'tangle-lives hud-lives', label: 'Lives', role: 'img', render: (g, el) => renderLives(el, g.lives, MAX_LIVES) },
     { cls: 'tangle-left hud-value num', label: 'Arrows left', render: (g, el) => { el.textContent = String(g.left); } },
   ],
   card: {

@@ -66,3 +66,18 @@ export function createHud(el: HTMLElement): HudHandle {
     },
   };
 }
+
+/** One heart per life (`max` in all); lost lives are drawn greyed out. Styled by `.hud-lives` in shell.css. */
+export function renderLives(el: HTMLElement, n: number, max: number): void {
+  el.textContent = '';
+  for (let k = 0; k < max; k++) {
+    const lost = k >= n;
+    const h = document.createElement('span');
+    h.className = lost ? 'hud-life is-lost' : 'hud-life';
+    h.textContent = lost ? '♡' : '♥';
+    h.setAttribute('aria-hidden', 'true');
+    el.appendChild(h);
+  }
+  el.title = `${n} of ${max} lives left`;
+  el.setAttribute('aria-label', `${n} of ${max} lives left`);
+}
