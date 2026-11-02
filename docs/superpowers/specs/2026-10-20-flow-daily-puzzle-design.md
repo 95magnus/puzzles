@@ -67,7 +67,7 @@ Implemented with Pointer Events (mouse, pen, touch share one path).
 - **Press a path end:** continue from there. **Press mid-path:** truncate to that cell and continue.
 - **Drag:** extend orthogonally cell by cell. Fast pointer jumps are filled in along a straight line between cells so no cells are skipped.
 - **Drag back over own path:** backtrack (removes those cells).
-- **Drag into another color's path:** that path is cut at the crossing cell. **Another color's dot is blocked.**
+- **Drag into another color's path or dot:** blocked; the path stops before it. Clear or shorten the other path first.
 - **Reach matching dot:** pair completes; further dragging is ignored; one-shot pulse.
 - **Release:** path stays as drawn.
 - **Right-click a path:** clears it (context menu suppressed on the board).

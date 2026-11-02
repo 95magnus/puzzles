@@ -79,12 +79,19 @@ describe('game state', () => {
     expect(s.paths[0]).toEqual([c(0, 1)]);
   });
 
-  test('drag into another color path cuts it at the crossing cell (prefix kept)', () => {
+  test('drag into another color path is blocked; both paths unchanged', () => {
     let s = drag(newGame(P), [c(1, 1), c(1, 2), c(0, 2)]);
     expect(s.paths[1]).toEqual([c(1, 1), c(1, 2), c(0, 2)]);
     s = drag(s, [c(1, 3), c(1, 2)]);
-    expect(s.paths[1]).toEqual([c(1, 1)]);
-    expect(s.paths[2]).toEqual([c(1, 3), c(1, 2)]);
+    expect(s.paths[1]).toEqual([c(1, 1), c(1, 2), c(0, 2)]);
+    expect(s.paths[2]).toEqual([c(1, 3)]);
+  });
+
+  test('a fast jump across another color path stops before it', () => {
+    let s = drag(newGame(P), [c(1, 1), c(1, 2), c(0, 2)]);
+    s = pointerMove(pointerDown(s, c(2, 2)), c(0, 2));
+    expect(s.paths[3]).toEqual([c(2, 2)]);
+    expect(s.paths[1]).toEqual([c(1, 1), c(1, 2), c(0, 2)]);
   });
 
   test("drag into another color's dot is blocked; path unchanged", () => {

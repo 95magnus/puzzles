@@ -69,11 +69,9 @@ function step(s: GameState, next: Cell): GameState {
   const other = endpointColor(s, next);
   const target = targetOf(s, color)!;
   if (other >= 0 && !same(next, target)) return s; // another pair's dot
-  const paths = s.paths.map((q, k) => {
-    if (k === color) return [...p, next];
-    const j = q.findIndex(x => same(x, next));
-    return j >= 0 ? q.slice(0, j) : q;
-  });
+  if (s.paths.some((q, k) => k !== color && q.some(x => same(x, next)))) return s; // another path
+  const paths = s.paths.slice();
+  paths[color] = [...p, next];
   return { ...s, paths };
 }
 
