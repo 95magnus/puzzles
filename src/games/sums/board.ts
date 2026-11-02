@@ -39,11 +39,9 @@ function build(size: number, interactive: boolean): Built {
     const t = document.createElement('div');
     t.className = 'sums-target';
     t.dataset.line = String(line);
-    const sum = document.createElement('span');
-    sum.className = 'sums-target__sum';
     const left = document.createElement('span');
     left.className = 'sums-target__left';
-    t.append(sum, left);
+    t.append(left);
     targets[line] = t;
     return t;
   };
@@ -71,7 +69,7 @@ function setText(el: Element, text: string): void {
 }
 
 function paint(b: Built, s: GameState, bad: number): void {
-  const { size, digits, targets } = s.puzzle;
+  const { size, digits } = s.puzzle;
   for (let i = 0; i < size * size; i++) {
     const el = b.cells[i];
     const v = s.cells[i];
@@ -88,8 +86,10 @@ function paint(b: Built, s: GameState, bad: number): void {
     const left = remaining(s, l);
     const done = left <= 0;
     t.classList.toggle('is-done', done);
-    setText(t.querySelector('.sums-target__sum')!, String(targets[l]));
-    setText(t.querySelector('.sums-target__left')!, done ? '✓' : '−' + left);
+    setText(t.querySelector('.sums-target__left')!, done ? '✓' : String(left));
+    const name = l < size ? `Row ${l + 1}` : `Column ${l - size + 1}`;
+    const label = `${name}: ${done ? 'done' : left + ' left'}`;
+    if (t.getAttribute('aria-label') !== label) t.setAttribute('aria-label', label);
   }
 }
 
@@ -214,6 +214,12 @@ export function createSumsBoard(
   panel.addEventListener('pointercancel', clearPress);
   panel.addEventListener('lostpointercapture', clearPress);
   panel.addEventListener('contextmenu', onContextMenu);
+  // Keyboard and assistive-tech activation of a cell button (detail 0); pointer clicks strike on pointerup.
+  panel.addEventListener('click', (e) => {
+    if (e.detail !== 0 || blocked()) return;
+    const button = (e.target as Element | null)?.closest<HTMLElement>('button[data-cell]');
+    if (button) cb.onStrike(Number(button.dataset.cell));
+  });
   window.addEventListener('blur', clearPress);
   const stopFit = watchSize(host, fit);
 
@@ -228,6 +234,7 @@ export function createSumsBoard(
         built = build(s.puzzle.size, true);
         const g = built.grid;
         g.setAttribute('role', 'group');
+        g.setAttribute('aria-label', 'Sums board');
         g.style.touchAction = 'none';
         g.style.userSelect = 'none';
         g.style.setProperty('-webkit-user-select', 'none');

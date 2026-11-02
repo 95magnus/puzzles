@@ -210,22 +210,42 @@ export function loopPreview(): SVGSVGElement {
   return svg;
 }
 
-/** Sums: a 4x4 grid of digits with a target row and column; two digits are struck out. */
+/** Sums preview board: digits, the digits that stay (1), and the struck digits (never kept ones). */
+export const SUMS_PREVIEW = {
+  digits: ['3925', '7146', '5382', '2693'],
+  keep: ['1010', '0110', '1001', '0110'],
+  struck: ['0,1', '0,3', '1,0', '3,0', '3,3'], // "row,col"
+};
+
+/** What each line still has to lose: its unstruck digits minus its kept ones. Rows first, then columns. */
+export function sumsPreviewCounts(): number[] {
+  const { digits, keep, struck } = SUMS_PREVIEW;
+  const n = digits.length;
+  const lose = (r: number, c: number) => (keep[r][c] === '0' && !struck.includes(`${r},${c}`) ? Number(digits[r][c]) : 0);
+  const idx = Array.from({ length: n }, (_, i) => i);
+  return [
+    ...idx.map(r => idx.reduce((t, c) => t + lose(r, c), 0)),
+    ...idx.map(c => idx.reduce((t, r) => t + lose(r, c), 0)),
+  ];
+}
+
+/** Sums: a 4x4 grid of digits whose row and column counts show what each line still has to lose; five digits are struck. */
 export function sumsPreview(): SVGSVGElement {
   const svg = frame();
   const o = 4, step = 11.5; // target column/row at index 0, digits at 1..4
   const cx = (n: number) => o + n * step + step / 2;
   const cy = (n: number) => o + n * step + step / 2 + 3;
-  const digits = ['3925', '7146', '5382', '2693'];
-  const struck = new Set(['0,1', '2,0']); // "row,col" of the struck digits
-  const targets = { cols: [10, 12, 8, 7], rows: [12, 16, 10, 6] };
+  const { digits } = SUMS_PREVIEW;
+  const struck = new Set(SUMS_PREVIEW.struck);
+  const counts = sumsPreviewCounts();
   const label = (x: number, y: number, text: string, fill: string, size: number) => {
     const t = s('text', { x, y, 'text-anchor': 'middle', 'font-size': size, 'font-weight': 700, fill });
     t.textContent = text;
     svg.append(t);
   };
-  targets.cols.forEach((n, c) => label(cx(c + 1), cy(0), String(n), '#5dcaa5', 7));
-  targets.rows.forEach((n, r) => label(cx(0), cy(r + 1), String(n), '#5dcaa5', 7));
+  const count = (x: number, y: number, n: number) => (n === 0 ? label(x, y, '✓', '#5dcaa5', 8) : label(x, y, String(n), '#eef0f7', 8));
+  counts.slice(0, 4).forEach((n, r) => count(cx(0), cy(r + 1), n));
+  counts.slice(4).forEach((n, c) => count(cx(c + 1), cy(0), n));
   digits.forEach((row, r) => [...row].forEach((ch, c) => {
     const x = cx(c + 1), y = cy(r + 1);
     if (struck.has(`${r},${c}`)) {

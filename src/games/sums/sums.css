@@ -2,7 +2,6 @@
 :root {
   --sums-tile: rgba(255, 255, 255, 0.1);
   --sums-tile-hover: rgba(255, 255, 255, 0.17);
-  --sums-left: #ef9f27;
   --sums-done: #5dcaa5;
   --sums-locked: #7f77dd;
   --sums-bad: #ff5c7a;
@@ -34,6 +33,29 @@
 
 .sums-corner,
 .sums-target,
+.sums-cell {
+  width: var(--cell);
+  height: var(--cell);
+}
+
+.sums-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sums-target__left {
+  font-size: calc(var(--cell) * 0.4);
+  font-weight: 700;
+}
+
+.sums-target.is-done .sums-target__left {
+  color: var(--sums-done);
+}
+
 .sums-cell {
   width: var(--cell);
   height: var(--cell);
@@ -91,10 +113,14 @@ div.sums-cell {
 }
 
 @media (hover: hover) {
-  .sums-cell[data-state="open"]:hover,
-  .sums-cell[data-state="marked"]:hover {
+  .sums-panel:not(.is-locked) .sums-cell[data-state="open"]:hover,
+  .sums-panel:not(.is-locked) .sums-cell[data-state="marked"]:hover {
     background-color: var(--sums-tile-hover);
   }
+}
+
+.sums-panel.is-locked .sums-cell {
+  cursor: default;
 }
 
 .sums-cell[data-state="struck"] {
@@ -137,6 +163,29 @@ div.sums-cell {
   to {
     background-color: var(--sums-tile);
   }
+}
+
+/* How-to: the demo is a real, inert grid at a fixed cell size. */
+.sums-howto__body {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--space) * 2);
+  margin: 0 0 calc(var(--space) * 2);
+}
+
+.sums-howto__body ul {
+  flex: 1;
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.sums-howto__demo {
+  --cell: 30px;
+  flex: none;
+  pointer-events: none;
 }
 
 /* Win: the remaining digits pulse once. */

@@ -13,7 +13,7 @@ Tagline: *Strike out digits until every line adds up.*
 - **Daily mode:** one 7×7 board per UTC day, identical for every player. 3 lives per attempt. Losing all 3 shows "Out of lives"; **Try again** replays the same board from the start with 3 fresh lives as the next attempt (attempts counted, as in Mines and Tangle; a win is final).
 - **Practice mode:** unlimited random boards; presets **Easy** 5×5, **Medium** 7×7 (default, same as daily), **Hard** 9×9. Losing all lives ends that board.
 - Input: tap/click a digit to strike it; long-press/right-click toggles a free "keep" mark.
-- Each target shows how much its line still has to lose (§7).
+- Each target shows how much its line still has to lose, counting down to a check mark (§7).
 - Separate page `sums.html`, sharing core modules, the `puzzleApp` shell, header, theme, analytics and dashboard with the other eight puzzles. Static site, no backend.
 
 **Out of scope (v1)** — undo (strikes are final), hints, stats/streaks, share button, keyboard play, difficulty grading beyond grid size. The design must not block adding these later.
@@ -62,7 +62,7 @@ Stack as before: TypeScript + Vite, no UI framework. Generation runs on the main
 | `sums/solver` | `lineCells(size)`; `deduce(puzzle)` — line-subset fixpoint plus one-step trials (§5); `countSolutions(puzzle, limit)` — backtracking, tests only | `types` |
 | `sums/generate` | `generatePuzzle(size, seed): Puzzle` — deterministic; `PRESETS`, `DAILY_PRESET`, `sumsDailySeed(date)` | `core/rng`, `solver` |
 | `sums/game` | Pure state: `strike`, `toggleMark`, lives, `remaining(line)`, win/loss, encode/restore. No DOM | `types`, `solver` (`lineCells`) |
-| `sums/board` | DOM grid: targets with remaining counts, cells, tap / long-press / right-click, mistake flash and input pause | `game`, `ui/fit`, `ui/grid` |
+| `sums/board` | DOM grid: targets showing remaining counts, cells, tap / long-press / right-click, mistake flash and input pause | `game`, `ui/fit`, `ui/grid` |
 | `sums/app` | `PuzzleGame` definition for `mountPuzzleApp`: presets, specs, save hooks, board, HUD stats, end card | all above, `ui/puzzleApp` |
 | `sums/howto` | How-to modal with a small static example | `ui/modal` |
 | `sums/storage` | `loadSumsDaily` / `saveSumsDaily` via `dailyStore`, `getSumsPreset` / `setSumsPreset` via `presetStore` | `core/storage` |
@@ -136,9 +136,11 @@ Returns `(0 | 1)[]` when no unknowns remain; otherwise `null` (stalled or contra
 
 **Layout.** A `(size + 1) × (size + 1)` grid: empty corner, column targets across the top, row targets down the left, digit cells in the rest. Cell size `clamp(30px, fit-to-panel, 56px)`. 9×9 is 10 tracks, so it fits 375 px at about 32 px per cell.
 
-**Targets.** The target number, with a small second line under it showing `remaining`:
-- `> 0`: amber `−n`.
-- `0`: the target and a check mark turn green (`#5dcaa5`).
+**Targets.** Each target cell shows one value, the line's `remaining` (its unstruck digits minus its hidden target). The target number itself is never shown:
+- `> 0`: the number `remaining`, in the normal text colour.
+- `0`: a green (`#5dcaa5`) check mark, with class `is-done`.
+
+The count starts at the line's total minus its target and drops as digits in the line are struck; a mistake leaves it unchanged. Each target has an `aria-label` such as `Row 1: 6 left` or `Column 3: done`.
 
 The remaining count is a visual cue only; winning is decided by §2.
 
@@ -164,8 +166,8 @@ Header (shared): `puzzles · Sums`, Daily / Practice tabs, "?".
 2. **Daily (solved):** board stays visible; card "All lines add up", time, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Daily (out of lives):** card "Out of lives", primary **Try again** (shell's `retryDaily`).
 4. **Practice:** preset switch (Easy · Medium · Hard) replaces the subtitle; button **New board**. Win and loss cards offer **New board**.
-5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the small number under each target shows how much that line still has to lose. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
-6. **Dashboard card:** name "Sums", tagline, `sumsPreview()` SVG (a 4×4 grid with targets and a few struck digits), daily status "Not started", "In progress · mm:ss", "Solved · mm:ss" (`doneWord: 'Solved'`), "Out of lives · attempt n" (`lostWord: 'Out of lives'`); attempts > 1 shown as in Tangle.
+5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the number beside each row and above each column shows how much that line still has to lose, and at zero it turns into a check. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
+6. **Dashboard card:** name "Sums", tagline, `sumsPreview()` SVG (a 4×4 grid with remaining counts, some at a green check, and a few struck digits), daily status "Not started", "In progress · mm:ss", "Solved · mm:ss" (`doneWord: 'Solved'`), "Out of lives · attempt n" (`lostWord: 'Out of lives'`); attempts > 1 shown as in Tangle.
 
 `sums.html` copies the whole `<head>` of an existing page (description and `og:description` repeat the tagline, Open Graph/Twitter tags, icons, manifest, Umami). Play events and counted actions go through the shell's play tracker as in the other puzzles.
 

@@ -92,12 +92,11 @@ test('the remaining count drops per strike and the target turns done', async ({ 
   const sum = row.reduce((s, i) => s + p.digits[i], 0);
   let left = sum - p.targets[0];
   expect(left).toBe(struck.reduce((s, i) => s + p.digits[i], 0));
-  await expect(target(page, 0).locator('.sums-target__sum')).toHaveText(String(p.targets[0]));
-  await expect(target(page, 0).locator('.sums-target__left')).toHaveText('−' + left);
+  await expect(target(page, 0).locator('.sums-target__left')).toHaveText(String(left));
   for (const i of struck) {
     await cell(page, i).click();
     left -= p.digits[i];
-    if (left > 0) await expect(target(page, 0).locator('.sums-target__left')).toHaveText('−' + left);
+    if (left > 0) await expect(target(page, 0).locator('.sums-target__left')).toHaveText(String(left));
   }
   await expect(target(page, 0)).toHaveClass(/is-done/);
   await expect(target(page, 0).locator('.sums-target__left')).toHaveText('✓');

@@ -162,7 +162,36 @@ test('how-to lists the four rules and a static grid', () => {
     'Strike out digits until every row and column adds up to its target.',
     'Strike a digit that belongs and you lose a life. You have 3.',
     'Long-press or right-click to mark a digit you want to keep. Marks are free.',
-    'The small number under each target shows how much that line still has to lose.',
+    'The number beside each row and above each column shows how much that line still has to lose. At zero it turns into a check.',
   ]);
   expect(modal.querySelectorAll('.sums-grid .sums-cell')).toHaveLength(9);
+});
+
+test('pagehide leaves another tab\'s save alone; after a strike it saves', () => {
+  mount('#/');
+  const p = daily();
+  const [s1, s2] = cellsOf(p, 0);
+  // An idle tab: another tab struck a digit and lost a life since.
+  const cells = Array.from({ length: 49 }, () => '0');
+  cells[s2] = '1';
+  const other = { date: DATE, cells: cells.join(''), lives: 2, elapsedMs: 5_000, status: 'playing' as const, attempt: 1 };
+  saveSumsDaily(other);
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadSumsDaily(DATE)).toMatchObject({ cells: other.cells, lives: 2, elapsedMs: 5_000 });
+  click(p, s1);
+  window.dispatchEvent(new Event('pagehide'));
+  expect(loadSumsDaily(DATE)!.cells).not.toBe(other.cells);
+  expect(loadSumsDaily(DATE)!.cells[s1]).toBe('1');
+});
+
+test('each target counts down as its line is struck', () => {
+  mount('#/');
+  const p = daily();
+  const i = cellsOf(p, 0)[0];
+  const row = Math.floor(i / p.size);
+  const rowLeft = () => root.querySelector(`.sums-target[data-line="${row}"] .sums-target__left`)!.textContent;
+  const before = Number(rowLeft());
+  expect(before).toBeGreaterThan(0);
+  click(p, i);
+  expect(rowLeft()).toBe(before === p.digits[i] ? '✓' : String(before - p.digits[i]));
 });

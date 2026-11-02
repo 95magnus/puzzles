@@ -75,7 +75,10 @@ test('renders size² cells and 2*size targets in a size+1 column grid', () => {
   expect(grid().style.touchAction).toBe('none');
   expect(cellEl(0).getAttribute('aria-label')).toBe('Row 1, column 1, 1');
   expect(cellEl(7).getAttribute('aria-label')).toBe('Row 2, column 3, 8');
-  expect(targetEl(0).querySelector('.sums-target__sum')!.textContent).toBe('9');
+  expect(targetEl(0).querySelector('.sums-target__sum')).toBeNull();
+  expect(targetEl(0).children).toHaveLength(1);
+  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: 6 left');
+  expect(targetEl(SIZE).getAttribute('aria-label')).toBe('Column 1: 13 left');
 });
 
 test('grid blocks selection and the touch callout inline', () => {
@@ -88,18 +91,19 @@ test('grid blocks selection and the touch callout inline', () => {
 test('render after a strike updates the cell and its row and column remaining', () => {
   const s = mount();
   // Row 0 keeps 1, 3, 5 and has 2 and 4 to lose; column 1 (2, 7, 3, 8, 4) keeps only 7 and 8.
-  expect(leftOf(0)).toBe('−6');
-  expect(leftOf(SIZE + 1)).toBe('−9');
+  expect(leftOf(0)).toBe('6');
+  expect(leftOf(SIZE + 1)).toBe('9');
   expect(strike(s, 1)).toBe('struck');
   board.render();
   expect(cellEl(1).dataset.state).toBe('struck');
   expect(cellEl(1).getAttribute('aria-label')).toBe('Row 1, column 2, 2, struck');
-  expect(leftOf(0)).toBe('−4');
-  expect(leftOf(SIZE + 1)).toBe('−7');
+  expect(leftOf(0)).toBe('4');
+  expect(leftOf(SIZE + 1)).toBe('7');
   expect(strike(s, 3)).toBe('struck');
   board.render();
   expect(leftOf(0)).toBe('✓');
   expect(targetEl(0).classList.contains('is-done')).toBe(true);
+  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: done');
   expect(targetEl(1).classList.contains('is-done')).toBe(false);
 });
 
@@ -276,5 +280,33 @@ test('sumsGrid is a static, non-interactive copy', () => {
   expect(g.querySelectorAll('.sums-cell')).toHaveLength(25);
   expect(g.querySelectorAll('button')).toHaveLength(0);
   expect(g.querySelector<HTMLElement>('.sums-cell[data-cell="1"]')!.dataset.state).toBe('struck');
-  expect(g.querySelector('.sums-target[data-line="0"] .sums-target__left')!.textContent).toBe('−4');
+  expect(g.querySelector('.sums-target[data-line="0"] .sums-target__left')!.textContent).toBe('4');
+});
+
+test('the grid is a labelled group', () => {
+  mount();
+  expect(grid().getAttribute('role')).toBe('group');
+  expect(grid().getAttribute('aria-label')).toBe('Sums board');
+});
+
+test('a keyboard or assistive-tech click (detail 0) strikes the cell', () => {
+  mount();
+  cellEl(7).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+  expect(onStrike).toHaveBeenCalledTimes(1);
+  expect(onStrike).toHaveBeenCalledWith(7);
+});
+
+test('a pointer click strikes exactly once, even with the click event that follows', () => {
+  mount();
+  click(7);
+  cellEl(7).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+  expect(onStrike).toHaveBeenCalledTimes(1);
+  expect(onStrike).toHaveBeenCalledWith(7);
+});
+
+test('a detail-0 click is ignored while the board is locked or paused', () => {
+  mount();
+  board.setInteractive(false);
+  cellEl(7).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+  expect(onStrike).not.toHaveBeenCalled();
 });

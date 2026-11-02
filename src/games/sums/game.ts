@@ -1,11 +1,11 @@
-import { lineCells } from "./solver";
-import type { Cell, GameState, Puzzle, Status } from "./types";
+import { lineCells } from './solver';
+import type { Cell, GameState, Puzzle, Status } from './types';
 
 // The functions mutate the state in place; the result tells the board what to animate.
 
 export const MAX_LIVES = 3;
 
-export type StrikeResult = "struck" | "mistake" | "ignored";
+export type StrikeResult = 'struck' | 'mistake' | 'ignored';
 
 export function newGame(p: Puzzle): GameState {
   const left = p.solution.reduce<number>((n, k) => n + (k ? 0 : 1), 0);
@@ -13,29 +13,29 @@ export function newGame(p: Puzzle): GameState {
     puzzle: p,
     cells: new Array<Cell>(p.size * p.size).fill(0),
     lives: MAX_LIVES,
-    status: left === 0 ? "won" : "playing",
+    status: left === 0 ? 'won' : 'playing',
     left,
   };
 }
 
 /** Strikes an open cell: a non-solution digit is struck, a solution digit locks and costs a life. */
 export function strike(s: GameState, cell: number): StrikeResult {
-  if (s.status !== "playing" || s.cells[cell] !== 0) return "ignored";
+  if (s.status !== 'playing' || s.cells[cell] !== 0) return 'ignored';
   if (s.puzzle.solution[cell]) {
     s.cells[cell] = 3;
     s.lives--;
-    if (s.lives === 0) s.status = "lost";
-    return "mistake";
+    if (s.lives === 0) s.status = 'lost';
+    return 'mistake';
   }
   s.cells[cell] = 1;
   s.left--;
-  if (s.left === 0) s.status = "won";
-  return "struck";
+  if (s.left === 0) s.status = 'won';
+  return 'struck';
 }
 
 /** Toggles open and marked; returns whether anything changed. */
 export function toggleMark(s: GameState, cell: number): boolean {
-  if (s.status !== "playing") return false;
+  if (s.status !== 'playing') return false;
   const c = s.cells[cell];
   if (c !== 0 && c !== 2) return false;
   s.cells[cell] = c === 0 ? 2 : 0;
@@ -52,7 +52,7 @@ export function remaining(s: GameState, line: number): number {
 
 /** One char per cell, `0`–`3`. */
 export function encode(s: GameState): string {
-  return s.cells.join("");
+  return s.cells.join('');
 }
 
 export function restore(
@@ -76,6 +76,6 @@ export function restore(
     cells.push(c);
   }
   if (locks !== MAX_LIVES - lives) return null;
-  const status: Status = left === 0 ? "won" : lives === 0 ? "lost" : "playing";
+  const status: Status = left === 0 ? 'won' : lives === 0 ? 'lost' : 'playing';
   return { puzzle: p, cells, lives, status, left };
 }

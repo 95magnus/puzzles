@@ -35,6 +35,8 @@ const sums: PuzzleGame<PresetId, Puzzle, GameState, SumsDailySave> = {
     saved.attempt > attempt || (saved.attempt === attempt && saved.status !== 'playing' && g.status === 'playing') ||
     (saved.attempt === attempt && saved.status === 'won'),
 
+  ownsSave: (saved, g) => saved.cells === encode(g) && saved.lives === g.lives,
+
   mountBoard(host, ctx) {
     const board = createSumsBoard(host, {
       onStrike: (cell) => {
