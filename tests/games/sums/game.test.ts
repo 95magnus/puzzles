@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_LIVES,
   encode,
+  need,
   newGame,
   remaining,
   restore,
@@ -108,6 +109,46 @@ describe('toggleMark', () => {
     expect(toggleMark(s, kept)).toBe(false);
     expect(s.cells[dropped]).toBe(1);
     expect(s.cells[kept]).toBe(3);
+  });
+});
+
+describe('need', () => {
+  const lines = lineCells(5);
+  const inRow0 = (k: 0 | 1) => lines[0].filter((i) => keep[i] === k);
+
+  it('starts at the target', () => {
+    const s = newGame(p);
+    for (let l = 0; l < 10; l++) expect(need(s, l)).toBe(p.targets[l]);
+  });
+
+  it('drops when a digit is marked and returns when it is unmarked', () => {
+    const s = newGame(p);
+    const c = inRow0(1)[0];
+    toggleMark(s, c);
+    expect(need(s, 0)).toBe(p.targets[0] - digits[c]);
+    toggleMark(s, c);
+    expect(need(s, 0)).toBe(p.targets[0]);
+  });
+
+  it('drops when a mistake locks a digit', () => {
+    const s = newGame(p);
+    const c = inRow0(1)[0];
+    strike(s, c);
+    expect(need(s, 0)).toBe(p.targets[0] - digits[c]);
+  });
+
+  it('is unchanged by a strike', () => {
+    const s = newGame(p);
+    strike(s, inRow0(0)[0]);
+    expect(need(s, 0)).toBe(p.targets[0]);
+  });
+
+  it('can go negative', () => {
+    const s = newGame(p);
+    for (const c of lines[0]) toggleMark(s, c);
+    const all = lines[0].reduce((a, c) => a + digits[c], 0);
+    expect(need(s, 0)).toBe(p.targets[0] - all);
+    expect(need(s, 0)).toBeLessThan(0);
   });
 });
 

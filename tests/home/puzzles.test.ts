@@ -13,7 +13,7 @@ import type { Status as MinesStatus } from '../../src/games/mines/types';
 import type { Status as TangleStatus } from '../../src/games/tangle/types';
 import type { Status as SumsStatus } from '../../src/games/sums/types';
 import { PUZZLES, statusLabel } from '../../src/home/puzzles';
-import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview, sumsPreview, SUMS_PREVIEW, sumsPreviewCounts } from '../../src/home/previews';
+import { QUEENS_PREVIEW_REGIONS, flowPreview, minesPreview, patchesPreview, queensPreview, tanglePreview, balancedPreview, bridgesPreview, loopPreview, sumsPreview, SUMS_PREVIEW, sumsPreviewTargets } from '../../src/home/previews';
 import { countSolutions } from '../../src/games/queens/solver';
 import { PAGES } from '../../src/pages';
 
@@ -239,22 +239,26 @@ test('the Queens preview layout has exactly one solution', () => {
   expect(countSolutions({ size: rows.length, regions, solution: [] }, 10)).toBe(1);
 });
 
-test('Sums preview counts are what each line still has to lose', () => {
-  const { digits, keep, struck } = SUMS_PREVIEW;
+test('Sums preview targets are a check or the goal minus the marked digits', () => {
+  const { digits, keep, struck, marked } = SUMS_PREVIEW;
   const kept = (r: number, c: number) => keep[r][c] === '1';
-  // Only digits that do not stay can be struck, and every line keeps at least one.
+  // Only digits that do not stay can be struck, only kept digits can be marked, and every line keeps at least one.
   for (const k of struck) {
     const [r, c] = k.split(',').map(Number);
     expect(kept(r, c)).toBe(false);
+  }
+  for (const k of marked) {
+    const [r, c] = k.split(',').map(Number);
+    expect(kept(r, c)).toBe(true);
   }
   for (let i = 0; i < 4; i++) {
     expect([0, 1, 2, 3].some(c => kept(i, c))).toBe(true);
     expect([0, 1, 2, 3].some(r => kept(r, i))).toBe(true);
   }
-  const counts = sumsPreviewCounts();
-  expect(counts).toEqual([0, 6, 11, 0, 0, 3, 8, 6]);
+  const targets = sumsPreviewTargets();
+  expect(targets).toEqual(['✓', '1', '2', '✓', '✓', '7', '11', '2']);
   expect(digits).toHaveLength(4);
-  expect(counts.filter(n => n === 0).length).toBeGreaterThanOrEqual(2);
-  expect(counts.some(n => n > 0)).toBe(true);
+  expect(targets.filter(t => t === '✓').length).toBeGreaterThanOrEqual(2);
+  expect(marked.length).toBeGreaterThan(0);
   expect(sumsPreview().textContent).toContain('✓');
 });

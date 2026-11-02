@@ -13,7 +13,7 @@ Tagline: *Strike out digits until every line adds up.*
 - **Daily mode:** one 7×7 board per UTC day, identical for every player. 3 lives per attempt. Losing all 3 shows "Out of lives"; **Try again** replays the same board from the start with 3 fresh lives as the next attempt (attempts counted, as in Mines and Tangle; a win is final).
 - **Practice mode:** unlimited random boards; presets **Easy** 5×5, **Medium** 7×7 (default, same as daily), **Hard** 9×9. Losing all lives ends that board.
 - Input: tap/click a digit to strike it; long-press/right-click toggles a free "keep" mark.
-- Each target shows how much its line still has to lose, counting down to a check mark (§7).
+- Each target shows its line's goal minus the digits the player has marked to keep, or a check mark once the line is finished (§7).
 - Separate page `sums.html`, sharing core modules, the `puzzleApp` shell, header, theme, analytics and dashboard with the other eight puzzles. Static site, no backend.
 
 **Out of scope (v1)** — undo (strikes are final), hints, stats/streaks, share button, keyboard play, difficulty grading beyond grid size. The design must not block adding these later.
@@ -62,7 +62,7 @@ Stack as before: TypeScript + Vite, no UI framework. Generation runs on the main
 | `sums/solver` | `lineCells(size)`; `deduce(puzzle)` — line-subset fixpoint plus one-step trials (§5); `countSolutions(puzzle, limit)` — backtracking, tests only | `types` |
 | `sums/generate` | `generatePuzzle(size, seed): Puzzle` — deterministic; `PRESETS`, `DAILY_PRESET`, `sumsDailySeed(date)` | `core/rng`, `solver` |
 | `sums/game` | Pure state: `strike`, `toggleMark`, lives, `remaining(line)`, win/loss, encode/restore. No DOM | `types`, `solver` (`lineCells`) |
-| `sums/board` | DOM grid: targets showing remaining counts, cells, tap / long-press / right-click, mistake flash and input pause | `game`, `ui/fit`, `ui/grid` |
+| `sums/board` | DOM grid: targets showing goal-minus-kept numbers or a check, cells, tap / long-press / right-click, mistake flash and input pause | `game`, `ui/fit`, `ui/grid` |
 | `sums/app` | `PuzzleGame` definition for `mountPuzzleApp`: presets, specs, save hooks, board, HUD stats, end card | all above, `ui/puzzleApp` |
 | `sums/howto` | How-to modal with a small static example | `ui/modal` |
 | `sums/storage` | `loadSumsDaily` / `saveSumsDaily` via `dailyStore`, `getSumsPreset` / `setSumsPreset` via `presetStore` | `core/storage` |
@@ -129,20 +129,22 @@ Returns `(0 | 1)[]` when no unknowns remain; otherwise `null` (stalled or contra
 - `newGame(puzzle)`: every cell open, 3 lives, `playing`, `left` = number of non-solution cells.
 - `strike(s, cell)`: on an open cell, either struck (`left - 1`, win at 0) or locked (`lives - 1`, loss at 0). Returns `'struck' | 'mistake' | 'ignored'` so the board knows what to animate. Ignored on non-open cells and after the game ends.
 - `toggleMark(s, cell)`: open ↔ marked; ignored otherwise and after the game ends.
-- `remaining(s, line)`: sum of the line's digits that are not struck, minus its target. Always ≥ 0; 0 means the line is done.
+- `need(s, line)`: the line's target minus the sum of its digits that are marked (`2`) or locked (`3`). Struck and open digits don't count. It changes when a digit is marked, unmarked or locked by a mistake, never when one is struck, and can go below 0.
+- `remaining(s, line)`: sum of the line's digits that are not struck, minus its target. Always ≥ 0; 0 means every wrong digit in the line is struck, so the line is done.
 - `encode(s)`: one char per cell, `0`–`3`. `restore(puzzle, str, lives)`: rejects wrong length, bad characters, a struck solution cell, a locked non-solution cell, lives outside 0–3, or a lock count that doesn't match `3 − lives`. Otherwise returns the game with its status recomputed.
 
 ## 7. Board (`board`)
 
 **Layout.** A `(size + 1) × (size + 1)` grid: empty corner, column targets across the top, row targets down the left, digit cells in the rest. Cell size `clamp(30px, fit-to-panel, 56px)`. 9×9 is 10 tracks, so it fits 375 px at about 32 px per cell.
 
-**Targets.** Each target cell shows one value, the line's `remaining` (its unstruck digits minus its hidden target). The target number itself is never shown:
-- `> 0`: the number `remaining`, in the normal text colour.
-- `0`: a green (`#5dcaa5`) check mark, with class `is-done`.
+**Targets.** Each target cell shows one thing. The number is `need(s, line)`: the line's goal minus its kept digits (marked or locked). At the start it equals the goal.
+- Otherwise: the number, in the normal text colour (including `0`).
+- `need < 0`: the number with a minus sign (e.g. `−2`) in red (`#ff5c7a`), with class `is-over`.
+- `remaining(s, line) === 0` (every wrong digit in the line is struck): a green (`#5dcaa5`) check mark in place of the number, with class `is-done`. This takes priority over the number, whatever the marks are.
 
-The count starts at the line's total minus its target and drops as digits in the line are struck; a mistake leaves it unchanged. Each target has an `aria-label` such as `Row 1: 6 left` or `Column 3: done`.
+A line whose marks make its goal shows `0`, not a check, while a wrong digit is still open. Each target has an `aria-label` such as `Row 1: needs 6`, `Row 1: over by 2` or `Column 3: done`.
 
-The remaining count is a visual cue only; winning is decided by §2.
+The target display is a visual cue only; winning is decided by §2.
 
 **Cells.**
 - Open: digit on a light tile; hover lightens it.
@@ -166,8 +168,8 @@ Header (shared): `puzzles · Sums`, Daily / Practice tabs, "?".
 2. **Daily (solved):** board stays visible; card "All lines add up", time, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Daily (out of lives):** card "Out of lives", primary **Try again** (shell's `retryDaily`).
 4. **Practice:** preset switch (Easy · Medium · Hard) replaces the subtitle; button **New board**. Win and loss cards offer **New board**.
-5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the number beside each row and above each column shows how much that line still has to lose, and at zero it turns into a check. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
-6. **Dashboard card:** name "Sums", tagline, `sumsPreview()` SVG (a 4×4 grid with remaining counts, some at a green check, and a few struck digits), daily status "Not started", "In progress · mm:ss", "Solved · mm:ss" (`doneWord: 'Solved'`), "Out of lives · attempt n" (`lostWord: 'Out of lives'`); attempts > 1 shown as in Tangle.
+5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the number beside each line is its goal minus the digits marked to keep, and it turns into a check once only the right digits are left. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
+6. **Dashboard card:** name "Sums", tagline, `sumsPreview()` SVG (a 4×4 grid whose targets show goal-minus-kept numbers or a green check, with a few struck and marked digits), daily status "Not started", "In progress · mm:ss", "Solved · mm:ss" (`doneWord: 'Solved'`), "Out of lives · attempt n" (`lostWord: 'Out of lives'`); attempts > 1 shown as in Tangle.
 
 `sums.html` copies the whole `<head>` of an existing page (description and `og:description` repeat the tagline, Open Graph/Twitter tags, icons, manifest, Umami). Play events and counted actions go through the shell's play tracker as in the other puzzles.
 
@@ -199,7 +201,7 @@ Header (shared): `puzzles · Sums`, Daily / Practice tabs, "?".
 - Tapping a solution digit loses a life and locks it; a second tap within 700 ms does nothing.
 - Three mistakes on the daily show "Out of lives"; **Try again** gives a fresh board with "Attempt 2".
 - Right-click marks a digit and a tap on it is ignored.
-- A target's remaining count drops as its digits are struck and turns into a check at 0.
+- Marking a solution digit lowers its row's number by that digit; marking wrong digits until the number is negative shows red with a minus sign; a line whose marks make its goal shows `0` while a wrong digit is open; striking never changes the number; striking every wrong digit gives the check, whatever the marks are.
 - Reload mid-daily restores strikes, marks, locks and lives.
 - `home.spec.ts`: `sums-howto-seen` added to the `beforeEach`; `/sums.html` added to its page lists; the dashboard shows the Sums card and its status.
 

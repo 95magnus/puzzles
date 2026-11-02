@@ -84,22 +84,68 @@ test('right-click marks a digit and a click leaves it marked', async ({ page }) 
   await expect(page.locator('.sums-lives')).toHaveText('♥♥♥');
 });
 
-test('the remaining count drops per strike and the target turns done', async ({ page }) => {
+const num = (page: Page, line: number) => target(page, line).locator('.sums-target__left');
+const minus = (n: number) => (n < 0 ? `−${-n}` : String(n));
+
+test('marking a solution digit lowers the row number by that digit', async ({ page }) => {
+  const p = practice();
+  await page.goto(PRACTICE_URL);
+  const keep = lineCells(EASY)[0].filter((i) => p.solution[i] === 1);
+  await expect(num(page, 0)).toHaveText(String(p.targets[0]));
+  await cell(page, keep[0]).click({ button: 'right' });
+  await expect(num(page, 0)).toHaveText(minus(p.targets[0] - p.digits[keep[0]]));
+  await cell(page, keep[0]).click({ button: 'right' });
+  await expect(num(page, 0)).toHaveText(String(p.targets[0]));
+});
+
+test('marking wrong digits until the number goes negative turns it red with a minus', async ({ page }) => {
   const p = practice();
   await page.goto(PRACTICE_URL);
   const row = lineCells(EASY)[0];
-  const struck = row.filter((i) => p.solution[i] === 0);
-  const sum = row.reduce((s, i) => s + p.digits[i], 0);
-  let left = sum - p.targets[0];
-  expect(left).toBe(struck.reduce((s, i) => s + p.digits[i], 0));
-  await expect(target(page, 0).locator('.sums-target__left')).toHaveText(String(left));
-  for (const i of struck) {
+  let n = p.targets[0];
+  for (const i of row) {
+    if (n < 0) break;
+    await cell(page, i).click({ button: 'right' });
+    n -= p.digits[i];
+  }
+  expect(n).toBeLessThan(0);
+  await expect(num(page, 0)).toHaveText(minus(n));
+  await expect(target(page, 0)).toHaveClass(/is-over/);
+});
+
+test('zero is shown as 0 while a wrong digit is open, and striking never changes the number', async ({ page }) => {
+  const p = practice();
+  await page.goto(PRACTICE_URL);
+  const row = lineCells(EASY)[0];
+  const keep = row.filter((i) => p.solution[i] === 1);
+  const wrong = row.filter((i) => p.solution[i] === 0);
+  for (const i of keep) await cell(page, i).click({ button: 'right' });
+  await expect(num(page, 0)).toHaveText('0');
+  await expect(target(page, 0)).not.toHaveClass(/is-done/);
+  await expect(target(page, 0)).not.toHaveClass(/is-over/);
+  for (const i of wrong.slice(0, -1)) {
     await cell(page, i).click();
-    left -= p.digits[i];
-    if (left > 0) await expect(target(page, 0).locator('.sums-target__left')).toHaveText(String(left));
+    await expect(num(page, 0)).toHaveText('0');
+  }
+  await cell(page, wrong[wrong.length - 1]).click();
+  await expect(target(page, 0)).toHaveClass(/is-done/);
+  await expect(num(page, 0)).toHaveText('✓');
+});
+
+test('striking every wrong digit in a row gives a check whatever the marks are', async ({ page }) => {
+  const p = practice();
+  await page.goto(PRACTICE_URL);
+  const row = lineCells(EASY)[0];
+  const keep = row.filter((i) => p.solution[i] === 1);
+  const wrong = row.filter((i) => p.solution[i] === 0);
+  await cell(page, keep[0]).click({ button: 'right' });
+  const before = await num(page, 0).textContent();
+  for (const i of wrong) {
+    await cell(page, i).click();
   }
   await expect(target(page, 0)).toHaveClass(/is-done/);
-  await expect(target(page, 0).locator('.sums-target__left')).toHaveText('✓');
+  await expect(num(page, 0)).toHaveText('✓');
+  expect(before).not.toBe('✓');
 });
 
 test('daily survives reload', async ({ page }) => {

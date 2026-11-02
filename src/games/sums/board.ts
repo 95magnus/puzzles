@@ -1,4 +1,4 @@
-import { remaining } from './game';
+import { need, remaining } from './game';
 import type { Cell, GameState, Puzzle } from './types';
 import { cellFromPoint } from '../../ui/grid';
 import { PANEL_PAD, PAGE_CHROME, fitCell, reducedMotion, watchSize } from '../../ui/fit';
@@ -83,12 +83,14 @@ function paint(b: Built, s: GameState, bad: number): void {
   }
   for (let l = 0; l < 2 * size; l++) {
     const t = b.targets[l];
-    const left = remaining(s, l);
-    const done = left <= 0;
+    const done = remaining(s, l) === 0;
+    const n = need(s, l);
+    const over = !done && n < 0;
     t.classList.toggle('is-done', done);
-    setText(t.querySelector('.sums-target__left')!, done ? '✓' : String(left));
+    t.classList.toggle('is-over', over);
+    setText(t.querySelector('.sums-target__left')!, done ? '✓' : n < 0 ? `−${-n}` : String(n));
     const name = l < size ? `Row ${l + 1}` : `Column ${l - size + 1}`;
-    const label = `${name}: ${done ? 'done' : left + ' left'}`;
+    const label = `${name}: ${done ? 'done' : over ? `over by ${-n}` : `needs ${n}`}`;
     if (t.getAttribute('aria-label') !== label) t.setAttribute('aria-label', label);
   }
 }

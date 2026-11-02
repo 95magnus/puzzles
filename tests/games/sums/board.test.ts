@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { createSumsBoard, sumsGrid, type SumsBoardHandle } from '../../../src/games/sums/board';
-import { newGame, strike } from '../../../src/games/sums/game';
+import { newGame, strike, toggleMark } from '../../../src/games/sums/game';
 import type { GameState } from '../../../src/games/sums/types';
 import { puzzle } from './helpers';
 
@@ -77,8 +77,8 @@ test('renders size² cells and 2*size targets in a size+1 column grid', () => {
   expect(cellEl(7).getAttribute('aria-label')).toBe('Row 2, column 3, 8');
   expect(targetEl(0).querySelector('.sums-target__sum')).toBeNull();
   expect(targetEl(0).children).toHaveLength(1);
-  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: 6 left');
-  expect(targetEl(SIZE).getAttribute('aria-label')).toBe('Column 1: 13 left');
+  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: needs 9');
+  expect(targetEl(SIZE).getAttribute('aria-label')).toBe('Column 1: needs 6');
 });
 
 test('grid blocks selection and the touch callout inline', () => {
@@ -88,23 +88,79 @@ test('grid blocks selection and the touch callout inline', () => {
   expect((grid().style as unknown as Record<string, string>).webkitTouchCallout).toBe('none');
 });
 
-test('render after a strike updates the cell and its row and column remaining', () => {
+test('striking never changes the number; the check appears once only the right digits are left', () => {
   const s = mount();
-  // Row 0 keeps 1, 3, 5 and has 2 and 4 to lose; column 1 (2, 7, 3, 8, 4) keeps only 7 and 8.
-  expect(leftOf(0)).toBe('6');
-  expect(leftOf(SIZE + 1)).toBe('9');
+  // Row 0 keeps 1, 3, 5 (target 9) and has 2 and 4 to lose; column 1 (2, 7, 3, 8, 4) has target 15.
+  expect(leftOf(0)).toBe('9');
+  expect(leftOf(SIZE + 1)).toBe('15');
   expect(strike(s, 1)).toBe('struck');
   board.render();
   expect(cellEl(1).dataset.state).toBe('struck');
   expect(cellEl(1).getAttribute('aria-label')).toBe('Row 1, column 2, 2, struck');
-  expect(leftOf(0)).toBe('4');
-  expect(leftOf(SIZE + 1)).toBe('7');
+  expect(leftOf(0)).toBe('9');
+  expect(leftOf(SIZE + 1)).toBe('15');
   expect(strike(s, 3)).toBe('struck');
   board.render();
   expect(leftOf(0)).toBe('✓');
   expect(targetEl(0).classList.contains('is-done')).toBe(true);
   expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: done');
   expect(targetEl(1).classList.contains('is-done')).toBe(false);
+});
+
+test('marking a digit lowers its row and column number; unmarking restores it', () => {
+  const s = mount();
+  toggleMark(s, 0); // a 1 in row 0, column 0
+  board.render();
+  expect(leftOf(0)).toBe('8');
+  expect(leftOf(SIZE)).toBe('5');
+  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: needs 8');
+  toggleMark(s, 0);
+  board.render();
+  expect(leftOf(0)).toBe('9');
+});
+
+test('a locked mistake counts as kept', () => {
+  const s = mount();
+  expect(strike(s, 0)).toBe('mistake');
+  board.render();
+  expect(leftOf(0)).toBe('8');
+});
+
+test('too many kept digits turn the number red with a minus sign', () => {
+  const s = mount();
+  for (const i of [0, 1, 2, 3]) toggleMark(s, i); // 1 + 2 + 3 + 4 = 10 against a target of 9
+  board.render();
+  expect(leftOf(0)).toBe('−1');
+  expect(targetEl(0).classList.contains('is-over')).toBe(true);
+  expect(targetEl(0).classList.contains('is-done')).toBe(false);
+  expect(targetEl(0).getAttribute('aria-label')).toBe('Row 1: over by 1');
+  toggleMark(s, 3);
+  board.render();
+  expect(leftOf(0)).toBe('3');
+  expect(targetEl(0).classList.contains('is-over')).toBe(false);
+});
+
+test('zero is a plain 0, not a check, while a wrong digit is still open', () => {
+  const s = mount();
+  for (const i of [0, 2, 4]) toggleMark(s, i); // the three digits that belong
+  board.render();
+  expect(leftOf(0)).toBe('0');
+  expect(targetEl(0).classList.contains('is-done')).toBe(false);
+  expect(targetEl(0).classList.contains('is-over')).toBe(false);
+});
+
+test('striking every wrong digit gives the check whatever the marks are', () => {
+  const s = mount();
+  for (const i of [0, 1, 2, 3, 4]) toggleMark(s, i);
+  strike(s, 1); // marked: ignored
+  toggleMark(s, 1);
+  toggleMark(s, 3);
+  strike(s, 1);
+  strike(s, 3);
+  board.render();
+  expect(leftOf(0)).toBe('✓');
+  expect(targetEl(0).classList.contains('is-done')).toBe(true);
+  expect(targetEl(0).classList.contains('is-over')).toBe(false);
 });
 
 test('marked and locked cells get their state and label', () => {
@@ -280,7 +336,10 @@ test('sumsGrid is a static, non-interactive copy', () => {
   expect(g.querySelectorAll('.sums-cell')).toHaveLength(25);
   expect(g.querySelectorAll('button')).toHaveLength(0);
   expect(g.querySelector<HTMLElement>('.sums-cell[data-cell="1"]')!.dataset.state).toBe('struck');
-  expect(g.querySelector('.sums-target[data-line="0"] .sums-target__left')!.textContent).toBe('4');
+  const row0 = () => g.querySelector('.sums-target[data-line="0"] .sums-target__left')!.textContent;
+  expect(row0()).toBe('9');
+  const marked = sumsGrid(p, cells.map((c, i) => (i === 0 ? 2 : c)) as GameState['cells']);
+  expect(marked.querySelector('.sums-target[data-line="0"] .sums-target__left')!.textContent).toBe('8');
 });
 
 test('the grid is a labelled group', () => {

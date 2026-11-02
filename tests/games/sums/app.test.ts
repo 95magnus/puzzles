@@ -162,7 +162,7 @@ test('how-to lists the four rules and a static grid', () => {
     'Strike out digits until every row and column adds up to its target.',
     'Strike a digit that belongs and you lose a life. You have 3.',
     'Long-press or right-click to mark a digit you want to keep. Marks are free.',
-    'The number beside each row and above each column shows how much that line still has to lose. At zero it turns into a check.',
+    'The number beside each line is its goal minus the digits you have marked to keep. It turns into a check once only the right digits are left.',
   ]);
   expect(modal.querySelectorAll('.sums-grid .sums-cell')).toHaveLength(9);
 });
@@ -184,14 +184,20 @@ test('pagehide leaves another tab\'s save alone; after a strike it saves', () =>
   expect(loadSumsDaily(DATE)!.cells[s1]).toBe('1');
 });
 
-test('each target counts down as its line is struck', () => {
+test('a target keeps its number when a digit is struck and drops when one is marked', () => {
   mount('#/');
   const p = daily();
-  const i = cellsOf(p, 0)[0];
-  const row = Math.floor(i / p.size);
-  const rowLeft = () => root.querySelector(`.sums-target[data-line="${row}"] .sums-target__left`)!.textContent;
-  const before = Number(rowLeft());
-  expect(before).toBeGreaterThan(0);
-  click(p, i);
-  expect(rowLeft()).toBe(before === p.digits[i] ? '✓' : String(before - p.digits[i]));
+  const [wrong] = cellsOf(p, 0);
+  const [kept] = cellsOf(p, 1);
+  const rowOf = (i: number) => Math.floor(i / p.size);
+  const num = (line: number) => root.querySelector(`.sums-target[data-line="${line}"] .sums-target__left`)!.textContent;
+  expect(num(rowOf(wrong))).toBe(String(p.targets[rowOf(wrong)]));
+  click(p, wrong);
+  const afterStrike = num(rowOf(wrong));
+  expect(afterStrike === '✓' || afterStrike === String(p.targets[rowOf(wrong)])).toBe(true);
+  rightClick(p, kept);
+  const row = rowOf(kept);
+  const base = p.targets[row] - p.digits[kept];
+  const shown = num(row);
+  expect(shown === '✓' || shown === (base < 0 ? `−${-base}` : String(base))).toBe(true);
 });

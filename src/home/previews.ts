@@ -210,26 +210,32 @@ export function loopPreview(): SVGSVGElement {
   return svg;
 }
 
-/** Sums preview board: digits, the digits that stay (1), and the struck digits (never kept ones). */
+/** Sums preview board: digits, the digits that stay (1), the struck digits (never kept ones) and the kept digits the player marked. */
 export const SUMS_PREVIEW = {
   digits: ['3925', '7146', '5382', '2693'],
   keep: ['1010', '0110', '1001', '0110'],
   struck: ['0,1', '0,3', '1,0', '3,0', '3,3'], // "row,col"
+  marked: ['1,2', '2,0'], // "row,col"; kept digits
 };
 
-/** What each line still has to lose: its unstruck digits minus its kept ones. Rows first, then columns. */
-export function sumsPreviewCounts(): number[] {
-  const { digits, keep, struck } = SUMS_PREVIEW;
+/** What each target shows, rows first then columns: a check once every wrong digit in the line is struck, else its goal minus the marked digits. */
+export function sumsPreviewTargets(): string[] {
+  const { digits, keep, struck, marked } = SUMS_PREVIEW;
   const n = digits.length;
-  const lose = (r: number, c: number) => (keep[r][c] === '0' && !struck.includes(`${r},${c}`) ? Number(digits[r][c]) : 0);
   const idx = Array.from({ length: n }, (_, i) => i);
+  const line = (cells: [number, number][]) => {
+    if (cells.every(([r, c]) => keep[r][c] === '1' || struck.includes(`${r},${c}`))) return '✓';
+    const goal = cells.reduce((t, [r, c]) => t + (keep[r][c] === '1' ? Number(digits[r][c]) : 0), 0);
+    const need = goal - cells.reduce((t, [r, c]) => t + (marked.includes(`${r},${c}`) ? Number(digits[r][c]) : 0), 0);
+    return need < 0 ? `−${-need}` : String(need);
+  };
   return [
-    ...idx.map(r => idx.reduce((t, c) => t + lose(r, c), 0)),
-    ...idx.map(c => idx.reduce((t, r) => t + lose(r, c), 0)),
+    ...idx.map(r => line(idx.map(c => [r, c] as [number, number]))),
+    ...idx.map(c => line(idx.map(r => [r, c] as [number, number]))),
   ];
 }
 
-/** Sums: a 4x4 grid of digits whose row and column counts show what each line still has to lose; five digits are struck. */
+/** Sums: a 4x4 grid of digits whose row and column targets show the goal minus the marked digits, or a check; five digits are struck and two are marked. */
 export function sumsPreview(): SVGSVGElement {
   const svg = frame();
   const o = 4, step = 11.5; // target column/row at index 0, digits at 1..4
@@ -237,15 +243,16 @@ export function sumsPreview(): SVGSVGElement {
   const cy = (n: number) => o + n * step + step / 2 + 3;
   const { digits } = SUMS_PREVIEW;
   const struck = new Set(SUMS_PREVIEW.struck);
-  const counts = sumsPreviewCounts();
+  const targets = sumsPreviewTargets();
+  const marked = new Set(SUMS_PREVIEW.marked);
   const label = (x: number, y: number, text: string, fill: string, size: number) => {
     const t = s('text', { x, y, 'text-anchor': 'middle', 'font-size': size, 'font-weight': 700, fill });
     t.textContent = text;
     svg.append(t);
   };
-  const count = (x: number, y: number, n: number) => (n === 0 ? label(x, y, '✓', '#5dcaa5', 8) : label(x, y, String(n), '#eef0f7', 8));
-  counts.slice(0, 4).forEach((n, r) => count(cx(0), cy(r + 1), n));
-  counts.slice(4).forEach((n, c) => count(cx(c + 1), cy(0), n));
+  const target = (x: number, y: number, t: string) => label(x, y, t, t === '✓' ? '#5dcaa5' : t.startsWith('−') ? '#ff5c7a' : '#eef0f7', 8);
+  targets.slice(0, 4).forEach((t, r) => target(cx(0), cy(r + 1), t));
+  targets.slice(4).forEach((t, c) => target(cx(c + 1), cy(0), t));
   digits.forEach((row, r) => [...row].forEach((ch, c) => {
     const x = cx(c + 1), y = cy(r + 1);
     if (struck.has(`${r},${c}`)) {
@@ -253,6 +260,7 @@ export function sumsPreview(): SVGSVGElement {
       label(x, y, ch, 'rgba(238,240,247,.3)', 8);
       svg.append(s('line', { x1: x - 3.5, y1: y - 1.5, x2: x + 3.5, y2: y - 1.5, stroke: '#ef9f27', 'stroke-width': 1.3, 'stroke-linecap': 'round' }));
     } else {
+      if (marked.has(`${r},${c}`)) svg.append(s('rect', { x: x - step / 2 + 1, y: y - step / 2 - 2, width: step - 2, height: step - 2, rx: 2.5, fill: 'none', stroke: '#7f77dd', 'stroke-width': 1 }));
       label(x, y, ch, '#eef0f7', 8);
     }
   }));

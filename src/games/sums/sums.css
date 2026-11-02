@@ -56,34 +56,8 @@
   color: var(--sums-done);
 }
 
-.sums-cell {
-  width: var(--cell);
-  height: var(--cell);
-}
-
-.sums-target {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.sums-target__sum {
-  font-size: calc(var(--cell) * 0.4);
-  font-weight: 700;
-}
-
-.sums-target__left {
-  font-size: calc(var(--cell) * 0.28);
-  font-weight: 600;
-  color: var(--sums-left);
-}
-
-.sums-target.is-done .sums-target__sum,
-.sums-target.is-done .sums-target__left {
-  color: var(--sums-done);
+.sums-target.is-over .sums-target__left {
+  color: var(--sums-bad);
 }
 
 .sums-cell {

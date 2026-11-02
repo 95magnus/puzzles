@@ -50,6 +50,14 @@ export function remaining(s: GameState, line: number): number {
   return sum - s.puzzle.targets[line];
 }
 
+/** The line's target minus its kept digits (marked or locked). Below 0 means too many are kept. */
+export function need(s: GameState, line: number): number {
+  let n = s.puzzle.targets[line];
+  for (const i of lineCells(s.puzzle.size)[line])
+    if (s.cells[i] === 2 || s.cells[i] === 3) n -= s.puzzle.digits[i];
+  return n;
+}
+
 /** One char per cell, `0`–`3`. */
 export function encode(s: GameState): string {
   return s.cells.join('');
