@@ -1,0 +1,162 @@
+/* Sums board. Tokens, base styles, .btn / .seg / .glass come from ../ui/theme.css. */
+:root {
+  --sums-tile: rgba(255, 255, 255, 0.1);
+  --sums-tile-hover: rgba(255, 255, 255, 0.17);
+  --sums-left: #ef9f27;
+  --sums-done: #5dcaa5;
+  --sums-locked: #7f77dd;
+  --sums-bad: #ff5c7a;
+}
+
+.sums-panel {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 12px; /* PANEL_PAD in board.ts */
+  transition: opacity var(--dur) var(--ease), filter var(--dur) var(--ease);
+}
+
+.sums-panel.is-paused {
+  opacity: 0.8;
+  filter: saturate(0.7);
+}
+
+/* No gap: the hit test in board.ts assumes equal tracks. Tile spacing is a transparent border. */
+.sums-grid {
+  --cell: 40px;
+  display: grid;
+  width: max-content;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+}
+
+.sums-corner,
+.sums-target,
+.sums-cell {
+  width: var(--cell);
+  height: var(--cell);
+}
+
+.sums-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sums-target__sum {
+  font-size: calc(var(--cell) * 0.4);
+  font-weight: 700;
+}
+
+.sums-target__left {
+  font-size: calc(var(--cell) * 0.28);
+  font-weight: 600;
+  color: var(--sums-left);
+}
+
+.sums-target.is-done .sums-target__sum,
+.sums-target.is-done .sums-target__left {
+  color: var(--sums-done);
+}
+
+.sums-cell {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: var(--sums-tile);
+  background-clip: padding-box;
+  color: var(--text);
+  font: inherit;
+  font-size: calc(var(--cell) * 0.46);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+
+div.sums-cell {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .sums-cell[data-state="open"]:hover,
+  .sums-cell[data-state="marked"]:hover {
+    background-color: var(--sums-tile-hover);
+  }
+}
+
+.sums-cell[data-state="struck"] {
+  opacity: 0.18;
+  text-decoration: line-through;
+  cursor: default;
+}
+
+.sums-cell[data-state="marked"]::after,
+.sums-cell[data-state="locked"]::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.sums-cell[data-state="marked"]::after {
+  border: 2px dashed var(--text-2);
+}
+
+.sums-cell[data-state="locked"] {
+  cursor: default;
+}
+
+.sums-cell[data-state="locked"]::after {
+  border: 2px solid var(--sums-locked);
+  border-radius: 50%;
+}
+
+.sums-cell.is-bad {
+  animation: sums-flash 500ms var(--ease);
+  background-color: var(--sums-bad);
+}
+
+@keyframes sums-flash {
+  from {
+    background-color: var(--sums-bad);
+  }
+  to {
+    background-color: var(--sums-tile);
+  }
+}
+
+/* Win: the remaining digits pulse once. */
+.sums-panel.is-celebrating .sums-cell[data-state="open"],
+.sums-panel.is-celebrating .sums-cell[data-state="marked"] {
+  animation: sums-pulse 400ms var(--ease);
+}
+
+@keyframes sums-pulse {
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sums-cell,
+  .sums-panel {
+    transition: none;
+  }
+  .sums-cell.is-bad {
+    animation: none;
+  }
+}
