@@ -20,6 +20,7 @@ type Card = { entry: PuzzleEntry; pill: HTMLElement; li: HTMLLIElement };
 function createCard(entry: PuzzleEntry): Card {
   const li = el('li', 'puzzle-card glass');
   li.dataset.id = entry.id;
+  if (entry.bestOnComputer) li.dataset.bestOnComputer = '';
   try {
     li.append(entry.preview());
   } catch {
@@ -31,7 +32,10 @@ function createCard(entry: PuzzleEntry): Card {
   if (entry.bestOnComputer) body.append(el('p', 'puzzle-card__phone-note', 'Best played on a computer'));
   body.append(pill);
   const actions = el('div', 'puzzle-card__actions');
-  actions.append(link('btn btn--primary', `${entry.href}#/`, 'Play daily'), link('btn', `${entry.href}#/practice`, 'Practice'));
+  actions.append(
+    link('btn btn--primary puzzle-card__play', `${entry.href}#/`, 'Play daily'),
+    link('btn puzzle-card__practice', `${entry.href}#/practice`, 'Practice'),
+  );
   li.append(body, actions);
   return { entry, pill, li };
 }
