@@ -12,6 +12,7 @@ export const PAGES = {
   balanced: 'balanced.html',
   bridges: 'bridges.html',
   loop: 'loop.html',
+  sums: 'sums.html',
 } as const;
 
 export type GameId = Exclude<keyof typeof PAGES, 'home'>;
