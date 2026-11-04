@@ -167,6 +167,42 @@ test('phones see which puzzles are best on a computer', async ({ page }) => {
   }
 });
 
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 375, height: 812 } });
+
+  test('each puzzle is a compact row', async ({ page }) => {
+    await page.goto('/');
+    for (const card of await page.locator('.puzzle-card').all()) {
+      // The best-on-a-computer note may wrap to a second line; the old cards were ~200px.
+      expect((await card.boundingBox())!.height).toBeLessThan(120);
+    }
+  });
+
+  test('tapping a row opens its daily', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.puzzle-card[data-id="queens"]').click();
+    await expect(page).toHaveURL(/\/queens\.html#\/$/);
+  });
+
+  test('practice stays a separate tap target', async ({ page }) => {
+    await page.goto('/');
+    const practice = page.locator('.puzzle-card[data-id="queens"]').getByRole('link', { name: 'Practice' });
+    expect((await practice.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    await practice.click();
+    await expect(page).toHaveURL(/\/queens\.html#\/practice$/);
+  });
+
+  test('puzzles best on a computer come last', async ({ page }) => {
+    await page.goto('/');
+    const cards = await page.locator('.puzzle-card').all();
+    const rows = await Promise.all(
+      cards.map(async c => ({ id: await c.getAttribute('data-id'), y: (await c.boundingBox())!.y })),
+    );
+    const order = rows.sort((a, b) => a.y - b.y).map(r => r.id);
+    expect(order.slice(-2)).toEqual(['mines', 'tangle']);
+  });
+});
+
 test('desktops do not see the best-on-a-computer note', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');

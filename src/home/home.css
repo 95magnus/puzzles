@@ -136,6 +136,80 @@
   }
 }
 
+/* ---------- Phone: one compact row per puzzle ----------
+   Below ~600px the grid is one column. The whole row is the daily link (Play daily stretched over
+   the card, its label kept for screen readers) and Practice sits above it as a text link. */
+@media (max-width: 600px) {
+  .home-grid {
+    gap: var(--space);
+  }
+
+  .puzzle-card {
+    position: relative;
+    grid-template-columns: 48px 1fr auto;
+    align-items: center;
+    gap: 0 calc(var(--space) * 1.5);
+    padding: 10px 8px 10px 12px;
+  }
+
+  /* Hard to play on a phone, so they go last. */
+  .puzzle-card[data-best-on-computer] {
+    order: 1;
+  }
+
+  .puzzle-preview {
+    width: 48px;
+    height: 48px;
+  }
+
+  .puzzle-card__name {
+    font-size: 18px;
+  }
+
+  .puzzle-card__tagline {
+    display: none;
+  }
+
+  .puzzle-card__phone-note {
+    margin: 0;
+  }
+
+  .puzzle-card__actions {
+    grid-column: auto;
+  }
+
+  .puzzle-card__actions .puzzle-card__play {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background: transparent;
+    color: transparent;
+    font-size: 0;
+  }
+
+  .puzzle-card__actions .puzzle-card__play:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .puzzle-card__actions .puzzle-card__practice {
+    position: relative;
+    z-index: 2;
+    flex: none;
+    min-height: 44px;
+    padding: 0 var(--space);
+    border: 0;
+    background: none;
+    color: #b9adff;
+    font-size: 14px;
+  }
+
+  .puzzle-card__practice::after {
+    content: '›' / '';
+    margin-left: 4px;
+  }
+}
+
 @media (max-width: 400px) {
   .home {
     padding-left: var(--space);
