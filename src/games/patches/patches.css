@@ -111,9 +111,11 @@
   background: color-mix(in srgb, var(--col) 35%, var(--patches-bg));
 }
 
+/* The fill ignores --col, so a broken tile reads as red even on a clue colour close to it. The stripes keep it distinct without colour. */
 .patches-tile.is-invalid {
   border-color: var(--patches-invalid);
-  background-image: repeating-linear-gradient(45deg, rgba(255, 92, 122, 0.22) 0 4px, transparent 4px 9px);
+  background-color: color-mix(in srgb, var(--patches-invalid) 50%, var(--patches-bg));
+  background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.25) 0 4px, transparent 4px 9px);
 }
 
 .patches-tile.is-glow {

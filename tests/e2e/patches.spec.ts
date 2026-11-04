@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { checkRect } from '../../src/games/patches/game';
 import { DAILY_PRESET, PRESETS, generatePuzzle, patchesDailySeed } from '../../src/games/patches/generate';
+import { inBounds, overlaps } from '../../src/games/patches/rect';
 import type { Rect } from '../../src/games/patches/types';
 
 const SIZE = PRESETS.small.size;
@@ -56,6 +58,32 @@ test('a rect over two clues is invalid', async ({ page }) => {
   await drawRect(page, SIZE, bounds);
   await expect(page.locator('.patches-tile')).toHaveCount(1);
   await expect(page.locator('.patches-tile.is-invalid')).toHaveCount(1);
+});
+
+test('broken patches share one fill, whatever their clue colour', async ({ page }) => {
+  await page.goto(PRACTICE_URL);
+  await expect(page.locator('.patches-cell')).toHaveCount(SIZE * SIZE);
+  const p = practice();
+  /** A two-cell rect holding only this clue and breaking it. */
+  const brokenAt = (i: number): Rect | undefined => {
+    const r = Math.floor(p.clues[i].cell / SIZE);
+    const c = p.clues[i].cell % SIZE;
+    const options: Rect[] = [{ r, c, w: 2, h: 1 }, { r, c, w: 1, h: 2 }, { r, c: c - 1, w: 2, h: 1 }, { r: r - 1, c, w: 1, h: 2 }];
+    return options.find((x) => inBounds(SIZE, x) && checkRect(p, x).clue === i && !checkRect(p, x).ok);
+  };
+  const broken = p.clues.flatMap((clue, i) => {
+    const rect = brokenAt(i);
+    return rect ? [{ color: clue.color, rect }] : [];
+  });
+  const first = broken[0];
+  const second = broken.find((x) => x.color !== first.color && !overlaps(x.rect, first.rect))!;
+
+  await drawRect(page, SIZE, first.rect);
+  await drawRect(page, SIZE, second.rect);
+  const tiles = page.locator('.patches-tile.is-invalid');
+  await expect(tiles).toHaveCount(2);
+  const fills = await tiles.evaluateAll((els) => els.map((el) => getComputedStyle(el).backgroundColor));
+  expect(fills[0]).toBe(fills[1]);
 });
 
 test('drawing over a rect leaves it in place', async ({ page }) => {
