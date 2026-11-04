@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_LIVES,
   encode,
+  isLocked,
   need,
   newGame,
   remaining,
@@ -109,6 +110,60 @@ describe('toggleMark', () => {
     expect(toggleMark(s, kept)).toBe(false);
     expect(s.cells[dropped]).toBe(1);
     expect(s.cells[kept]).toBe(3);
+  });
+});
+
+describe('a finished line', () => {
+  // Row 0 keeps cells 0 and 3 and loses 1, 2 and 4. Column 3 (line 8) has target 5; cell 3 holds a 4.
+  const finishRow0 = () => {
+    const s = newGame(p);
+    for (const c of [1, 2, 4]) strike(s, c);
+    return s;
+  };
+
+  it('locks the digits left in it, and nothing else', () => {
+    const s = newGame(p);
+    expect(isLocked(s, 0)).toBe(false);
+    strike(s, 1);
+    strike(s, 2);
+    expect(isLocked(s, 0)).toBe(false);
+    strike(s, 4);
+    expect(isLocked(s, 0)).toBe(true);
+    expect(isLocked(s, 3)).toBe(true);
+    expect(isLocked(s, 1)).toBe(false); // struck
+    expect(isLocked(s, 5)).toBe(false); // another row and column
+  });
+
+  it('ignores a strike on its digits, at no cost', () => {
+    const s = finishRow0();
+    expect(strike(s, 3)).toBe('ignored');
+    expect(s.cells[3]).toBe(0);
+    expect(s.lives).toBe(MAX_LIVES);
+  });
+
+  it('refuses to mark or unmark its digits', () => {
+    const s = newGame(p);
+    toggleMark(s, 0);
+    for (const c of [1, 2, 4]) strike(s, c);
+    expect(toggleMark(s, 0)).toBe(false);
+    expect(s.cells[0]).toBe(2);
+    expect(toggleMark(s, 3)).toBe(false);
+    expect(s.cells[3]).toBe(0);
+  });
+
+  it('counts its digits as kept in the crossing line', () => {
+    const s = newGame(p);
+    expect(need(s, 8)).toBe(5);
+    for (const c of [1, 2, 4]) strike(s, c);
+    expect(need(s, 8)).toBe(1);
+  });
+
+  it('survives a save and restore without changing the save format', () => {
+    const s = finishRow0();
+    expect(encode(s).slice(0, 5)).toBe('01101');
+    const back = restore(p, encode(s), s.lives)!;
+    expect(isLocked(back, 3)).toBe(true);
+    expect(strike(back, 3)).toBe('ignored');
   });
 });
 

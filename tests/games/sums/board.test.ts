@@ -174,6 +174,24 @@ test('marked and locked cells get their state and label', () => {
   expect(cellEl(2).getAttribute('aria-label')).toBe('Row 1, column 3, 3, kept');
 });
 
+test('a finished line shows its digits locked and lowers the crossing numbers', () => {
+  const s = mount();
+  // Row 0 keeps 1, 3, 5 and loses cells 1 and 3; column 0 has target 6 and holds that 1.
+  toggleMark(s, 2);
+  strike(s, 1);
+  board.render();
+  expect(cellEl(0).dataset.state).toBe('open');
+  expect(cellEl(2).dataset.state).toBe('marked');
+  expect(leftOf(SIZE)).toBe('6');
+  strike(s, 3);
+  board.render();
+  for (const i of [0, 2, 4]) expect(cellEl(i).dataset.state).toBe('locked');
+  expect(cellEl(0).getAttribute('aria-label')).toBe('Row 1, column 1, 1, kept');
+  expect(cellEl(1).dataset.state).toBe('struck');
+  expect(cellEl(5).dataset.state).toBe('open');
+  expect(leftOf(SIZE)).toBe('5');
+});
+
 test('mouse click strikes the cell under the pointer', () => {
   mount();
   click(7);

@@ -6,7 +6,7 @@ const RULES = [
   'Strike out digits until every row and column adds up to its target.',
   'Strike a digit that belongs and you lose a life. You have 3.',
   'Long-press or right-click to mark a digit you want to keep. Marks are free.',
-  'The number beside each line is its goal minus the digits you have marked to keep. It turns into a check once only the right digits are left.',
+  'The number beside each line is its goal minus the digits you have marked to keep. It turns into a check once only the right digits are left, and those digits lock.',
 ];
 
 const SIZE = 3;

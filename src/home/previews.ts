@@ -260,7 +260,7 @@ export function sumsPreview(): SVGSVGElement {
       label(x, y, ch, 'rgba(238,240,247,.3)', 8);
       svg.append(s('line', { x1: x - 3.5, y1: y - 1.5, x2: x + 3.5, y2: y - 1.5, stroke: '#ef9f27', 'stroke-width': 1.3, 'stroke-linecap': 'round' }));
     } else {
-      if (marked.has(`${r},${c}`)) svg.append(s('rect', { x: x - step / 2 + 1, y: y - step / 2 - 2, width: step - 2, height: step - 2, rx: 2.5, fill: 'none', stroke: '#7f77dd', 'stroke-width': 1 }));
+      if (marked.has(`${r},${c}`)) svg.append(s('circle', { cx: x, cy: y - 3, r: step / 2 - 1, fill: 'none', stroke: 'rgba(238,240,247,.6)', 'stroke-width': 1, 'stroke-dasharray': '1.6 1.2' }));
       label(x, y, ch, '#eef0f7', 8);
     }
   }));

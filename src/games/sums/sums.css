@@ -3,7 +3,6 @@
   --sums-tile: rgba(255, 255, 255, 0.1);
   --sums-tile-hover: rgba(255, 255, 255, 0.17);
   --sums-done: #5dcaa5;
-  --sums-locked: #7f77dd;
   --sums-bad: #ff5c7a;
 }
 
@@ -108,7 +107,7 @@ div.sums-cell {
   content: "";
   position: absolute;
   inset: 3px;
-  border-radius: 6px;
+  border-radius: 50%;
   pointer-events: none;
 }
 
@@ -121,8 +120,7 @@ div.sums-cell {
 }
 
 .sums-cell[data-state="locked"]::after {
-  border: 2px solid var(--sums-locked);
-  border-radius: 50%;
+  border: 2px solid var(--sums-done);
 }
 
 .sums-cell.is-bad {
@@ -163,8 +161,7 @@ div.sums-cell {
 }
 
 /* Win: the remaining digits pulse once. */
-.sums-panel.is-celebrating .sums-cell[data-state="open"],
-.sums-panel.is-celebrating .sums-cell[data-state="marked"] {
+.sums-panel.is-celebrating .sums-cell[data-state="locked"] {
   animation: sums-pulse 400ms var(--ease);
 }
 

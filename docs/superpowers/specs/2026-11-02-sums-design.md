@@ -34,7 +34,7 @@ Tagline: *Strike out digits until every line adds up.*
 - *open* — untouched.
 - *struck* — removed by the player; it no longer counts toward any sum.
 - *marked* — open, with the player's free "keep" note. Counts like open for every rule.
-- *locked* — a kept digit the player tried to strike. Shown circled; it stays on the board.
+- *locked* — a kept digit the player tried to strike, or a digit left in a finished row or column (one with a check, §7). Shown circled; it stays on the board and can't be struck, marked or unmarked. Locks from a finished line cost nothing.
 
 **Tap** on an open cell:
 - not in the solution → *struck*.
@@ -129,7 +129,8 @@ Returns `(0 | 1)[]` when no unknowns remain; otherwise `null` (stalled or contra
 - `newGame(puzzle)`: every cell open, 3 lives, `playing`, `left` = number of non-solution cells.
 - `strike(s, cell)`: on an open cell, either struck (`left - 1`, win at 0) or locked (`lives - 1`, loss at 0). Returns `'struck' | 'mistake' | 'ignored'` so the board knows what to animate. Ignored on non-open cells and after the game ends.
 - `toggleMark(s, cell)`: open ↔ marked; ignored otherwise and after the game ends.
-- `need(s, line)`: the line's target minus the sum of its digits that are marked (`2`) or locked (`3`). Struck and open digits don't count. It changes when a digit is marked, unmarked or locked by a mistake, never when one is struck, and can go below 0.
+- `isLocked(s, cell)`: the cell is `3`, or it is not struck and its row or column has `remaining === 0`. Only wrong digits can be struck, so a finished line holds exactly its solution. Derived from the cells, so it adds nothing to the save. `strike` and `toggleMark` ignore locked cells.
+- `need(s, line)`: the line's target minus the sum of its digits that are marked (`2`) or locked (`isLocked`). Struck and open digits don't count. It changes when a digit is marked, unmarked or locked, which includes a crossing line finishing, and can go below 0. Striking a digit doesn't change its own lines' numbers.
 - `remaining(s, line)`: sum of the line's digits that are not struck, minus its target. Always ≥ 0; 0 means every wrong digit in the line is struck, so the line is done.
 - `encode(s)`: one char per cell, `0`–`3`. `restore(puzzle, str, lives)`: rejects wrong length, bad characters, a struck solution cell, a locked non-solution cell, lives outside 0–3, or a lock count that doesn't match `3 − lives`. Otherwise returns the game with its status recomputed.
 
@@ -149,8 +150,8 @@ The target display is a visual cue only; winning is decided by §2.
 **Cells.**
 - Open: digit on a light tile; hover lightens it.
 - Struck: digit fades to ~18 % with a strike-through. Fade 200 ms; none under `prefers-reduced-motion`.
-- Marked: dashed ring inside the tile.
-- Locked: solid violet (`#7f77dd`) ring; on the mistake it flashes red (`#ff5c7a`) for 500 ms.
+- Marked: dashed grey circle inside the tile.
+- Locked: the same circle, solid green (`#5dcaa5`); on the mistake it flashes red (`#ff5c7a`) for 500 ms.
 
 **Input** (pointer events, one active pointer):
 - **Tap / click** → `strike`.
@@ -168,7 +169,7 @@ Header (shared): `puzzles · Sums`, Daily / Practice tabs, "?".
 2. **Daily (solved):** board stays visible; card "All lines add up", time, "Next daily in hh:mm:ss", primary **Play practice**.
 3. **Daily (out of lives):** card "Out of lives", primary **Try again** (shell's `retryDaily`).
 4. **Practice:** preset switch (Easy · Medium · Hard) replaces the subtitle; button **New board**. Win and loss cards offer **New board**.
-5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the number beside each line is its goal minus the digits marked to keep, and it turns into a check once only the right digits are left. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
+5. **How-to ("?"):** modal: strike digits until every row and column adds up to its target; striking a digit that belongs costs a life (3 per board); long-press or right-click marks a digit to keep, free; the number beside each line is its goal minus the digits marked to keep, and it turns into a check once only the right digits are left, and those digits lock. A small static 3×3 example, half solved. Opens automatically on the first visit (flag `sums-howto-seen`).
 6. **Dashboard card:** name "Sums", tagline, `sumsPreview()` SVG (a 4×4 grid whose targets show goal-minus-kept numbers or a green check, with a few struck and marked digits), daily status "Not started", "In progress · mm:ss", "Solved · mm:ss" (`doneWord: 'Solved'`), "Out of lives · attempt n" (`lostWord: 'Out of lives'`); attempts > 1 shown as in Tangle.
 
 `sums.html` copies the whole `<head>` of an existing page (description and `og:description` repeat the tagline, Open Graph/Twitter tags, icons, manifest, Umami). Play events and counted actions go through the shell's play tracker as in the other puzzles.

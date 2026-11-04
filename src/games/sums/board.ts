@@ -1,4 +1,4 @@
-import { need, remaining } from './game';
+import { isLocked, need, remaining } from './game';
 import type { Cell, GameState, Puzzle } from './types';
 import { cellFromPoint } from '../../ui/grid';
 import { PANEL_PAD, PAGE_CHROME, fitCell, reducedMotion, watchSize } from '../../ui/fit';
@@ -72,7 +72,7 @@ function paint(b: Built, s: GameState, bad: number): void {
   const { size, digits } = s.puzzle;
   for (let i = 0; i < size * size; i++) {
     const el = b.cells[i];
-    const v = s.cells[i];
+    const v = isLocked(s, i) ? 3 : s.cells[i];
     const state = STATE[v];
     if (el.dataset.state !== state) el.dataset.state = state;
     setText(el, String(digits[i]));
